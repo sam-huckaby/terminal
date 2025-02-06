@@ -5,7 +5,7 @@ organization:
   docs: https://terminal.shop/docs
   contact: dev@terminal.com
 openapi:
-  code_samples: x-codeSamples 
+  code_samples: x-codeSamples
 resources:
   product:
     models:
@@ -109,24 +109,44 @@ targets:
     production_repo: terminaldotshop/terminal-sdk-js
     publish:
       npm: true
+    skip: false
   go:
     package_name: terminal
     production_repo: terminaldotshop/terminal-sdk-go
+    skip: false
   python:
     project_name: terminal-shop
     package_name: terminal_shop
     production_repo: terminaldotshop/terminal-sdk-python
     publish:
       pypi: true
+    skip: false
   java:
     reverse_domain: shop.terminal.api
     production_repo: terminaldotshop/terminal-sdk-java
     publish:
       maven:
         sonatype_platform: portal
+    skip: false
   kotlin:
     reverse_domain: shop.terminal.api
     production_repo: terminaldotshop/terminal-sdk-kotlin
     publish:
       maven:
         sonatype_platform: portal
+    skip: false
+  ruby:
+    gem_name: terminal-shop
+    production_repo: terminaldotshop/terminal-sdk-ruby
+    publish:
+      rubygems: true
+    skip: false
+  terraform:
+    provider_name: terminal
+    production_repo: terminaldotshop/terraform-provider-terminal
+    publish:
+      hashicorp_registry: false
+    options:
+      infer_all_services: true
+    skip: false
+
