@@ -24,6 +24,7 @@
     "@astrojs/react": "4.2.0",
     "@astrojs/solid-js": "4.4.1",
     "@astrojs/tailwind": "^5.1.0",
+    "@modular-forms/solid": "0.25.0",
     "@openauthjs/openauth": "*",
     "@solid-primitives/autofocus": "^0.0.111",
     "@solid-primitives/date": "^2.0.21",
@@ -40,6 +41,8 @@
     "react": "19.0.0",
     "remark-directive": "3.0.0",
     "solid-js": "^1.8.16",
-    "sst": "3.7.3"
+    "sst": "3.7.3",
+    "stripe": "*",
+    "zod": "*"
   }
 }

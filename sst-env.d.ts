@@ -64,6 +64,15 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "LinkShortener": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
+    "LinkShortenerFn": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "SSH": {
       "service": string
       "type": "sst.aws.Service"
@@ -115,6 +124,8 @@ declare module "sst" {
     "Urls": {
       "api": string
       "auth": string
+      "short": string
+      "site": string
       "type": "sst.sst.Linkable"
     }
     "VHS": {

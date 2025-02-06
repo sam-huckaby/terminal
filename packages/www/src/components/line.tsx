@@ -1,6 +1,5 @@
 import { type Component, type JSX } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
-import { getLineNumber } from './editor'
 import type { State } from 'src/types'
 
 type LineProps = {
@@ -11,8 +10,6 @@ type LineProps = {
 } & JSX.HTMLAttributes<HTMLDivElement>
 
 const LineComponent: Component<LineProps> = (props) => {
-  const number = getLineNumber()
-
   return (
     <Dynamic
       component={props.href ? 'a' : 'div'}
@@ -21,8 +18,9 @@ const LineComponent: Component<LineProps> = (props) => {
       target={props.href ? '_blank' : undefined}
       {...props}
       classList={{
+        line: true,
         ...props.classList,
-        'group flex leading-10 items-center text-gray-10 hover:bg-gray-5 px-6 border-transparent border-l-2':
+        'group flex leading-10 items-center text-gray-10 hover:bg-gray-5 px-4 sm:px-6 border-transparent border-l-2':
           true,
         '!border-orange text-gray-11 bg-gray-6':
           !props.inactive && props.state === 'active',
@@ -38,11 +36,10 @@ const LineComponent: Component<LineProps> = (props) => {
           !props.inactive,
         'has-[:focus]:border-orange has-[:focus]:text-gray-11 has-[:focus]:bg-gray-6 has-[:focus]:outline-none':
           !props.inactive,
-        'pointer-events-none': props.state && props.state !== 'normal',
+        // 'pointer-events-none': props.state && props.state !== 'normal',
         [props.class ?? '']: !!props.class,
       }}
     >
-      <div class="self-start shrink-0 w-10 md:w-14">{number}</div>
       {props.children}
       <svg
         class="hidden w-5 h-5 ml-6 text-gray-10 shrink-0"

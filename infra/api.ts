@@ -1,5 +1,5 @@
 import { secret } from "./secret";
-import { domain, zone } from "./dns";
+import { domain, shortDomain } from "./dns";
 import { database } from "./database";
 import { webhook } from "./stripe";
 import { bus } from "./bus";
@@ -11,10 +11,12 @@ sst.Linkable.wrap(random.RandomString, (resource) => ({
   },
 }));
 
-const urls = new sst.Linkable("Urls", {
+export const urls = new sst.Linkable("Urls", {
   properties: {
     api: "https://api." + domain,
     auth: "https://auth." + domain,
+    site: $dev ? "http://localhost:4321" : "https://www." + domain,
+    short: "https://" + shortDomain,
   },
 });
 

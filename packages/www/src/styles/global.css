@@ -30,7 +30,6 @@
     counter-increment: editor-counter;
   }
   .editor .line:before {
-    @apply shrink-0 w-10 content-[counter(editor-counter)] self-start;
-    @apply md:w-14;
+    @apply shrink-0 w-8 sm:w-10 md:w-14 content-[counter(editor-counter)] self-start;
   }
 }

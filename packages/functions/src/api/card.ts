@@ -5,6 +5,8 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { validator } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
+import { Resource } from "sst";
+import { Link } from "@terminal/core/link/index";
 
 export module CardApi {
   export const route = new Hono()
@@ -111,6 +113,48 @@ export module CardApi {
         const param = c.req.valid("param");
         await Card.remove(param.id);
         return c.json({ data: "ok" as const }, 200);
+      },
+    )
+    .post(
+      "/collect",
+      describeRoute({
+        tags: ["Card"],
+        summary: "Collect card",
+        description:
+          "Create a temporary URL for collecting credit card information for the current user.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(
+                  z
+                    .object({
+                      url: z
+                        .string()
+                        .url()
+                        .openapi({
+                          example: Examples.Collect.url,
+                          description:
+                            "Temporary URL that allows a user to enter credit card details over https at terminal.shop.",
+                        }),
+                    })
+                    .openapi({
+                      example: { url: Examples.Collect.url },
+                      description: "URL for collecting card information.",
+                    }),
+                ),
+              },
+            },
+            description: "URL for collecting card information.",
+          },
+        },
+      }),
+      async (c) => {
+        const authorization = c.req.header("authorization");
+        const token = authorization?.replace("Bearer ", "");
+        const url = `${Resource.Urls.site}/pay#${token}`;
+        const id = await Link.create(url);
+        return c.json({ data: { url: `${Resource.Urls.short}/${id}` } }, 200);
       },
     );
 }

@@ -124,4 +124,8 @@ export module Examples {
     name: "Example App",
     redirectURI: "https://example.com/callback",
   };
+
+  export const Collect = {
+    url: "https://trm.sh/XXXXXXXXXX",
+  };
 }

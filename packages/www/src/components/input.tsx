@@ -10,23 +10,22 @@ import {
 import Caret from '@components/caret'
 import { autofocus } from '@solid-primitives/autofocus'
 import type { State } from 'src/types'
+import Spinner from './spinner'
 
 // ensures it doesn't get tree shaken
 autofocus
 
 type InputProps = {
   autofocus?: boolean
-  labelledby?: string
   state?: State
-  value?: string
   message?: string
   result?: string
   readonly?: boolean
   onReturn?: (value: string) => void
-} & JSX.HTMLAttributes<HTMLSpanElement>
+} & JSX.InputHTMLAttributes<HTMLInputElement>
 
 const InputComponent: Component<InputProps> = (props) => {
-  let ref: HTMLSpanElement | undefined
+  let ref: HTMLInputElement | undefined
 
   const [visible, setVisible] = createSignal<boolean>(true)
   const [before, setBefore] = createSignal<string>()
@@ -39,22 +38,20 @@ const InputComponent: Component<InputProps> = (props) => {
   const update = () => {
     if (props.readonly) return
 
-    setInternalValue(ref?.innerText)
+    setInternalValue(ref?.value)
 
-    const selection = document.getSelection()
-    const visible = selection?.isCollapsed ?? false
-    const position = visible ? selection?.anchorOffset : undefined
+    // const selection = document.getSelection()
+    // const visible = selection?.isCollapsed ?? false
+    const position = ref?.selectionStart ?? undefined
 
     if (blinkTimeout) clearTimeout(blinkTimeout)
     setBlink(false)
 
     if (position !== undefined) {
-      const beforeText = ref?.innerText
+      const beforeText = ref?.value
         .substring(0, position)
         .replace(/ /g, '&nbsp')
-      const afterText = ref?.innerText
-        .substring(position)
-        .replace(/ /g, '&nbsp')
+      const afterText = ref?.value.substring(position).replace(/ /g, '&nbsp')
 
       setBefore(beforeText)
       setAfter(afterText)
@@ -67,6 +64,26 @@ const InputComponent: Component<InputProps> = (props) => {
     }, 200)
   }
 
+  const onInput: JSX.InputHTMLAttributes<HTMLInputElement>['onInput'] = (
+    ev,
+  ) => {
+    if (props.onInput && typeof props.onInput === 'function') props.onInput(ev)
+    update()
+  }
+
+  const onChange: JSX.InputHTMLAttributes<HTMLInputElement>['onChange'] = (
+    ev,
+  ) => {
+    if (props.onChange && typeof props.onChange === 'function')
+      props.onChange(ev)
+    update()
+  }
+
+  const onBlur: JSX.InputHTMLAttributes<HTMLInputElement>['onBlur'] = (ev) => {
+    if (props.onBlur && typeof props.onBlur === 'function') props.onBlur(ev)
+    update()
+  }
+
   createEffect(() => {
     if (props.state === 'normal') ref?.focus()
   }, [props.state])
@@ -74,11 +91,12 @@ const InputComponent: Component<InputProps> = (props) => {
   const submit = (ev: KeyboardEvent) => {
     if (props.state === 'busy') return
 
-    const span = ev.target as HTMLSpanElement
+    const input = ev.target as HTMLInputElement
     if (ev.key === 'Enter') {
-      ev.preventDefault()
-
-      if (props.onReturn && span.innerText) props.onReturn(span.innerText)
+      if (props.onReturn && input.value) {
+        ev.preventDefault()
+        props.onReturn(input.value)
+      }
     }
   }
 
@@ -87,24 +105,25 @@ const InputComponent: Component<InputProps> = (props) => {
       classList={{
         ...props.classList,
         'relative group/input': true,
-        'flex items-center overflow-x-scroll no-scrollbar pr-[10px]': true,
+        'flex items-start overflow-x-scroll no-scrollbar flex-wrap justify-start w-full':
+          true,
         '!overflow-visible': props.state !== 'normal' || props.readonly,
         [props.class ?? '']: !!props.class,
       }}
     >
-      <span
-        use:autofocus
-        contenteditable={props.state === 'normal' && !props.readonly}
+      <input
         {...props}
+        use:autofocus={props.autofocus}
         ref={ref}
-        role="textbox"
-        aria-labelledby={props.labelledby}
+        value={props.value}
         classList={{
-          'text-white leading-10 flex gap-2 flex-wrap': true,
-          'focus:outline-none whitespace-nowrap caret-transparent': true,
-          hidden: props.state !== 'normal',
+          'focus:text-white leading-10 placeholder:text-gray-10': true,
+          'focus:outline-none whitespace-nowrap caret-transparent bg-transparent':
+            true,
+          'animate-shake': props.state === 'error',
+          // hidden: props.state !== 'normal',
         }}
-        onInput={update}
+        onInput={onInput}
         onKeyUp={update}
         onSelect={update}
         onMouseMove={update}
@@ -113,51 +132,23 @@ const InputComponent: Component<InputProps> = (props) => {
         onPaste={update}
         onCut={update}
         onKeyPress={submit}
-        // onChange={update}
+        onChange={onChange}
+        onBlur={onBlur}
         // onKeyDown={update}
-      >
-        {props.readonly ? props.value : ''}
-      </span>
+      />
       <Show when={props.state !== 'normal'}>
         <span class="text-white leading-10 flex gap-2 flex-wrap">
-          <Show when={props.readonly}>
-            <div>{props.value}</div>
-          </Show>
-          <Show when={!props.readonly}>
-            <div classList={{ 'animate-shake': props.state === 'error' }}>
-              {internalValue()}
-            </div>
-          </Show>
           <div
             classList={{
-              'w-4 h-4 self-center': true,
+              'w-4 h-4 self-center shrink': true,
               'text-blue-11': props.state === 'busy',
               'text-green-11': props.state === 'success',
-              'text-red-11': props.state === 'error',
+              hidden: props.state === 'error',
             }}
           >
             <Switch>
               <Match when={props.state === 'busy'}>
-                <svg
-                  class="animate-spin h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <Spinner />
               </Match>
               <Match when={props.state === 'success'}>
                 <svg
@@ -192,24 +183,26 @@ const InputComponent: Component<InputProps> = (props) => {
               </Match>
             </Switch>
           </div>
-          <span class="text-gray-10">{props.message}</span>
+          <span class="text-gray-10 grow">{props.message}</span>
         </span>
       </Show>
       <div
-        class="absolute inset-0 flex items-center pointer-events-none"
+        class="absolute inset-0 flex h-10 items-center pointer-events-none"
         aria-hidden="true"
       >
         <div class="flex items-center leading-10 whitespace-nowrap focus:outline-none">
           <span
             class="text-transparent"
-            innerHTML={before() ?? (props.readonly ? props.value : '')}
+            innerHTML={
+              before() ?? (props.readonly ? props.value?.toString() : '')
+            }
           ></span>
           <Caret
             blink={blink()}
             classList={{
               'hidden group-has-[:focus]/input:block': true,
               '!block ml-1.5': props.readonly,
-              '!hidden': !visible() || props.state !== 'normal',
+              // '!hidden': !visible() || props.state !== 'normal',
             }}
           />
           <span class="text-transparent" innerHTML={after()}></span>

@@ -9,6 +9,7 @@
   "devDependencies": {},
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.606.0",
+    "@hono/zod-validator": "0.4.2",
     "@openauthjs/openauth": "*",
     "@terminal/core": "workspace:",
     "airtable": "0.12.2",

@@ -183,6 +183,13 @@
       "when": 1738270038581,
       "tag": "0025_chunky_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1738798581944,
+      "tag": "0026_hard_mentor",
+      "breakpoints": true
     }
   ]
 }

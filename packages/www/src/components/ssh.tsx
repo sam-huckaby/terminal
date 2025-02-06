@@ -7,11 +7,13 @@ import {
   Switch,
   Match,
 } from 'solid-js'
+import { z } from 'zod'
 import Editor from '@components/editor'
 import Line from '@components/line'
 import InputLine from '@components/input-line'
 import { hc } from 'hono/client'
 import type { Routes } from '@terminal/functions/api'
+import { createForm, setResponse, zodForm } from '@modular-forms/solid'
 
 type SshProps = { apiUrl: string } & JSX.HTMLAttributes<HTMLDivElement>
 type InputLineProps = ComponentProps<typeof InputLine>
@@ -39,47 +41,15 @@ const SshComponent: Component<SshProps> = (props) => {
   }
 
   const client = hc<Routes>(props.apiUrl)
-  let stateTimeout: ReturnType<typeof setTimeout> | undefined
+  const [form, { Form, Field }] = createForm({
+    validate: zodForm(
+      z.object({
+        email: z.string().email('# invalid email').nonempty('# required'),
+      }),
+    ),
+  })
 
-  const [emailState, setEmailState] = createSignal<State>('normal')
-  const [emailMessage, setEmailMessage] = createSignal<string>()
   const [lines, setLines] = createSignal<InputLineProps[]>([])
-
-  const restoreEmail = (timeout = 2500) => {
-    if (stateTimeout) clearTimeout(stateTimeout)
-
-    stateTimeout = setTimeout(() => {
-      setEmailState('normal')
-      setEmailMessage(undefined)
-    }, timeout)
-  }
-
-  const submitEmail = async (email: string) => {
-    if (
-      !email ||
-      !email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-    ) {
-      setEmailState('error')
-      setEmailMessage('# invalid email address')
-      restoreEmail()
-      return
-    }
-
-    setEmailState('busy')
-
-    try {
-      await client.email.$post({ json: { email } })
-      setEmailState('success')
-      setEmailMessage('# signed up')
-      setLines([{ state: 'normal' }])
-    } catch (err) {
-      console.error(err)
-      setEmailState('error')
-      setEmailMessage((err as Error).message)
-      restoreEmail()
-      return
-    }
-  }
 
   return (
     <Editor>
@@ -152,18 +122,40 @@ const SshComponent: Component<SshProps> = (props) => {
         ></span>
       </Line>
       <Line />
-      <Line>
-        <label id="email-label" for="email-input">
-          # sign up for updates, enter your email address below...
-        </label>
-      </Line>
-      <InputLine
-        autofocus
-        state={emailState()}
-        message={emailMessage()}
-        labelledby="email-label"
-        onReturn={submitEmail}
-      />
+      <Form
+        onSubmit={async ({ email }) => {
+          await client.email.$post({ json: { email } })
+          setResponse(form, { status: 'success', message: '# signed up' })
+          setLines([{ state: 'normal' }])
+        }}
+      >
+        <Line>
+          <label id="email-label" for="email-input">
+            # sign up for updates, enter your email address below...
+          </label>
+        </Line>
+        <Field name="email">
+          {(field, props) => (
+            <InputLine
+              {...props}
+              autofocus
+              id="email-input"
+              aria-labelledby="email-label"
+              autocomplete="email"
+              state={
+                field.error
+                  ? 'error'
+                  : form.submitting
+                    ? 'busy'
+                    : form.response.status === 'success'
+                      ? 'success'
+                      : 'normal'
+              }
+              message={form.response.message ?? field.error}
+            />
+          )}
+        </Field>
+      </Form>
       <Index each={lines()}>{(line) => <InputLine {...line()} />}</Index>
     </Editor>
   )

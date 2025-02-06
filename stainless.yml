@@ -32,6 +32,7 @@ resources:
     methods:
       list: get /card
       create: post /card
+      collect: post /card/collect
       delete: delete /card/{id}
   cart:
     models:
