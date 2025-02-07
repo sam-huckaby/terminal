@@ -14,6 +14,7 @@ import Stripe from 'stripe'
 import Line from './line'
 import Input from './input'
 import Spinner from './spinner'
+import Button from './button'
 
 type PayProps = {
   apiUrl: string
@@ -193,6 +194,16 @@ const PayComponent: Component<PayProps> = (props) => {
             />
           )}
         </Field>
+        <Line />
+        <Line>
+          <Button
+            type="submit"
+            class="bg-orange hover:enabled:bg-orange/80 text-white"
+          >
+            Add Payment Method
+          </Button>
+        </Line>
+        <Line />
         <Show when={form.submitting}>
           <Line state="busy">
             <Spinner />
@@ -204,7 +215,6 @@ const PayComponent: Component<PayProps> = (props) => {
           </Line>
         </Show>
       </Editor>
-      <input type="submit" class="hidden" />
     </Form>
   )
 }

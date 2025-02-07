@@ -137,7 +137,7 @@ const InputComponent: Component<InputProps> = (props) => {
         // onKeyDown={update}
       />
       <Show when={props.state !== 'normal'}>
-        <span class="text-white leading-10 flex gap-2 flex-wrap">
+        <span class="text-white leading-10 flex gap-2 flex-wrap self-center">
           <div
             classList={{
               'w-4 h-4 self-center shrink': true,
