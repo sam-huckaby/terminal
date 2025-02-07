@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -11,6 +12,7 @@ import (
 	"github.com/stripe/stripe-go/v78"
 	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
+	"github.com/terminaldotshop/terminal/go/pkg/tui/qrfefe"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/validate"
 )
 
@@ -19,6 +21,7 @@ type paymentView = int
 const (
 	paymentListView paymentView = iota
 	paymentFormView
+	paymentHttpsView
 )
 
 type paymentInput struct {
@@ -35,11 +38,25 @@ type paymentState struct {
 	input      paymentInput
 	form       *huh.Form
 	submitting bool
+	generating bool
 	error      string
+	url        *string
 }
 
 type SelectedCardUpdatedMsg struct {
 	cardID string
+}
+
+type PollPaymentInitMsg struct {
+	paymentUrl string
+}
+
+type PollPaymentStatusMsg struct {
+	cardCount int
+}
+
+type PollPaymentCompleteMsg struct {
+	cards []terminal.Card
 }
 
 func (m model) GetSelectedCard() *terminal.Card {
@@ -143,9 +160,9 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 		WithShowHelp(false)
 
 	m.state.payment.view = paymentListView
-	if len(m.cards) == 0 {
-		m.state.payment.view = paymentFormView
-	}
+	// if len(m.cards) == 0 {
+	// 	m.state.payment.view = paymentFormView
+	// }
 
 	m = m.updatePaymentForm()
 	return m, m.state.payment.form.Init()
@@ -190,7 +207,7 @@ func (m model) updatePaymentForm() model {
 
 func (m model) nextPaymentMethod() (model, tea.Cmd) {
 	next := m.state.payment.selected + 1
-	max := len(m.cards) // add new
+	max := len(m.cards) + 1 // add new, add new https
 	if next > max {
 		next = max
 	}
@@ -215,9 +232,7 @@ func (m model) SetCard(cardID string) {
 	}
 
 	params := terminal.CartSetCardParams{CardID: terminal.F(cardID)}
-	_, err := m.client.Cart.SetCard(m.context, params)
-	if err != nil {
-	}
+	m.client.Cart.SetCard(m.context, params)
 }
 
 func (m model) choosePaymentMethod() (model, tea.Cmd) {
@@ -227,9 +242,16 @@ func (m model) choosePaymentMethod() (model, tea.Cmd) {
 			m.SetCard(cardID)
 			return SelectedCardUpdatedMsg{cardID: cardID}
 		}
-	} else { // new
+	} else if m.state.payment.selected == len(m.cards) { // new ssh
 		m.state.payment.input = paymentInput{}
 		m.state.payment.view = paymentFormView
+	} else if m.state.payment.selected == len(m.cards)+1 { // new https
+		m.state.payment.generating = true
+		m.state.payment.view = paymentHttpsView
+		return m, func() tea.Msg {
+			resp, _ := m.client.Card.Collect(m.context)
+			return PollPaymentInitMsg{paymentUrl: resp.Data.URL}
+		}
 	}
 
 	return m, nil
@@ -237,6 +259,13 @@ func (m model) choosePaymentMethod() (model, tea.Cmd) {
 
 func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 	cmds := []tea.Cmd{}
+
+	m.state.footer.commands = []footerCommand{
+		{key: "esc", value: "back"},
+		{key: "↑/↓", value: "cards"},
+		{key: "x/del", value: "remove"},
+		{key: "enter", value: "select"},
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -262,9 +291,7 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					cards, err := m.client.Card.List(m.context)
-					if err != nil {
-					}
+					cards, _ := m.client.Card.List(m.context)
 					return cards.Data
 				}
 			}
@@ -291,6 +318,12 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
+	m.state.footer.commands = []footerCommand{
+		{key: "esc", value: "back"},
+		{key: "tab", value: "next"},
+		{key: "enter", value: "submit"},
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -313,7 +346,6 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 
 		cards, _ := m.client.Card.List(m.context)
-
 		m.cards = cards.Data
 		return m, func() tea.Msg {
 			m.SetCard(response.Data)
@@ -375,6 +407,48 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
+	m.state.footer.commands = []footerCommand{
+		{key: "esc", value: "back"},
+	}
+
+	switch msg := msg.(type) {
+	case PollPaymentInitMsg:
+		m.state.payment.url = &msg.paymentUrl
+		m.state.payment.generating = false
+		return m, func() tea.Msg {
+			return PollPaymentStatusMsg{cardCount: len(m.cards)}
+		}
+	case PollPaymentStatusMsg:
+		return m, tea.Tick(time.Second, func(t time.Time) tea.Msg {
+			cards, _ := m.client.Card.List(m.context)
+			if len(cards.Data) > msg.cardCount {
+				return PollPaymentCompleteMsg{cards: cards.Data}
+			}
+			return PollPaymentStatusMsg{cardCount: msg.cardCount}
+		})
+	case PollPaymentCompleteMsg:
+		m.cards = msg.cards
+		m.state.payment.selected = len(m.cards) - 1
+		cardID := m.cards[m.state.payment.selected].ID
+		return m, func() tea.Msg {
+			m.SetCard(cardID)
+			return SelectedCardUpdatedMsg{cardID: cardID}
+		}
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			m.state.payment.view = paymentListView
+			return m, nil
+		}
+	}
+
+	return m, tea.Batch(cmds...)
+}
+
 func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case SelectedCardUpdatedMsg:
@@ -386,10 +460,12 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m.ConfirmSwitch()
 	}
 
-	if m.state.payment.view == paymentListView {
-		return m.paymentListUpdate(msg)
-	} else {
+	if m.state.payment.view == paymentFormView {
 		return m.paymentFormUpdate(msg)
+	} else if m.state.payment.view == paymentHttpsView {
+		return m.paymentHttpsUpdate(msg)
+	} else {
+		return m.paymentListUpdate(msg)
 	}
 }
 
@@ -397,11 +473,16 @@ func (m model) PaymentView() string {
 	if m.state.payment.submitting {
 		return m.theme.Base().Width(m.widthContent).Render("verifying payment details...")
 	}
+	if m.state.payment.generating {
+		return m.theme.Base().Width(m.widthContent).Render("generating payment link...")
+	}
 
-	if m.state.payment.view == paymentListView {
-		return m.paymentListView()
-	} else {
+	if m.state.payment.view == paymentFormView {
 		return m.paymentFormView()
+	} else if m.state.payment.view == paymentHttpsView {
+		return m.paymentHttpsView()
+	} else {
+		return m.paymentListView()
 	}
 }
 
@@ -432,12 +513,23 @@ func (m model) paymentListView() string {
 	}
 
 	newInSshIndex := len(m.cards)
-	newInSsh := m.CreateCenteredBox("add payment method", m.state.payment.selected == newInSshIndex)
+	newInHttpsIndex := newInSshIndex + 1
+	newInSsh := m.CreateCenteredBox(
+		"add payment method (ssh)",
+		m.state.payment.selected == newInSshIndex,
+	)
+	newInHttps := m.CreateCenteredBox(
+		"add payment method (https)",
+		m.state.payment.selected == newInHttpsIndex,
+	)
 	methods = append(methods, newInSsh)
+	methods = append(methods, newInHttps)
 
 	hint := "use selected payment method"
 	if m.state.payment.selected == newInSshIndex {
-		hint = "create new payment method here"
+		hint = "create new payment method (here)"
+	} else if m.state.payment.selected == newInHttpsIndex {
+		hint = "create new payment method (browser)"
 	}
 
 	return m.theme.Base().Render(lipgloss.JoinVertical(
@@ -452,9 +544,38 @@ func (m model) paymentFormView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
-		"\ncreate new payment method:\n",
+		"\n",
+		// "\ncreate new payment method:\n",
 		m.state.payment.form.View(),
 		m.theme.TextError().Render(m.state.payment.error),
+	))
+}
+
+func (m model) paymentHttpsView() string {
+	base := m.theme.Base().Render
+	accent := m.theme.TextAccent().Render
+
+	qr, _, err := qrfefe.Generate(0, *m.state.payment.url)
+	if err != nil {
+	}
+
+	instructions := lipgloss.JoinVertical(
+		lipgloss.Center,
+		base("scan the QR code\n"),
+		base("or copy the URL below"),
+		accent(*m.state.payment.url),
+	)
+
+	space := m.widthContent - lipgloss.Width(qr) - lipgloss.Width(instructions)
+
+	return m.theme.Base().Render(lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			qr,
+			m.theme.Base().Width(space).Render(),
+			instructions,
+		),
 	))
 }
 

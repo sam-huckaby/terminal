@@ -18,7 +18,7 @@ export module Link {
 
   export const create = fn(Info.shape.url, (url) =>
     useTransaction(async (tx) => {
-      const id = nanoid(10);
+      const id = nanoid(8);
       await tx.insert(linkTable).values({
         id,
         url,

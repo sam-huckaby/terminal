@@ -75,7 +75,7 @@ func generate(level Level, text string) (string, int, error) {
 	}
 
 	// add lower border when required (only required when QR size is odd)
-	addWhiteRow(&qrRunes, code.Size+4)
+	// addWhiteRow(&qrRunes, code.Size+4)
 
 	return string(qrRunes), code.Size, nil
 }

@@ -56,6 +56,7 @@ export module Card {
         .select()
         .from(cardTable)
         .where(eq(cardTable.userID, useUserID()))
+        .orderBy(cardTable.timeCreated)
         .execute()
         .then((rows) => rows.map(serialize)),
     );

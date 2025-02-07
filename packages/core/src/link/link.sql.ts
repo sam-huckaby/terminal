@@ -3,7 +3,7 @@ import { timestamp, timestamps, ulid } from "../drizzle/types";
 import { userTable } from "../user/user.sql";
 
 export const linkTable = mysqlTable("link", {
-  id: char("id", { length: 10 }).primaryKey(),
+  id: char("id", { length: 8 }).primaryKey(),
   ...timestamps,
   timeExpired: timestamp("time_expired").notNull(),
   url: text("url").notNull(),
