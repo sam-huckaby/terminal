@@ -12,7 +12,6 @@ RUN mkdir packages
 COPY package.json ./
 COPY packages/*/package.json ./packages/
 COPY packages ./packages
-COPY patches ./patches
 RUN bun install
 
 COPY packages/vhs/src/GeistMonoVF.ttf /usr/share/fonts/GeistMonoVF.ttf
