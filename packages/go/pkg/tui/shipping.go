@@ -380,16 +380,30 @@ func (m model) ShippingView(totalWidth int, focused bool) string {
 	}
 }
 
-func (m model) formatAddress(address terminal.Address) string {
-	lines := []string{}
-	lines = append(lines, m.theme.TextAccent().Render(address.Street1))
-	if address.Street2 != "" {
-		lines = append(lines, address.Street2)
-	}
-	lines = append(lines, address.City+", "+address.Province+", "+address.Country)
-	lines = append(lines, address.Zip)
+func (m model) formatListItem(text string, focused bool) string {
+	accent := m.theme.TextAccent().Render
 
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+	content := " ☉   " + text
+	hint := ""
+	if focused {
+		content = accent(content)
+		hint = accent("enter")
+	}
+
+	hintSpace := m.widthContent - lipgloss.Width(hint) - lipgloss.Width(content) - 6
+	return content + m.theme.Base().Width(hintSpace).Render() + hint
+}
+
+func (m model) formatAddress(address terminal.Address, focused bool) string {
+	parts := []string{}
+	parts = append(parts, address.Street1+", ")
+	if address.Street2 != "" {
+		parts = append(parts, address.Street2+", ")
+	}
+	parts = append(parts, address.City+", "+address.Province+", "+address.Country+", ")
+	parts = append(parts, address.Zip)
+
+	return m.formatListItem(lipgloss.JoinHorizontal(lipgloss.Left, parts...), focused)
 }
 
 func (m model) shippingListView(totalWidth int, focused bool) string {
@@ -398,9 +412,12 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 
 	addresses := []string{}
 	for i, address := range m.addresses {
-		content := m.formatAddress(address)
+		content := m.formatAddress(
+			address,
+			i == m.state.shipping.selected && (focused || m.page != accountPage),
+		)
 		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
-			content = accent("are you sure?") + base("\n(y/n)")
+			content = m.formatListItem(accent("are you sure?")+base("(y/n)"), true)
 		}
 		box := m.CreateBoxCustom(
 			content,
@@ -411,33 +428,27 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 	}
 
 	newAddressIndex := len(m.addresses)
-	newAddress := m.CreateCenteredBoxCustom(
-		"add address",
+	newAddress := m.CreateBoxCustom(
+		m.formatListItem("add new address", m.state.shipping.selected == newAddressIndex),
 		m.state.shipping.selected == newAddressIndex,
 		totalWidth,
 	)
 	addresses = append(addresses, newAddress)
 
-	hint := "use selected address"
-	if m.state.shipping.selected == newAddressIndex {
-		hint = "create new address"
-	}
-
 	addressList := lipgloss.JoinVertical(lipgloss.Left, addresses...)
-	withHint := accent("enter ") + base(hint)
 
 	if m.state.shipping.error != "" {
 		return m.theme.Base().Render(lipgloss.JoinVertical(
 			lipgloss.Left,
 			m.theme.TextError().Render(m.state.shipping.error),
+			"\nselect shipping address",
 			addressList,
-			withHint,
 		))
 	} else {
 		return m.theme.Base().Render(lipgloss.JoinVertical(
 			lipgloss.Left,
+			"\nselect shipping address",
 			addressList,
-			withHint,
 		))
 	}
 }

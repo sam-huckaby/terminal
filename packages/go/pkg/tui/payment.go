@@ -491,52 +491,44 @@ func (m model) paymentListView() string {
 	accent := m.theme.TextAccent().Render
 	methods := []string{}
 	for i, card := range m.cards {
-		number := formatLast4(accent(card.Last4))
-		contentWidth := lipgloss.Width(number)
-
-		expir := accent(formatExpiration(card.Expiration))
-		brand := base(card.Brand)
-		space := contentWidth - lipgloss.Width(brand) - lipgloss.Width(expir)
-		expLine := lipgloss.JoinHorizontal(
+		brand := card.Brand + "  "
+		number := formatLast4(card.Last4) + "  "
+		expir := formatExpiration(card.Expiration)
+		content := lipgloss.JoinHorizontal(
 			lipgloss.Center,
 			brand,
-			m.theme.Base().Width(space).Render(),
+			number,
 			expir,
 		)
-		content := lipgloss.JoinVertical(lipgloss.Left, number, expLine)
 		if m.state.payment.deleting != nil && *m.state.payment.deleting == i {
 			content = accent("are you sure?") + base("\n(y/n)")
 		}
 
-		method := m.CreateBox(content, i == m.state.payment.selected)
+		focused := i == m.state.payment.selected
+		method := m.CreateBox(m.formatListItem(content, focused), focused)
 		methods = append(methods, method)
 	}
 
 	newInSshIndex := len(m.cards)
+	newInSshFocused := m.state.payment.selected == newInSshIndex
 	newInHttpsIndex := newInSshIndex + 1
-	newInSsh := m.CreateCenteredBox(
-		"add payment method (ssh)",
-		m.state.payment.selected == newInSshIndex,
+	newInHttpsFocused := m.state.payment.selected == newInHttpsIndex
+	newInSsh := m.CreateBox(
+		m.formatListItem("add payment information via ssh", newInSshFocused),
+		newInSshFocused,
 	)
-	newInHttps := m.CreateCenteredBox(
-		"add payment method (https)",
-		m.state.payment.selected == newInHttpsIndex,
+	newInHttps := m.CreateBox(
+		m.formatListItem("add payment information via browser", newInHttpsFocused),
+		newInHttpsFocused,
 	)
 	methods = append(methods, newInSsh)
 	methods = append(methods, newInHttps)
 
-	hint := "use selected payment method"
-	if m.state.payment.selected == newInSshIndex {
-		hint = "create new payment method (here)"
-	} else if m.state.payment.selected == newInHttpsIndex {
-		hint = "create new payment method (browser)"
-	}
-
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
+		"\nselect payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
-		accent("enter ")+base(hint),
 	))
 }
 
@@ -559,24 +551,15 @@ func (m model) paymentHttpsView() string {
 	if err != nil {
 	}
 
-	instructions := lipgloss.JoinVertical(
-		lipgloss.Center,
-		base("scan the QR code\n"),
-		base("or copy the URL below"),
-		accent(*m.state.payment.url),
-	)
-
-	space := m.widthContent - lipgloss.Width(qr) - lipgloss.Width(instructions)
-
-	return m.theme.Base().Render(lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.JoinHorizontal(
+	return m.theme.Base().Render(
+		lipgloss.JoinVertical(
 			lipgloss.Center,
+			m.theme.Base().Width(m.widthContent).Render(),
 			qr,
-			m.theme.Base().Width(space).Render(),
-			instructions,
+			base("\nscan or copy to enter payment information"),
+			accent(*m.state.payment.url),
 		),
-	))
+	)
 }
 
 func (m model) paymentCostsView() string {
@@ -595,6 +578,7 @@ func (m model) paymentCostsView() string {
 		m.theme.TextAccent().
 			Render(fmt.Sprintf("Total: %s", formatUSD(int(price+shipping)))),
 	)
+	view.WriteString("\n")
 
 	return view.String()
 }
