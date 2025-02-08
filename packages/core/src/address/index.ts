@@ -8,6 +8,7 @@ import { addressTable } from "./address.sql";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { Shippo } from "../shippo";
+import { cartTable } from "../cart/cart.sql";
 
 export module Address {
   export const Inner = z
@@ -97,6 +98,10 @@ export module Address {
 
   export const remove = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
+      await tx
+        .update(cartTable)
+        .set({ addressID: null })
+        .where(eq(cartTable.addressID, input));
       await tx
         .delete(addressTable)
         .where(

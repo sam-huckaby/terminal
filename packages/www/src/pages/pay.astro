@@ -8,6 +8,7 @@ import PayComponent from '@components/pay'
   <PayComponent
     stripePk={Resource.StripePublic.value}
     apiUrl={Resource.Api.url}
+    name={Astro.url.searchParams.get('name') || undefined}
     client:load
   />
 </Layout>

@@ -7,6 +7,8 @@ import { validator } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
 import { Resource } from "sst";
 import { Link } from "@terminal/core/link/index";
+import { User } from "@terminal/core/user/index";
+import { useUserID } from "@terminal/core/actor";
 
 export module CardApi {
   export const route = new Hono()
@@ -129,14 +131,11 @@ export module CardApi {
                 schema: Result(
                   z
                     .object({
-                      url: z
-                        .string()
-                        .url()
-                        .openapi({
-                          example: Examples.Collect.url,
-                          description:
-                            "Temporary URL that allows a user to enter credit card details over https at terminal.shop.",
-                        }),
+                      url: z.string().url().openapi({
+                        example: Examples.Collect.url,
+                        description:
+                          "Temporary URL that allows a user to enter credit card details over https at terminal.shop.",
+                      }),
                     })
                     .openapi({
                       example: { url: Examples.Collect.url },
@@ -152,7 +151,8 @@ export module CardApi {
       async (c) => {
         const authorization = c.req.header("authorization");
         const token = authorization?.replace("Bearer ", "");
-        const url = `${Resource.Urls.site}/pay#${token}`;
+        const user = await User.fromID(useUserID());
+        const url = `${Resource.Urls.site}/pay?name=${user?.name?.split(" ")[0]}#${token}`;
         const id = await Link.create(url);
         return c.json({ data: { url: `${Resource.Urls.short}/${id}` } }, 200);
       },

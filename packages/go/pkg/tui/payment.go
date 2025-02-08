@@ -501,7 +501,7 @@ func (m model) paymentListView() string {
 			expir,
 		)
 		if m.state.payment.deleting != nil && *m.state.payment.deleting == i {
-			content = accent("are you sure?") + base("\n(y/n)")
+			content = accent("are you sure?") + base(" (y/n)")
 		}
 
 		focused := i == m.state.payment.selected
@@ -572,11 +572,11 @@ func (m model) paymentCostsView() string {
 		shipping = 0
 	}
 
-	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + ", ")
-	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(shipping))) + ", ")
+	view.WriteString(fmt.Sprintf("subtotal: %s", formatUSD(int(price))) + ", ")
+	view.WriteString(fmt.Sprintf("shipping: %s", formatUSD(int(shipping))) + ", ")
 	view.WriteString(
 		m.theme.TextAccent().
-			Render(fmt.Sprintf("Total: %s", formatUSD(int(price+shipping)))),
+			Render(fmt.Sprintf("total: %s", formatUSD(int(price+shipping)))),
 	)
 	view.WriteString("\n")
 

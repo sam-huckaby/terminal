@@ -417,7 +417,7 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 			i == m.state.shipping.selected && (focused || m.page != accountPage),
 		)
 		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
-			content = m.formatListItem(accent("are you sure?")+base("(y/n)"), true)
+			content = m.formatListItem(accent("are you sure?")+base(" (y/n)"), true)
 		}
 		box := m.CreateBoxCustom(
 			content,

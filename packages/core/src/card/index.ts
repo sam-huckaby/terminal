@@ -10,6 +10,7 @@ import { cardTable } from "./card.sql";
 import { VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
+import { cartTable } from "../cart/cart.sql";
 
 export module Card {
   export const Info = z
@@ -150,6 +151,10 @@ export module Card {
       await stripe.paymentMethods
         .detach(paymentMethodID)
         .catch((e) => e.message as string);
+      await tx
+        .update(cartTable)
+        .set({ cardID: null })
+        .where(eq(cartTable.cardID, input));
       await tx
         .delete(cardTable)
         .where(and(eq(cardTable.id, input), eq(cardTable.userID, useUserID())));
