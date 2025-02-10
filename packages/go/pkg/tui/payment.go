@@ -471,10 +471,10 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) PaymentView() string {
 	if m.state.payment.submitting {
-		return m.theme.Base().Width(m.widthContent).Render("verifying payment details...")
+		return m.theme.Base().Width(m.widthContent).Render(" verifying payment details...")
 	}
 	if m.state.payment.generating {
-		return m.theme.Base().Width(m.widthContent).Render("generating payment link...")
+		return m.theme.Base().Width(m.widthContent).Render(" generating payment link...")
 	}
 
 	if m.state.payment.view == paymentFormView {
@@ -527,7 +527,7 @@ func (m model) paymentListView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
-		"\nselect payment method",
+		"\n select payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
 	))
 }
@@ -572,7 +572,7 @@ func (m model) paymentCostsView() string {
 		shipping = 0
 	}
 
-	view.WriteString(fmt.Sprintf("subtotal: %s", formatUSD(int(price))) + ", ")
+	view.WriteString(fmt.Sprintf(" subtotal: %s", formatUSD(int(price))) + ", ")
 	view.WriteString(fmt.Sprintf("shipping: %s", formatUSD(int(shipping))) + ", ")
 	view.WriteString(
 		m.theme.TextAccent().

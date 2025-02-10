@@ -357,7 +357,7 @@ func (m model) View() string {
 			m.theme.Base().
 				Width(m.widthContainer).
 				Height(height).
-				Padding(0, 1).
+				Padding(0, 0).
 				Render(view),
 			footer,
 		)
@@ -487,7 +487,7 @@ func (m model) updateViewport() model {
 	if m.hasScroll {
 		m.widthContent = m.widthContainer - 4
 	} else {
-		m.widthContent = m.widthContainer - 2
+		m.widthContent = m.widthContainer - 0
 	}
 
 	return m

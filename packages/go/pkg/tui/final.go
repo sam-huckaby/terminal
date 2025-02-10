@@ -30,7 +30,7 @@ func (m model) FinalUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) FinalView() string {
-	return m.theme.Base().Width(m.widthContent).Render(lipgloss.JoinVertical(
+	return m.theme.Base().Width(m.widthContent).Padding(0, 1).Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.theme.TextAccent().Render("Thank you for ordering with Terminal Products, Inc.")),
 		"\n\nAt this very moment as you sit, stunned and in awe of the CLI experience that just befell you, a personalised order confirmation email is on its way to your inbox.\n\nSimultaneously, news of your order is being celebrated wildly by the team. Perhaps too wildly by some. Once the excitement of your order has subsided to manageable levels your order will be sealed, shipped, and tracked courtesy of our very own Chief of SST.\n\nYours sincerely,\n\nDax, Adam, Prime, Teej, David\n\nTerminal Products, Inc.",

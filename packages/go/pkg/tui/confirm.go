@@ -73,7 +73,7 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) ConfirmView() string {
 	if m.state.confirm.submitting {
-		return m.theme.Base().Width(m.widthContent).Render("submitting order...")
+		return m.theme.Base().Width(m.widthContent).Render(" submitting order...")
 	}
 
 	card := m.GetSelectedCard()
@@ -86,7 +86,7 @@ func (m model) ConfirmView() string {
 			m.theme.TextAccent().
 				Render(m.state.subscribe.product.Name + ": " + m.state.subscribe.product.Variants[m.state.subscribe.selected].Name),
 		)
-		view.WriteString("\nMonthly Subscription\n")
+		view.WriteString("\nmonthly subscription\n")
 		view.WriteString("\n")
 	}
 	view.WriteString(address.Name + "\n")
@@ -105,7 +105,7 @@ func (m model) ConfirmView() string {
 		}
 	}
 	view.WriteString("\n")
-	view.WriteString(fmt.Sprintf("CC: %s", formatLast4(card.Last4)) + "\n")
+	view.WriteString(fmt.Sprintf("cc: %s", formatLast4(card.Last4)) + "\n")
 	var subtotal int
 	var shipping int
 	if m.IsSubscribing() {
@@ -117,18 +117,18 @@ func (m model) ConfirmView() string {
 	}
 	total := subtotal + shipping
 
-	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(subtotal)) + "\n")
-	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(shipping)) + "\n")
+	view.WriteString(fmt.Sprintf("subtotal: %s", formatUSD(subtotal)) + "\n")
+	view.WriteString(fmt.Sprintf("shipping: %s", formatUSD(shipping)) + "\n")
 	view.WriteString(
 		m.theme.TextAccent().
-			Render(fmt.Sprintf("Total:    %s", formatUSD(total)) + "\n"),
+			Render(fmt.Sprintf("total:    %s", formatUSD(total)) + "\n"),
 	)
 	view.WriteString("\n")
 	view.WriteString(m.theme.TextHighlight().Render("press enter to confirm") + "\n")
 	view.WriteString("\n")
 	view.WriteString(m.theme.TextError().Render(m.state.confirm.error))
 
-	return m.theme.Base().Render(view.String())
+	return m.theme.Base().Padding(0, 1).Render(view.String())
 }
 
 func formatUSD(cents int) string {

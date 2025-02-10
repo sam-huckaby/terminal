@@ -187,7 +187,7 @@ func (m model) AccountView() string {
 		pages.WriteString(content + "\n")
 	}
 
-	pageList := m.theme.Base().Render(pages.String())
+	pageList := m.theme.Base().Padding(0, 1).Render(pages.String())
 	pageListWidth := lipgloss.Width(pageList)
 
 	detailPaddingLeft := 2

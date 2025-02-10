@@ -370,7 +370,7 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) ShippingView(totalWidth int, focused bool) string {
 	if m.state.shipping.submitting {
-		return m.theme.Base().Width(totalWidth).Render("calculating shipping costs...")
+		return m.theme.Base().Width(totalWidth).Render(" calculating shipping costs...")
 	}
 
 	if m.state.shipping.view == shippingListView {
@@ -386,7 +386,7 @@ func (m model) formatListItem(text string, focused bool) string {
 	content := " ☉   " + text
 	hint := ""
 	if focused {
-		content = accent(content)
+		content = accent(" ☉   " + text)
 		hint = accent("enter")
 	}
 
@@ -441,13 +441,13 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 		return m.theme.Base().Render(lipgloss.JoinVertical(
 			lipgloss.Left,
 			m.theme.TextError().Render(m.state.shipping.error),
-			"\nselect shipping address",
+			"\n select shipping address",
 			addressList,
 		))
 	} else {
 		return m.theme.Base().Render(lipgloss.JoinVertical(
 			lipgloss.Left,
-			"\nselect shipping address",
+			"\n select shipping address",
 			addressList,
 		))
 	}

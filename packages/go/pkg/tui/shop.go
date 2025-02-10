@@ -224,7 +224,6 @@ func (m model) ShopView() string {
 
 	// If we have featured products, show sections
 	if featuredCount > 0 {
-		// Featured section
 		products.WriteString(sectionHeader.Render("~ featured ~"))
 		products.WriteString("\n")
 
@@ -240,7 +239,6 @@ func (m model) ShopView() string {
 
 		if featuredCount < len(m.products) {
 			products.WriteString("\n")
-			// Originals section
 			products.WriteString(sectionHeader.Render("~ originals ~"))
 			products.WriteString("\n")
 
@@ -268,7 +266,7 @@ func (m model) ShopView() string {
 		}
 	}
 
-	productList := m.theme.Base().Render(products.String())
+	productList := m.theme.Base().Padding(0, 1).Render(products.String())
 	productListWidth := lipgloss.Width(productList)
 	detailPaddingLeft := 2
 	detailWidth := m.widthContent - productListWidth - detailPaddingLeft
