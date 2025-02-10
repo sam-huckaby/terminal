@@ -221,6 +221,7 @@ const PayComponent: Component<PayProps> = (props) => {
           </Match>
           <Match when={form.submitting}>
             <Line state="busy">
+              <span class="mr-2">sending information to stripe</span>
               <Spinner />
             </Line>
           </Match>
