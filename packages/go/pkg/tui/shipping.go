@@ -225,7 +225,11 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
-				m.client.Address.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
+				_, err := m.client.Address.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
+				if err != nil {
+					m.state.shipping.error = api.GetErrorMessage(err)
+					return m, nil
+				}
 				if len(m.addresses)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
@@ -440,9 +444,9 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 	if m.state.shipping.error != "" {
 		return m.theme.Base().Render(lipgloss.JoinVertical(
 			lipgloss.Left,
-			m.theme.TextError().Render(m.state.shipping.error),
 			"\n select shipping address",
 			addressList,
+			m.theme.TextError().Padding(0, 1).Render(m.state.shipping.error),
 		))
 	} else {
 		return m.theme.Base().Render(lipgloss.JoinVertical(

@@ -11,6 +11,7 @@ import { VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { cartTable } from "../cart/cart.sql";
+import { subscriptionTable } from "../subscription/subscription.sql";
 
 export module Card {
   export const Info = z
@@ -137,6 +138,18 @@ export module Card {
 
   export const remove = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
+      const subscriptions = await tx
+        .select()
+        .from(subscriptionTable)
+        .where(eq(subscriptionTable.cardID, input));
+      if (subscriptions.length > 0) {
+        throw new VisibleError(
+          "input",
+          "card.in-use",
+          "card is in use by a subscription, please cancel the subscription first.",
+        );
+      }
+
       const paymentMethodID = await tx
         .select({ stripePaymentMethodID: cardTable.stripePaymentMethodID })
         .from(cardTable)

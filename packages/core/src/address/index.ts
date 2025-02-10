@@ -9,6 +9,8 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { Shippo } from "../shippo";
 import { cartTable } from "../cart/cart.sql";
+import { subscriptionTable } from "../subscription/subscription.sql";
+import { VisibleError } from "../error";
 
 export module Address {
   export const Inner = z
@@ -98,6 +100,18 @@ export module Address {
 
   export const remove = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
+      const subscriptions = await tx
+        .select()
+        .from(subscriptionTable)
+        .where(eq(subscriptionTable.addressID, input));
+      if (subscriptions.length > 0) {
+        throw new VisibleError(
+          "input",
+          "address.in-use",
+          "address is in use by a subscription, please cancel the subscription first.",
+        );
+      }
+
       await tx
         .update(cartTable)
         .set({ addressID: null })

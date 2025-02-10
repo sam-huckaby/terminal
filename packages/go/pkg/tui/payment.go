@@ -286,7 +286,11 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.payment.deleting != nil {
 				m.state.payment.deleting = nil
-				m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
+				_, err := m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
+				if err != nil {
+					m.state.payment.error = api.GetErrorMessage(err)
+					return m, nil
+				}
 				if len(m.cards)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
@@ -529,6 +533,7 @@ func (m model) paymentListView() string {
 		m.paymentCostsView(),
 		"\n select payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
+		m.theme.TextError().Padding(0, 1).Render(m.state.payment.error),
 	))
 }
 
@@ -539,7 +544,7 @@ func (m model) paymentFormView() string {
 		"\n",
 		// "\ncreate new payment method:\n",
 		m.state.payment.form.View(),
-		m.theme.TextError().Render(m.state.payment.error),
+		m.theme.TextError().Padding(0, 1).Render(m.state.payment.error),
 	))
 }
 
