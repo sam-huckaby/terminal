@@ -15,9 +15,11 @@ export const key = new tls.PrivateKey("SSHKey", {
   algorithm: "ED25519",
 });
 
-cluster.addService("SSH", {
+new sst.aws.Service("SSH", {
+  cluster,
   cpu: "2 vCPU",
   memory: "4 GB",
+  wait: true,
   image: {
     context: "./packages/go",
   },
