@@ -8,5 +8,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o ssh ./cmd/ssh/main.go
 # Second stage: build the runtime image.
 FROM mirror.gcr.io/alpine
 WORKDIR /root/
+ENV FOO=1
 COPY --from=builder /app/ssh .
 CMD TERM=xterm-256color ./ssh
