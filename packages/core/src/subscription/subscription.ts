@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { SubscriptionFrequency, subscriptionTable } from "./subscription.sql";
+import {
+  SubscriptionFrequency,
+  SubscriptionSchedule,
+  subscriptionTable,
+} from "./subscription.sql";
 import { useTransaction } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
 import { useUserID } from "../actor";
@@ -36,6 +40,9 @@ export module Subscription {
         description: "Frequency of the subscription.",
         example: Examples.Subscription.frequency,
       }),
+      schedule: SubscriptionSchedule.openapi({
+        description: "Schedule of the subscription.",
+      }).optional(),
       next: z.date().optional().openapi({
         description: "Next shipment and billing date for the subscription.",
         example: Examples.Subscription.next,
@@ -64,6 +71,7 @@ export module Subscription {
               frequency: r.frequency,
               addressID: r.addressID,
               productVariantID: r.productVariantID,
+              schedule: r.schedule || undefined,
             }),
           ),
         ),
@@ -101,6 +109,7 @@ export module Subscription {
           addressID: input.addressID,
           cardID: input.cardID,
           frequency: input.frequency,
+          schedule: input.schedule,
         })
         .onDuplicateKeyUpdate({
           set: {
@@ -108,6 +117,7 @@ export module Subscription {
             addressID: sql`VALUES(shipping_id)`,
             cardID: sql`VALUES(card_id)`,
             frequency: sql`VALUES(frequency)`,
+            schedule: sql`VALUES(schedule)`,
             timeDeleted: null,
           },
         });
