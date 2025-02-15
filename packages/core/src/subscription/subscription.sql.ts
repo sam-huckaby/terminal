@@ -1,4 +1,4 @@
-import { mysqlTable, unique, int, varchar } from "drizzle-orm/mysql-core";
+import { mysqlTable, unique, int, varchar, json } from "drizzle-orm/mysql-core";
 import { cardTable } from "../card/card.sql";
 import { id, timestamp, timestamps, ulid } from "../drizzle/types";
 import { productVariantTable } from "../product/product.sql";
@@ -22,6 +22,7 @@ export const subscriptionTable = mysqlTable(
     })
       .$type<SubscriptionFrequency>()
       .notNull(),
+    schedule: json("schedule").$type<SubscriptionSchedule>(),
     productVariantID: ulid("product_variant_id")
       .references(() => productVariantTable.id, {
         onDelete: "cascade",
@@ -48,3 +49,14 @@ export const SubscriptionFrequency = z.enum([
   "yearly",
 ]);
 export type SubscriptionFrequency = z.infer<typeof SubscriptionFrequency>;
+
+export const SubscriptionSchedule = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("fixed"),
+  }),
+  z.object({
+    type: z.literal("weekly"),
+    interval: z.number().int().min(1),
+  }),
+]);
+export type SubscriptionSchedule = z.infer<typeof SubscriptionSchedule>;

@@ -35,6 +35,7 @@
         "ulid": "2.3.0",
         "zod": "*",
         "zod-openapi": "4.1.0",
+        "zod-to-json-schema": "3.24.1",
       },
       "devDependencies": {
         "@types/bun": "1.1.5",
