@@ -110,6 +110,9 @@ func (m model) SubscriptionsUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) formatSubscription(subscription terminal.Subscription, totalWidth int) string {
+	base := m.theme.Base().Render
+	accent := m.theme.TextAccent().Render
+
 	var product *terminal.Product
 	var variant *terminal.ProductVariant
 	for _, p := range m.products {
@@ -121,20 +124,31 @@ func (m model) formatSubscription(subscription terminal.Subscription, totalWidth
 		}
 	}
 
-	price := fmt.Sprintf(" $%2v/mo", variant.Price/100)
+	title := accent(fmt.Sprintf("%dx %s", subscription.Quantity, product.Name))
+	if product.Name == "cron" {
+		title = accent(product.Name)
+	} else {
+		scheduleType := ""
+		if subscription.Schedule.Type == "weekly" {
+			scheduleType = "weeks"
+		}
+		title = accent(title) + base(fmt.Sprintf(" (every %d %s)", subscription.Schedule.Interval, scheduleType))
+	}
+
+	price := fmt.Sprintf(" $%2v/mo", subscription.Quantity*variant.Price/100)
 	space := totalWidth - lipgloss.Width(
-		product.Name,
+		title,
 	) - lipgloss.Width(price) - 2
 	content := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		m.theme.TextAccent().Render(product.Name),
+		title,
 		m.theme.Base().Width(space).Render(),
 		m.theme.Base().Render(price),
 	)
 
 	lines := []string{}
 	lines = append(lines, content)
-	lines = append(lines, variant.Name)
+	lines = append(lines, fmt.Sprintf("next shipment: %s", subscription.Next))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }

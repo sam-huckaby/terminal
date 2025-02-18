@@ -64,7 +64,8 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 		log.Error(msg.message)
 		return m.ShippingSwitch()
 	case terminal.Order:
-		return m.FinalSwitch()
+		m.order = &msg
+		return m.FinalSubSwitch()
 	case *terminal.SubscriptionNewResponse:
 		return m.FinalSwitch()
 	}

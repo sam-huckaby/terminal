@@ -51,12 +51,16 @@ export const SubscriptionFrequency = z.enum([
 export type SubscriptionFrequency = z.infer<typeof SubscriptionFrequency>;
 
 export const SubscriptionSchedule = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("fixed"),
-  }),
-  z.object({
-    type: z.literal("weekly"),
-    interval: z.number().int().min(1),
-  }),
+  z
+    .object({
+      type: z.literal("fixed"),
+    })
+    .openapi({ title: "fixed" }),
+  z
+    .object({
+      type: z.literal("weekly"),
+      interval: z.number().int().min(1),
+    })
+    .openapi({ title: "weekly" }),
 ]);
 export type SubscriptionSchedule = z.infer<typeof SubscriptionSchedule>;

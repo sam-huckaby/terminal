@@ -89,7 +89,7 @@ client_settings:
       read_env: TERMINAL_BEARER_TOKEN
 environments:
   production: https://api.terminal.shop/
-  sandbox: https://sandbox.terminal.shop/
+  dev: https://api.dev.terminal.shop/
 query_settings:
   nested_format: brackets
   array_format: comma

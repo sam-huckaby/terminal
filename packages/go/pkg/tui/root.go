@@ -26,6 +26,7 @@ const (
 	subscribePage
 	shippingPage
 	confirmPage
+	finalSubPage
 	finalPage
 	subscriptionsPage
 	tokensPage
@@ -59,6 +60,7 @@ type model struct {
 	tokens        []terminal.Token
 	apps          []terminal.App
 	orders        []terminal.Order
+	order         *terminal.Order
 	cart          terminal.Cart
 	subscription  terminal.SubscriptionParam
 	renderer      *lipgloss.Renderer
@@ -95,6 +97,7 @@ type state struct {
 	confirm       confirmState
 	faq           faqState
 	menu          menuState
+	finalSub      finalSubState
 }
 
 type children struct {
@@ -279,6 +282,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.ShippingUpdate(msg)
 	case confirmPage:
 		m, cmd = m.ConfirmUpdate(msg)
+	case finalSubPage:
+		m, cmd = m.FinalSubUpdate(msg)
 	case finalPage:
 		m, cmd = m.FinalUpdate(msg)
 	}
@@ -391,6 +396,8 @@ func (m model) getContent() string {
 		page = m.ShippingView(m.widthContent-2, false)
 	case confirmPage:
 		page = m.ConfirmView()
+	case finalSubPage:
+		page = m.FinalSubView()
 	case finalPage:
 		page = m.FinalView()
 	case accountPage:

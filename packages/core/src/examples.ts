@@ -107,6 +107,7 @@ export module Examples {
     addressID: Shipping.id,
     cardID: Card.id,
     frequency: "monthly" as const,
+    schedule: { type: "weekly" as const, interval: 3 },
     next: new Date("2025-02-01 19:36:19.000"),
   };
 

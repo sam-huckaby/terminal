@@ -59,15 +59,17 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "enter":
 			if product.Subscription == terminal.ProductSubscriptionRequired {
 				subscribed := false
+				subscriptionId := ""
 				for _, s := range m.subscriptions {
 					for _, v := range product.Variants {
 						if v.ID == s.ProductVariantID {
+							subscriptionId = s.ID
 							subscribed = true
 						}
 					}
 				}
 				if subscribed {
-					return m.SubscriptionManageSwitch(product.ID)
+					return m.SubscriptionManageSwitch(subscriptionId)
 				} else {
 					m.state.subscribe.product = &product
 					return m.SubscribeSwitch()

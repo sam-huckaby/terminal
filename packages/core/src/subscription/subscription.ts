@@ -40,9 +40,10 @@ export module Subscription {
         description: "Frequency of the subscription.",
         example: Examples.Subscription.frequency,
       }),
-      schedule: SubscriptionSchedule.openapi({
+      schedule: SubscriptionSchedule.optional().openapi({
         description: "Schedule of the subscription.",
-      }).optional(),
+        example: Examples.Subscription.schedule,
+      }),
       next: z.date().optional().openapi({
         description: "Next shipment and billing date for the subscription.",
         example: Examples.Subscription.next,
@@ -71,6 +72,7 @@ export module Subscription {
               frequency: r.frequency,
               addressID: r.addressID,
               productVariantID: r.productVariantID,
+              next: r.timeNext || undefined,
               schedule: r.schedule || undefined,
             }),
           ),

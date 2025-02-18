@@ -182,7 +182,7 @@ app.get(
       },
       security: [{ Bearer: [] }],
       servers: [
-        { description: "Sandbox", url: "https://api.sandbox.terminal.shop" },
+        { description: "Dev", url: "https://api.dev.terminal.shop" },
         { description: "Production", url: "https://api.terminal.shop" },
       ],
     },

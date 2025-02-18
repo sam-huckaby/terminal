@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"log/slog"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -34,6 +35,7 @@ func (m model) LoadCmds() []tea.Cmd {
 	cmds = append(cmds, func() tea.Msg {
 		response, err := m.client.View.Init(m.context)
 		if err != nil {
+			slog.Error(err.Error())
 		}
 		return response.Data
 	})
