@@ -1,3 +1,4 @@
+import "zod-openapi/extend";
 import { mysqlTable, unique, int, varchar, json } from "drizzle-orm/mysql-core";
 import { cardTable } from "../card/card.sql";
 import { id, timestamp, timestamps, ulid } from "../drizzle/types";
