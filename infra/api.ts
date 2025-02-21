@@ -90,6 +90,14 @@ new sst.aws.Cron("InventoryTracker", {
   },
 });
 
+new sst.aws.Cron("SubscriptionProcessor", {
+  schedule: "rate(1 day)",
+  job: {
+    link: [database, bus, ...Object.values(secret)],
+    handler: "./packages/functions/src/cron/subscription.handler",
+  },
+});
+
 export const outputs = {
   auth: auth.url,
   api: api.url,

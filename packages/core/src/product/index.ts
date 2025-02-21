@@ -9,10 +9,12 @@ import { eq } from "drizzle-orm";
 import { first, groupBy, map, pipe, values } from "remeda";
 import { fn } from "../util/fn";
 import { createID } from "../util/id";
-import { SubscriptionSetting } from "../subscription/subscription";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { filter, FilterContext, useFilterContext } from "./filter";
+
+export const SubscriptionSetting = z.enum(["allowed", "required"]);
+export type SubscriptionSetting = z.infer<typeof SubscriptionSetting>;
 
 export module Product {
   export const Variant = z

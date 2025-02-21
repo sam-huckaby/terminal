@@ -371,9 +371,9 @@ export module Order {
             email: userTable.email,
           })
           .from(userTable)
-          .innerJoin(addressTable, eq(cartTable.addressID, addressTable.id))
-          .innerJoin(cardTable, eq(cartTable.cardID, cardTable.id))
-          .where(eq(cartTable.userID, userID))
+          .innerJoin(addressTable, eq(addressTable.id, input.addressID))
+          .innerJoin(cardTable, eq(cardTable.id, input.cardID))
+          .where(eq(userTable.id, userID))
           .then((rows) => rows[0]),
       );
       if (!match) throw new Error("Card or address not found");

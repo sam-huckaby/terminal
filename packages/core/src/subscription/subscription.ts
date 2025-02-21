@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isNull, lt } from "drizzle-orm";
 import {
   SubscriptionFrequency,
   SubscriptionSchedule,
@@ -6,12 +7,15 @@ import {
 } from "./subscription.sql";
 import { useTransaction } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
-import { useUserID } from "../actor";
+import { ActorContext, useUserID } from "../actor";
 import { createID } from "../util/id";
 import { fn } from "../util/fn";
 import { productTable, productVariantTable } from "../product/product.sql";
 import { Common } from "../common";
 import { Examples } from "../examples";
+import { DateTime } from "luxon";
+import { Order } from "../order/order";
+import { filter, groupBy, pipe, values } from "remeda";
 
 export module Subscription {
   export const Info = z
@@ -93,9 +97,10 @@ export module Subscription {
         )
         .where(eq(productVariantTable.id, input.productVariantID))
         .then((rows) => rows[0]);
-      if (!product?.subscription) {
-        throw new Error("Product variant does not allow subscriptions");
-      }
+      if (!product) throw new Error("Product variant not found");
+      // if (!product?.subscription) {
+      //   throw new Error("Product variant does not allow subscriptions");
+      // }
       if (product.subscription === "required" && input.frequency !== "fixed") {
         throw new Error(
           "Subscription frequency must be 'fixed' for this product",
@@ -105,6 +110,12 @@ export module Subscription {
         .insert(subscriptionTable)
         .values({
           id,
+          timeNext: input.schedule
+            ? next({
+                schedule: input.schedule,
+                last: new Date(),
+              })
+            : undefined,
           userID: useUserID(),
           productVariantID: input.productVariantID,
           quantity: input.quantity,
@@ -126,6 +137,82 @@ export module Subscription {
     }),
   );
 
+  export const next = fn(
+    z.object({
+      schedule: SubscriptionSchedule,
+      last: z.date(),
+    }),
+    (input) => {
+      if (input.schedule.type === "fixed") return undefined;
+      return DateTime.fromJSDate(input.last)
+        .toUTC()
+        .startOf("week")
+        .plus({ weeks: input.schedule.interval })
+        .toJSDate();
+    },
+  );
+
+  export async function process() {
+    const subs = await useTransaction((tx) =>
+      tx
+        .select()
+        .from(subscriptionTable)
+        .where(
+          and(
+            lt(subscriptionTable.timeNext, DateTime.now().toUTC().toJSDate()),
+            isNull(subscriptionTable.timeDeleted),
+          ),
+        ),
+    );
+
+    console.log("processing", subs.length, "subscriptions");
+    const grouped = pipe(
+      subs,
+      filter((s) => s.schedule?.type === "weekly"),
+      groupBy((s) => s.productVariantID),
+      values(),
+    );
+    for (const group of grouped) {
+      await ActorContext.with(
+        {
+          type: "user",
+          properties: {
+            userID: group[0].userID,
+          },
+        },
+        async () => {
+          console.log("creating order for", group[0].userID);
+          const order = await Order.create({
+            addressID: group[0].addressID,
+            cardID: group[0].cardID,
+            variants: Object.fromEntries(
+              group.map((s) => [s.productVariantID, s.quantity] as const),
+            ),
+          }).catch((ex) => {
+            console.log("error creating order");
+            console.error(ex);
+          });
+          if (!order) return;
+          for (const sub of group) {
+            const n = next({
+              schedule: sub.schedule!,
+              last: sub.timeNext || new Date(),
+            });
+
+            await useTransaction(async (tx) => {
+              await tx
+                .update(subscriptionTable)
+                .set({
+                  timeNext: n,
+                })
+                .where(eq(subscriptionTable.id, sub.id));
+            });
+          }
+        },
+      );
+    }
+  }
+
   export const remove = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
       await tx
@@ -139,6 +226,3 @@ export module Subscription {
     }),
   );
 }
-
-export const SubscriptionSetting = z.enum(["allowed", "required"]);
-export type SubscriptionSetting = z.infer<typeof SubscriptionSetting>;
