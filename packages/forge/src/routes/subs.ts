@@ -4,6 +4,10 @@ import { and, count, desc, eq, isNull } from "@terminal/core/drizzle/index";
 import { subscriptionTable } from "@terminal/core/subscription/subscription.sql";
 import { userTable } from "@terminal/core/user/user.sql";
 import { addressTable } from "@terminal/core/address/address.sql";
+import {
+  productTable,
+  productVariantTable,
+} from "@terminal/core/product/product.sql";
 
 export const Subs = new Page({
   name: "Subs",
@@ -51,6 +55,7 @@ export const Subs = new Page({
                   name: userTable.name,
                   email: userTable.email,
                   address: addressTable.address,
+                  product: productTable.name,
                   created: subscriptionTable.timeCreated,
                   next: subscriptionTable.timeNext,
                 })
@@ -62,6 +67,17 @@ export const Subs = new Page({
                 .innerJoin(
                   addressTable,
                   eq(subscriptionTable.addressID, addressTable.id),
+                )
+                .innerJoin(
+                  productVariantTable,
+                  eq(
+                    subscriptionTable.productVariantID,
+                    productVariantTable.id,
+                  ),
+                )
+                .innerJoin(
+                  productTable,
+                  eq(productVariantTable.productID, productTable.id),
                 )
                 .orderBy(desc(subscriptionTable.id))
                 .offset(input.offset)
@@ -83,6 +99,7 @@ export const Subs = new Page({
             "id",
             "name",
             "email",
+            "product",
             {
               label: "address",
               renderCell: (row) => ({
