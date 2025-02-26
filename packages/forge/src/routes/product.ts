@@ -162,33 +162,43 @@ export default new Page({
       unlisted: true,
       async handler() {
         const product = await selectProduct();
-        const [name, description, order, subscription, featured, filters] =
-          await io.group([
-            io.input.text("name", {
-              defaultValue: product.name,
-            }),
-            io.input.text("description", {
-              defaultValue: product.description,
-              multiline: true,
-            }),
-            io.input.number("order", {
-              defaultValue: product.order,
-            }),
-            io.select.single("subscription", {
-              options: ["none", "allowed", "required"],
-              defaultValue: product.subscription || "none",
-            }),
-            io.input.boolean("featured", {
-              defaultValue: product.tags?.["featured"] === "true" || false,
-            }),
-            io.select.multiple("filters", {
-              options: Object.keys(Filters).map((key) => ({
-                label: key,
-                value: key,
-              })),
-              defaultValue: product.filters,
-            }),
-          ]);
+        const [
+          name,
+          description,
+          order,
+          subscription,
+          featured,
+          color,
+          filters,
+        ] = await io.group([
+          io.input.text("name", {
+            defaultValue: product.name,
+          }),
+          io.input.text("description", {
+            defaultValue: product.description,
+            multiline: true,
+          }),
+          io.input.number("order", {
+            defaultValue: product.order,
+          }),
+          io.select.single("subscription", {
+            options: ["none", "allowed", "required"],
+            defaultValue: product.subscription || "none",
+          }),
+          io.input.boolean("featured", {
+            defaultValue: product.tags?.["featured"] === "true" || false,
+          }),
+          io.input.text("color", {
+            defaultValue: product.tags?.["color"],
+          }),
+          io.select.multiple("filters", {
+            options: Object.keys(Filters).map((key) => ({
+              label: key,
+              value: key,
+            })),
+            defaultValue: product.filters,
+          }),
+        ]);
         console.log(filters);
         await Product.edit({
           id: product.id,
@@ -198,7 +208,11 @@ export default new Page({
           filters: filters.map((item) => item.value as Filter),
           subscription:
             subscription === "none" ? undefined : (subscription as any),
-          tags: { ...product.tags, featured: featured ? "true" : "false" },
+          tags: {
+            ...product.tags,
+            featured: featured ? "true" : "false",
+            color: color,
+          },
         });
         await ctx.redirect({
           route: "product/detail",

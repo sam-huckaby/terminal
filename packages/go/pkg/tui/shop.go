@@ -327,16 +327,10 @@ func (m model) ShopView() string {
 func (m model) UpdateSelectedTheme() model {
 	var highlight string
 	product := m.products[m.state.shop.selected]
-	if strings.ToLower(product.Name) == "segfault" {
-		highlight = "#169FC1"
-	} else if strings.ToLower(product.Name) == "dark mode" {
-		highlight = "#118B39"
-	} else if strings.ToLower(product.Name) == "[object object]" {
-		highlight = "#F5BB1D"
-	} else if strings.ToLower(product.Name) == "404" {
-		highlight = "#D53C81"
-	} else if strings.ToLower(product.Name) == "artisan" {
-		highlight = "#EB4432"
+	for key, value := range product.Tags {
+		if key == "color" {
+			highlight = value
+		}
 	}
 
 	if highlight != "" {

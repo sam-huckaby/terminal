@@ -42,23 +42,6 @@ function ProductSection(props: {
   )
 }
 
-function getHighlightColor(productName: string): string {
-  switch (productName) {
-    case 'segfault':
-      return '#169FC1'
-    case 'dark mode':
-      return '#118B39'
-    case '[object Object]':
-      return '#F5BB1D'
-    case '404':
-      return '#D53C81'
-    case 'artisan':
-      return '#EB4432'
-    default:
-      return '#FF5C00'
-  }
-}
-
 export default function ShopPage() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const router = useRouter()
@@ -132,9 +115,7 @@ export default function ShopPage() {
     quantity: 0,
     subtotal: 0,
   }
-  const highlightColor = selectedProduct
-    ? getHighlightColor(selectedProduct.name)
-    : '#FF5C00'
+  const highlightColor = selectedProduct.tags?.color ?? '#FF5C00'
 
   return (
     <Layout>
