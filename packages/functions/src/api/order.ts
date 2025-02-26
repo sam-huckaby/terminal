@@ -85,5 +85,63 @@ export module OrderApi {
         if (!order) return c.json({ error: "Order not found" }, 404);
         return c.json({ data: order }, 200);
       },
+    )
+    .post(
+      "/",
+      describeRoute({
+        tags: ["Order"],
+        summary: "Create order",
+        description:
+          "Create an order without a cart. The order will be placed immediately.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(
+                  Order.Info.shape.id.openapi({
+                    description: "Order ID.",
+                    example: Examples.Order.id,
+                  }),
+                ),
+              },
+            },
+            description: "Order ID.",
+          },
+        },
+      }),
+      validator(
+        "json",
+        z
+          .object({
+            variants: z.record(z.number().int()).openapi({
+              description:
+                "Product variants to include in the order, along with their quantities.",
+              example: {
+                [Examples.ProductVariant.id]: 1,
+              },
+            }),
+            cardID: z
+              .string()
+              .openapi({ description: "Card ID.", example: Examples.Card.id }),
+            addressID: z.string().openapi({
+              description: "Shipping address ID.",
+              example: Examples.Shipping.id,
+            }),
+          })
+          .openapi({
+            description: "Order information.",
+            example: {
+              cardID: Examples.Card.id,
+              addressID: Examples.Shipping.id,
+              variants: {
+                [Examples.ProductVariant.id]: 1,
+              },
+            },
+          }),
+      ),
+      async (c) => {
+        const orderID = await Order.create(c.req.valid("json"));
+        return c.json({ data: orderID }, 200);
+      },
     );
 }

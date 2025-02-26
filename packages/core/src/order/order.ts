@@ -481,7 +481,7 @@ export module Order {
             id: createID("cartItem"),
             amount: item.price,
             productVariantID: item.id,
-            quantity: item.weight,
+            quantity: item.quantity,
             orderID,
           });
         }
