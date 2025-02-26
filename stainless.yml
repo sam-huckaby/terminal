@@ -48,6 +48,7 @@ resources:
       order: Order
     methods:
       get: get /order/{id}
+      create: post /order
       list: get /order
   subscription:
     models:
@@ -105,7 +106,7 @@ readme:
       params: *ref_0
 targets:
   node:
-    package_name: '@terminaldotshop/sdk'
+    package_name: "@terminaldotshop/sdk"
     production_repo: terminaldotshop/terminal-sdk-js
     publish:
       npm: true
@@ -149,4 +150,3 @@ targets:
     options:
       infer_all_services: true
     skip: false
-
