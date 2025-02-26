@@ -125,7 +125,7 @@ func (m model) SubscribeView() string {
 	var lines []string
 	for i, item := range m.VisibleSubscribeItems() {
 		name := accent(item.Name)
-		subtotal := m.theme.Base().Render(fmt.Sprintf("$%v/mo", item.Price/100))
+		subtotal := m.theme.Base().Render(fmt.Sprintf("$%v", item.Price/100))
 		space := m.widthContent - lipgloss.Width(
 			name,
 		) - lipgloss.Width(

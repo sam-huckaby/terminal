@@ -25,6 +25,10 @@ export namespace Api {
           description: "Redirect URI of the app.",
           example: Examples.App.redirectURI,
         }),
+        secret: z.string().openapi({
+          description: "OAuth 2.0 client secret of the app (obfuscated).",
+          example: Examples.App.secret,
+        }),
       })
       .openapi({
         ref: "App",
@@ -101,6 +105,12 @@ export namespace Api {
           ),
     );
 
+    function obfuscate(secret: string) {
+      const [prefix, id] = secret.split("_");
+      const last4 = id?.slice(-4);
+      return `${prefix}_******${last4}`;
+    }
+
     function serialize(
       input: typeof apiClientTable.$inferSelect,
     ): z.infer<typeof Info> {
@@ -108,6 +118,7 @@ export namespace Api {
         id: input.id,
         name: input.name,
         redirectURI: input.redirectURI,
+        secret: obfuscate(input.secret),
       };
     }
 

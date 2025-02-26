@@ -135,7 +135,7 @@ func (m model) formatSubscription(subscription terminal.Subscription, totalWidth
 		title = accent(title) + base(fmt.Sprintf(" (every %d %s)", subscription.Schedule.Interval, scheduleType))
 	}
 
-	price := fmt.Sprintf(" $%2v/mo", subscription.Quantity*variant.Price/100)
+	price := fmt.Sprintf(" $%2v", subscription.Quantity*variant.Price/100)
 	space := totalWidth - lipgloss.Width(
 		title,
 	) - lipgloss.Width(price) - 2

@@ -385,16 +385,29 @@ func (m model) ShippingView(totalWidth int, focused bool) string {
 }
 
 func (m model) formatListItem(text string, focused bool) string {
+	return m.formatListItemCustom(text, focused, m.widthContent, true)
+}
+
+func (m model) formatListItemCustom(text string, focused bool, totalWidth int, showRadio bool) string {
 	accent := m.theme.TextAccent().Render
 
-	content := " ☉   " + text
+	content := "     " + text
 	hint := ""
 	if focused {
 		content = accent(" ☉   " + text)
 		hint = accent("enter")
 	}
 
-	hintSpace := m.widthContent - lipgloss.Width(hint) - lipgloss.Width(content) - 6
+	if !showRadio {
+		content = text
+	}
+
+	padding := 6
+	if !showRadio {
+		padding = 2
+	}
+
+	hintSpace := totalWidth - lipgloss.Width(hint) - lipgloss.Width(content) - padding
 	return content + m.theme.Base().Width(hintSpace).Render() + hint
 }
 

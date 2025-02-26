@@ -121,7 +121,7 @@ export module Examples {
 
   export const App = {
     id: Id("apiClient"),
-    secret: Id("apiSecret"),
+    secret: "sec_******XXXX",
     name: "Example App",
     redirectURI: "https://example.com/callback",
   };

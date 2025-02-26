@@ -30,6 +30,7 @@ const (
 	finalPage
 	subscriptionsPage
 	tokensPage
+	appsPage
 	ordersPage
 	aboutPage
 	faqPage
@@ -87,6 +88,7 @@ type state struct {
 	shipping      shippingState
 	subscriptions subscriptionsState
 	tokens        tokensState
+	apps          appsState
 	orders        ordersState
 	shop          shopState
 	account       accountState
@@ -123,6 +125,7 @@ func NewModel(
 			ordersPage,
 			subscriptionsPage,
 			tokensPage,
+			appsPage,
 			// shippingPage,
 			// paymentPage,
 			faqPage,
@@ -239,6 +242,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.addresses = msg.Addresses
 		m.subscriptions = msg.Subscriptions
 		m.tokens = msg.Tokens
+		m.apps = msg.Apps
 		m.orders = msg.Orders
 		m = m.reorderProducts()
 	case terminal.Profile:
@@ -256,6 +260,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.subscriptions = msg
 	case []terminal.Token:
 		m.tokens = msg
+	case []terminal.App:
+		m.apps = msg
 	case []terminal.Order:
 		m.orders = msg
 	}
@@ -297,7 +303,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.hasMenu = m.page == shopPage ||
-		m.page == accountPage
+		(m.page == accountPage && m.state.apps.editing == false)
 		// m.page == aboutPage ||
 		// m.page == faqPage
 

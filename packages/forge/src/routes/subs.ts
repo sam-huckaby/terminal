@@ -19,17 +19,6 @@ export const Subs = new Page({
         .where(and(isNull(subscriptionTable.timeDeleted))),
     );
 
-    const frequencyTotals = await useTransaction((tx) =>
-      tx
-        .select({
-          frequency: subscriptionTable.frequency,
-          count: count(subscriptionTable.id),
-        })
-        .from(subscriptionTable)
-        .where(isNull(subscriptionTable.timeDeleted))
-        .groupBy(subscriptionTable.frequency),
-    );
-
     return new Layout({
       title: "Subscription",
       menuItems: [],
@@ -40,12 +29,6 @@ export const Subs = new Page({
             level: 3,
           },
         ),
-        io.display.chart("Subscription Frequencies", {
-          type: "pie",
-          data: frequencyTotals,
-          dataKeys: ["count"],
-          dataLabelKey: "frequency",
-        }),
         io.display.table("Subscriptions", {
           getData: async (input) => {
             return useTransaction(async (tx) => ({
@@ -57,6 +40,7 @@ export const Subs = new Page({
                   address: addressTable.address,
                   product: productTable.name,
                   created: subscriptionTable.timeCreated,
+                  schedule: subscriptionTable.schedule,
                   next: subscriptionTable.timeNext,
                 })
                 .from(subscriptionTable)
@@ -112,6 +96,15 @@ export const Subs = new Page({
               }),
             },
             "created",
+            {
+              label: "schedule",
+              renderCell: (row) => ({
+                label:
+                  row.schedule?.type === "weekly"
+                    ? `every ${row.schedule?.interval} weeks`
+                    : row.schedule?.type,
+              }),
+            },
             "next",
           ],
           isSortable: false,
