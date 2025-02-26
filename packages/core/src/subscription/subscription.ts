@@ -122,7 +122,12 @@ export module Subscription {
           addressID: input.addressID,
           cardID: input.cardID,
           frequency: input.frequency,
-          schedule: input.schedule,
+          schedule:
+            input.frequency === "fixed"
+              ? {
+                  type: "fixed",
+                }
+              : input.schedule,
         })
         .onDuplicateKeyUpdate({
           set: {
