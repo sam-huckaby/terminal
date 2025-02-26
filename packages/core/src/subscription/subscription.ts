@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { isNull, lt } from "drizzle-orm";
-import {
-  SubscriptionFrequency,
-  SubscriptionSchedule,
-  subscriptionTable,
-} from "./subscription.sql";
+import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
 import { useTransaction } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
 import { ActorContext, useUserID } from "../actor";
@@ -40,10 +36,6 @@ export module Subscription {
         description: "ID of the card used for the subscription.",
         example: Examples.Subscription.cardID,
       }),
-      frequency: SubscriptionFrequency.openapi({
-        description: "Frequency of the subscription.",
-        example: Examples.Subscription.frequency,
-      }),
       schedule: SubscriptionSchedule.optional().openapi({
         description: "Schedule of the subscription.",
         example: Examples.Subscription.schedule,
@@ -73,7 +65,6 @@ export module Subscription {
               id: r.id,
               cardID: r.cardID,
               quantity: r.quantity,
-              frequency: r.frequency,
               addressID: r.addressID,
               productVariantID: r.productVariantID,
               next: r.timeNext || undefined,
@@ -101,11 +92,6 @@ export module Subscription {
       // if (!product?.subscription) {
       //   throw new Error("Product variant does not allow subscriptions");
       // }
-      if (product.subscription === "required" && input.frequency !== "fixed") {
-        throw new Error(
-          "Subscription frequency must be 'fixed' for this product",
-        );
-      }
       await tx
         .insert(subscriptionTable)
         .values({
@@ -121,20 +107,13 @@ export module Subscription {
           quantity: input.quantity,
           addressID: input.addressID,
           cardID: input.cardID,
-          frequency: input.frequency,
-          schedule:
-            input.frequency === "fixed"
-              ? {
-                  type: "fixed",
-                }
-              : input.schedule,
+          schedule: input.schedule,
         })
         .onDuplicateKeyUpdate({
           set: {
             quantity: sql`VALUES(quantity)`,
             addressID: sql`VALUES(shipping_id)`,
             cardID: sql`VALUES(card_id)`,
-            frequency: sql`VALUES(frequency)`,
             schedule: sql`VALUES(schedule)`,
             timeDeleted: null,
           },

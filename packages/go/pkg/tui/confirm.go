@@ -37,14 +37,12 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, func() tea.Msg {
 				if m.IsSubscribing() {
 					m.subscription.Quantity = terminal.Int(1)
-					m.subscription.Frequency = terminal.F(terminal.SubscriptionFrequencyFixed)
 					params := terminal.SubscriptionNewParams{Subscription: m.subscription}
 					subscription, err := m.client.Subscription.New(m.context, params)
 					if err != nil {
 						return VisibleError{
 							message: api.GetErrorMessage(err),
 						}
-						// return err
 					}
 					return subscription
 				} else {

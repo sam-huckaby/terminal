@@ -121,7 +121,7 @@ func (m model) formatToken(token terminal.Token, totalWidth int) string {
 
 	lines := []string{}
 	lines = append(lines, content)
-	lines = append(lines, "created: "+token.Time.Created)
+	lines = append(lines, "created: "+token.Created)
 
 	if m.state.tokens.newToken != nil && token.ID == m.state.tokens.newToken.ID {
 		lines = append(

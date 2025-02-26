@@ -138,17 +138,10 @@ export namespace Api {
           description: Common.IdDescription,
           example: Examples.Token.id,
         }),
-        time: z
-          .object({
-            created: z.date().openapi({
-              description: "The created time for the token.",
-              example: Examples.Token.time.created,
-            }),
-          })
-          .openapi({
-            description: "Relevant timestamps for the token.",
-            example: Examples.Token.time,
-          }),
+        created: z.date().openapi({
+          description: "The created time for the token.",
+          example: Examples.Token.created,
+        }),
         token: z.string().openapi({
           description: "Personal access token (obfuscated).",
           example: Examples.Token.token,
@@ -216,9 +209,7 @@ export namespace Api {
     ): z.infer<typeof Info> {
       return {
         id: input.id,
-        time: {
-          created: input.timeCreated,
-        },
+        created: input.timeCreated,
         token: obfuscate(input.token),
       };
     }

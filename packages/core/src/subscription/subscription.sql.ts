@@ -1,5 +1,5 @@
 import "zod-openapi/extend";
-import { mysqlTable, unique, int, varchar, json } from "drizzle-orm/mysql-core";
+import { mysqlTable, unique, int, json } from "drizzle-orm/mysql-core";
 import { cardTable } from "../card/card.sql";
 import { id, timestamp, timestamps, ulid } from "../drizzle/types";
 import { productVariantTable } from "../product/product.sql";
@@ -17,11 +17,6 @@ export const subscriptionTable = mysqlTable(
       .references(() => userTable.id, {
         onDelete: "cascade",
       })
-      .notNull(),
-    frequency: varchar("frequency", {
-      length: 255,
-    })
-      .$type<SubscriptionFrequency>()
       .notNull(),
     schedule: json("schedule").$type<SubscriptionSchedule>(),
     productVariantID: ulid("product_variant_id")
@@ -41,15 +36,6 @@ export const subscriptionTable = mysqlTable(
     unique: unique("unique").on(table.userID, table.productVariantID),
   }),
 );
-
-export const SubscriptionFrequency = z.enum([
-  "fixed",
-  "daily",
-  "weekly",
-  "monthly",
-  "yearly",
-]);
-export type SubscriptionFrequency = z.infer<typeof SubscriptionFrequency>;
 
 export const SubscriptionSchedule = z.discriminatedUnion("type", [
   z

@@ -1,5 +1,4 @@
 import { prefixes } from "./util/id";
-import { randomBytes } from "crypto";
 
 export module Examples {
   export const Id = (prefix: keyof typeof prefixes) =>
@@ -106,7 +105,6 @@ export module Examples {
     quantity: 1,
     addressID: Shipping.id,
     cardID: Card.id,
-    frequency: "monthly" as const,
     schedule: { type: "weekly" as const, interval: 3 },
     next: new Date("2025-02-01 19:36:19.000"),
   };
@@ -114,9 +112,7 @@ export module Examples {
   export const Token = {
     id: Id("apiPersonal"),
     token: "trm_test_******XXXX",
-    time: {
-      created: new Date("2024-06-29 19:36:19.000"),
-    },
+    created: new Date("2024-06-29 19:36:19.000"),
   };
 
   export const App = {

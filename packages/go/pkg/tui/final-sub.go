@@ -21,7 +21,7 @@ type SubscriptionCompleteMsg struct{}
 func (m model) FinalSubSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(finalSubPage)
 	m.state.footer.commands = []footerCommand{
-		{key: "+/-", value: "frequency"},
+		{key: "+/-", value: "schedule"},
 		{key: "enter", value: "subscribe"},
 		{key: "esc", value: "skip"},
 	}
@@ -66,7 +66,6 @@ func (m model) FinalSubUpdate(msg tea.Msg) (model, tea.Cmd) {
 					subscription := terminal.SubscriptionParam{
 						Quantity:         terminal.F(item.Quantity),
 						ProductVariantID: terminal.F(item.ProductVariantID),
-						Frequency:        terminal.F(terminal.SubscriptionFrequencyFixed),
 						Schedule: terminal.F[terminal.SubscriptionScheduleUnionParam](
 							terminal.SubscriptionScheduleWeeklyParam{
 								Type:     terminal.F(terminal.SubscriptionScheduleWeeklyTypeWeekly),
