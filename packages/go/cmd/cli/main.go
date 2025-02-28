@@ -21,6 +21,8 @@ func main() {
 	model, err := tui.NewModel(
 		lipgloss.DefaultRenderer(),
 		"fingerprint",
+		nil,
+		nil,
 	)
 	if err != nil {
 		panic(err)
