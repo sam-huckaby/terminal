@@ -90,5 +90,12 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }) {
+      addVariant('first-checked', [
+        '&:first-child:checked',
+        '&:checked:first-child',
+      ])
+    },
+  ],
 } satisfies Config
