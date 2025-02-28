@@ -143,9 +143,12 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	fingerprint := s.Context().Value("fingerprint").(string)
 	remoteAddress := s.RemoteAddr().String()
 	remoteAddress = remoteAddress[:strings.LastIndex(remoteAddress, ":")]
+	localAddress := s.LocalAddr().String()
+	localAddress = localAddress[:strings.LastIndex(localAddress, ":")]
 
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
 	slog.Info("got ip address", "address", remoteAddress)
+	slog.Info("got local ip address", "address", localAddress)
 
 	var countryCode *string
 	var ipAddress *string
