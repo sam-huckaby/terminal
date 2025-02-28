@@ -59,6 +59,7 @@ func (m model) SplashInit() tea.Cmd {
 		client := terminal.NewClient(
 			option.WithBaseURL(resource.Resource.Api.Url),
 			option.WithBearerToken(token.AccessToken),
+			option.WithAppID("ssh"),
 		)
 
 		return UserSignedInMsg{

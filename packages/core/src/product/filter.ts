@@ -3,6 +3,11 @@ import { createContext } from "../context";
 type FilterContext = {
   region?: "eu" | "na";
   country?: string;
+  ip?: string;
+  app?: string;
+  sdk?: string;
+  sdkVersion?: string;
+  os?: string;
 };
 
 export type FilterFunc = (context: FilterContext) => boolean;
@@ -26,6 +31,8 @@ export const Filters = {
 export type Filter = keyof typeof Filters;
 
 export function filter(ctx: FilterContext, filters: Filter[]) {
+  console.log({ ctx, filters });
+
   if (filters.length === 0) return true;
 
   for (const filter of filters) {

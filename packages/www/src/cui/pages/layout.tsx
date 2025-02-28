@@ -11,7 +11,7 @@ const baseURL = document
 const terminal = async () => {
   const bearerToken = await getToken()
   if (!bearerToken) return
-  return new Terminal({ bearerToken, baseURL })
+  return new Terminal({ bearerToken, baseURL, appId: 'console.shop' })
 }
 
 export default function Layout(props: PropsWithChildren) {

@@ -88,6 +88,10 @@ client_settings:
       auth:
         security_scheme: Bearer
       read_env: TERMINAL_BEARER_TOKEN
+    app_id:
+      type: string
+      nullable: true
+      send_in_header: "x-terminal-app-id"
 environments:
   production: https://api.terminal.shop/
   dev: https://api.dev.terminal.shop/

@@ -87,11 +87,69 @@ const auth: MiddlewareHandler = async (c, next) => {
   return ActorContext.with({ type: "public", properties: {} }, next);
 };
 
+const countryToRegion = (country: string | undefined) => {
+  if (!country) return undefined;
+
+  const countryCode = country.toUpperCase();
+  if (countryCode === "US" || countryCode === "CA" || countryCode === "MX")
+    return "na";
+
+  const euCountries = [
+    "AT", // Austria
+    "BE", // Belgium
+    "BG", // Bulgaria
+    "HR", // Croatia
+    "CY", // Cyprus
+    "CZ", // Czechia
+    "DK", // Denmark
+    "EE", // Estonia
+    "FI", // Finland
+    "FR", // France
+    "DE", // Germany
+    "GR", // Greece
+    "HU", // Hungary
+    "IE", // Ireland
+    "IT", // Italy
+    "LV", // Latvia
+    "LT", // Lithuania
+    "LU", // Luxembourg
+    "MT", // Malta
+    "NL", // Netherlands
+    "PL", // Poland
+    "PT", // Portugal
+    "RO", // Romania
+    "SK", // Slovakia
+    "SI", // Slovenia
+    "ES", // Spain
+    "SE", // Sweden
+    "EU", // European Union
+    "IS", // Iceland
+    "LI", // Liechtenstein
+    "NO", // Norway
+    "CH", // Switzerland
+  ];
+  if (euCountries.includes(countryCode)) return "eu";
+
+  return undefined;
+};
+
 const filter: MiddlewareHandler = async (c, next) => {
+  const country =
+    c.req.header("x-terminal-country") ??
+    c.req.header("CloudFront-Viewer-Country");
+
   return FilterContext.with(
     {
-      region: c.req.header("x-terminal-region") as any,
-      country: c.req.header("x-terminal-country"),
+      region:
+        (c.req.header("x-terminal-region") as any) ?? countryToRegion(country),
+      country,
+      ip:
+        c.req.header("x-terminal-ip") ??
+        c.req.header("CloudFront-Viewer-Address")?.split(":")[0],
+      app: c.req.header("x-terminal-app-id"), // ie, 'raycast', 'console.log', 'ssh'
+      sdk: c.req.header("X-Stainless-Lang"),
+      sdkVersion: c.req.header("X-Stainless-Package-Version"),
+      os: c.req.header("X-Stainless-OS"),
     },
     next,
   );
