@@ -68,6 +68,8 @@ type model struct {
 	// output          *termenv.Output
 	theme           theme.Theme
 	fingerprint     string
+	ipAddress       *string
+	countryCode     *string
 	viewportWidth   int
 	viewportHeight  int
 	widthContainer  int
@@ -108,6 +110,8 @@ type children struct {
 func NewModel(
 	renderer *lipgloss.Renderer,
 	fingerprint string,
+	ipAddress *string,
+	countryCode *string,
 ) (tea.Model, error) {
 	api.Init()
 
@@ -119,6 +123,8 @@ func NewModel(
 		renderer: renderer,
 		// output:      renderer.Output(),
 		fingerprint: fingerprint,
+		ipAddress:   ipAddress,
+		countryCode: countryCode,
 		theme:       theme.BasicTheme(renderer, nil),
 		faqs:        LoadFaqs(),
 		accountPages: []page{

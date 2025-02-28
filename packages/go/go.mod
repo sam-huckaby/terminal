@@ -12,6 +12,7 @@ require (
 	github.com/charmbracelet/wish v1.4.0
 	github.com/foize/go.sgr v0.0.0-20140220094842-40bdfc98040c
 	github.com/google/uuid v1.6.0
+	github.com/oschwald/geoip2-golang v1.11.0
 	github.com/stripe/stripe-go/v78 v78.2.0
 	github.com/terminaldotshop/terminal-sdk-go v0.1.0-alpha.61
 	golang.org/x/crypto v0.21.0
@@ -39,6 +40,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

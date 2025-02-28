@@ -90,43 +90,43 @@ const auth: MiddlewareHandler = async (c, next) => {
 const countryToRegion = (country: string | undefined) => {
   if (!country) return undefined;
 
-  const countryCode = country.toUpperCase();
-  if (countryCode === "US" || countryCode === "CA" || countryCode === "MX")
+  const countryCode = country.toLowerCase();
+  if (countryCode === "us" || countryCode === "ca" || countryCode === "mx")
     return "na";
 
   const euCountries = [
-    "AT", // Austria
-    "BE", // Belgium
-    "BG", // Bulgaria
-    "HR", // Croatia
-    "CY", // Cyprus
-    "CZ", // Czechia
-    "DK", // Denmark
-    "EE", // Estonia
-    "FI", // Finland
-    "FR", // France
-    "DE", // Germany
-    "GR", // Greece
-    "HU", // Hungary
-    "IE", // Ireland
-    "IT", // Italy
-    "LV", // Latvia
-    "LT", // Lithuania
-    "LU", // Luxembourg
-    "MT", // Malta
-    "NL", // Netherlands
-    "PL", // Poland
-    "PT", // Portugal
-    "RO", // Romania
-    "SK", // Slovakia
-    "SI", // Slovenia
-    "ES", // Spain
-    "SE", // Sweden
-    "EU", // European Union
-    "IS", // Iceland
-    "LI", // Liechtenstein
-    "NO", // Norway
-    "CH", // Switzerland
+    "at", // Austria
+    "be", // Belgium
+    "bg", // Bulgaria
+    "hr", // Croatia
+    "cy", // Cyprus
+    "cz", // Czechia
+    "dk", // Denmark
+    "ee", // Estonia
+    "fi", // Finland
+    "fr", // France
+    "de", // Germany
+    "gr", // Greece
+    "hu", // Hungary
+    "ie", // Ireland
+    "it", // Italy
+    "lv", // Latvia
+    "lt", // Lithuania
+    "lu", // Luxembourg
+    "mt", // Malta
+    "nl", // Netherlands
+    "pl", // Poland
+    "pt", // Portugal
+    "ro", // Romania
+    "sk", // Slovakia
+    "si", // Slovenia
+    "es", // Spain
+    "se", // Sweden
+    "eu", // European Union
+    "is", // Iceland
+    "li", // Liechtenstein
+    "no", // Norway
+    "ch", // Switzerland
   ];
   if (euCountries.includes(countryCode)) return "eu";
 
@@ -134,9 +134,10 @@ const countryToRegion = (country: string | undefined) => {
 };
 
 const filter: MiddlewareHandler = async (c, next) => {
-  const country =
+  const country = (
     c.req.header("x-terminal-country") ??
-    c.req.header("CloudFront-Viewer-Country");
+    c.req.header("CloudFront-Viewer-Country")
+  )?.toLowerCase();
 
   return FilterContext.with(
     {

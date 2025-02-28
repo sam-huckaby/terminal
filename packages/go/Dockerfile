@@ -10,4 +10,5 @@ FROM mirror.gcr.io/alpine:3.21.2
 WORKDIR /root/
 ENV FOO=1
 COPY --from=builder /app/ssh .
+COPY GeoLite2-Country.mmdb ./
 CMD TERM=xterm-256color ./ssh

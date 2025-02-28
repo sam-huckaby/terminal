@@ -21,7 +21,6 @@ export const Filters = {
   },
   na: (context: FilterContext) => {
     if (context.region) return context.region === "na";
-
     // TODO: add countries
 
     return true;
