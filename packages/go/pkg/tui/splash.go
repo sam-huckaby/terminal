@@ -61,12 +61,6 @@ func (m model) SplashInit() tea.Cmd {
 			option.WithBearerToken(token.AccessToken),
 			option.WithAppID("ssh"),
 		}
-		if m.ipAddress != nil {
-			options = append(options, option.WithHeader("x-terminal-ip", *m.ipAddress))
-		}
-		if m.countryCode != nil {
-			options = append(options, option.WithHeader("x-terminal-country", *m.countryCode))
-		}
 		client := terminal.NewClient(options...)
 
 		return UserSignedInMsg{

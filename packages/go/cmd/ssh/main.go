@@ -7,7 +7,6 @@ import (
 	"crypto/md5"
 	_ "embed"
 	"encoding/hex"
-	"strings"
 
 	"context"
 	"errors"
@@ -19,7 +18,6 @@ import (
 	"syscall"
 
 	"github.com/google/uuid"
-	"github.com/terminaldotshop/terminal/go/pkg/maxmind"
 	"github.com/terminaldotshop/terminal/go/pkg/resource"
 	"github.com/terminaldotshop/terminal/go/pkg/tui"
 
@@ -30,7 +28,6 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
-	"github.com/oschwald/geoip2-golang"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -65,7 +62,6 @@ func main() {
 		wish.WithHostKeyPEM([]byte(resource.Resource.SSHKey.Private)),
 		wish.WithMiddleware(
 			bubbletea.Middleware(teaHandler),
-			maxmind.Middleware(),
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
 			logging.Middleware(),
 		),
@@ -141,42 +137,9 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	}
 	renderer := bubbletea.MakeRenderer(sessionBridge)
 	fingerprint := s.Context().Value("fingerprint").(string)
-	remoteAddress := s.RemoteAddr().String()
-	remoteAddress = remoteAddress[:strings.LastIndex(remoteAddress, ":")]
-	localAddress := s.LocalAddr().String()
-	localAddress = localAddress[:strings.LastIndex(localAddress, ":")]
-
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
-	slog.Info("got ip address", "address", remoteAddress)
-	slog.Info("got local ip address", "address", localAddress)
 
-	var countryCode *string
-	var ipAddress *string
-
-	ip := net.ParseIP(remoteAddress)
-	if ip == nil {
-		slog.Warn("Invalid IP address")
-		ipAddress = nil
-		countryCode = nil
-	} else {
-		db := s.Context().Value("maxmind").(*geoip2.Reader)
-		record, err := db.Country(ip)
-		if err != nil {
-			slog.Warn("Error looking up IP")
-			slog.Error(err.Error())
-		} else {
-			countryCode = &record.Country.IsoCode
-			address := ip.String()
-			ipAddress = &address
-		}
-	}
-
-	model, err := tui.NewModel(
-		renderer,
-		fingerprint,
-		ipAddress,
-		countryCode,
-	)
+	model, err := tui.NewModel(renderer, fingerprint)
 	if err != nil {
 		return nil, []tea.ProgramOption{}
 	}
