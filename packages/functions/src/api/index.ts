@@ -24,7 +24,7 @@ import { ProfileApi } from "./profile";
 import { ViewApi } from "./view";
 import { AppApi } from "./app";
 import { TokenApi } from "./token";
-import { FilterContext } from "@terminal/core/product/filter";
+import { ProductFilter } from "@terminal/core/product/filter";
 
 const client = createClient({
   clientID: "api",
@@ -139,7 +139,7 @@ const filter: MiddlewareHandler = async (c, next) => {
     c.req.header("CloudFront-Viewer-Country")
   )?.toLowerCase();
 
-  return FilterContext.with(
+  return ProductFilter.provide(
     {
       region:
         (c.req.header("x-terminal-region") as any) ?? countryToRegion(country),
