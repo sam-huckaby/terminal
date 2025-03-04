@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { useTransaction } from "../drizzle/transaction";
 import {
+  ProductSubscriptionSetting,
   productTable,
+  ProductTags,
   productVariantInventoryTable,
   productVariantTable,
 } from "./product.sql";
@@ -11,10 +13,7 @@ import { fn } from "../util/fn";
 import { createID } from "../util/id";
 import { Common } from "../common";
 import { Examples } from "../examples";
-import { filter, FilterContext, useFilterContext } from "./filter";
-
-export const SubscriptionSetting = z.enum(["allowed", "required"]);
-export type SubscriptionSetting = z.infer<typeof SubscriptionSetting>;
+import { ProductFilter } from "./filter";
 
 export module Product {
   export const Variant = z
@@ -61,15 +60,14 @@ export module Product {
           "Order of the product used when displaying a sorted list of products.",
         example: Examples.Product.order,
       }),
-      subscription: SubscriptionSetting.optional().openapi({
+      subscription: ProductSubscriptionSetting.optional().openapi({
         description: "Whether the product must be or can be subscribed to.",
         example: Examples.Product.subscription,
       }),
-      tags: z.record(z.string()).optional().openapi({
+      tags: ProductTags.optional().openapi({
         description: "Tags for the product.",
         example: Examples.Product.tags,
       }),
-      filters: z.array(z.union([z.literal("eu"), z.literal("na")])),
     })
     .openapi({
       ref: "Product",
@@ -96,7 +94,6 @@ export module Product {
         map(
           (group): Info => ({
             id: group[0].product.id,
-            filters: group[0].product.filters || [],
             name: group[0].product.name,
             description: group[0].product.description,
             order: group[0].product.order || undefined,
@@ -111,7 +108,9 @@ export module Product {
             tags: group[0].product.tags || undefined,
           }),
         ),
-      ).filter((item) => filter(useFilterContext(), item.filters));
+      ).filter((item) =>
+        ProductFilter.run(ProductFilter.use(), item.tags || {}),
+      );
       return result as Info[];
     });
 
@@ -134,7 +133,6 @@ export module Product {
             id: group[0].product.id,
             name: group[0].product.name,
             description: group[0].product.description,
-            filters: group[0].product.filters || [],
             variants: !group[0].product_variant
               ? []
               : group.map((item) => ({
@@ -159,21 +157,12 @@ export module Product {
       order: true,
       subscription: true,
       tags: true,
-    })
-      .partial({
-        name: true,
-        description: true,
-        order: true,
-        tags: true,
-      })
-      .merge(
-        z.object({
-          filters: z
-            .union([z.literal("eu"), z.literal("na")])
-            .array()
-            .optional(),
-        }),
-      ),
+    }).partial({
+      name: true,
+      description: true,
+      order: true,
+      tags: true,
+    }),
     (input) =>
       useTransaction(async (tx) => {
         await tx
@@ -184,7 +173,6 @@ export module Product {
             order: input.order,
             subscription: input.subscription || null,
             tags: input.tags || null,
-            filters: input.filters,
           })
           .where(eq(productTable.id, input.id));
       }),

@@ -8,8 +8,19 @@ import {
 } from "drizzle-orm/mysql-core";
 import { dollar, id, ulid, timestamps } from "../drizzle/types";
 import { inventoryTable } from "../inventory/inventory.sql";
-import { SubscriptionSetting } from "../subscription/subscription";
-import { Filter } from "./filter";
+import { z } from "zod";
+
+export const ProductSubscriptionSetting = z.enum(["allowed", "required"]);
+export type ProductSubscriptionSetting = z.infer<
+  typeof ProductSubscriptionSetting
+>;
+
+export const ProductTags = z.object({
+  app: z.string().optional(),
+  color: z.string().optional(),
+  featured: z.boolean().optional(),
+});
+export type ProductTags = z.infer<typeof ProductTags>;
 
 export const productTable = mysqlTable("product", {
   ...id,
@@ -19,9 +30,8 @@ export const productTable = mysqlTable("product", {
   order: int("order"),
   subscription: varchar("subscription", {
     length: 255,
-  }).$type<SubscriptionSetting>(),
-  tags: json("tags").$type<Record<string, string>>(),
-  filters: json("filters").default([]).$type<Filter[]>().notNull(),
+  }).$type<ProductSubscriptionSetting>(),
+  tags: json("tags").$type<ProductTags>(),
 });
 
 export const productVariantTable = mysqlTable("product_variant", {

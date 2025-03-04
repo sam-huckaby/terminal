@@ -2,9 +2,12 @@ import { Action, Page, io, ctx, Layout } from "@forgeapp/sdk";
 import { eq } from "@terminal/core/drizzle/index";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { inventoryTable } from "@terminal/core/inventory/inventory.sql";
-import { Filter, Filters } from "@terminal/core/product/filter";
 import { Product } from "@terminal/core/product/index";
-import { productVariantInventoryTable } from "@terminal/core/product/product.sql";
+import { z } from "zod";
+import {
+  ProductTags,
+  productVariantInventoryTable,
+} from "@terminal/core/product/product.sql";
 
 async function selectProduct() {
   let { productID } = ctx.params;
@@ -41,7 +44,7 @@ async function selectVariant() {
 
 export default new Page({
   name: "Product",
-  handler: async (input) => {
+  handler: async () => {
     const products = await Product.list();
     return new Layout({
       title: "Products",
@@ -162,56 +165,54 @@ export default new Page({
       unlisted: true,
       async handler() {
         const product = await selectProduct();
-        const [
-          name,
-          description,
-          order,
-          subscription,
-          featured,
-          color,
-          filters,
-        ] = await io.group([
-          io.input.text("name", {
-            defaultValue: product.name,
-          }),
-          io.input.text("description", {
-            defaultValue: product.description,
-            multiline: true,
-          }),
-          io.input.number("order", {
-            defaultValue: product.order,
-          }),
-          io.select.single("subscription", {
-            options: ["none", "allowed", "required"],
-            defaultValue: product.subscription || "none",
-          }),
-          io.input.boolean("featured", {
-            defaultValue: product.tags?.["featured"] === "true" || false,
-          }),
-          io.input.text("color", {
-            defaultValue: product.tags?.["color"],
-          }),
-          io.select.multiple("filters", {
-            options: Object.keys(Filters).map((key) => ({
-              label: key,
-              value: key,
-            })),
-            defaultValue: product.filters,
-          }),
-        ]);
-        console.log(filters);
+        const { name, description, order, subscription, ...tags } =
+          await io.group({
+            name: io.input.text("name", {
+              defaultValue: product.name,
+            }),
+            description: io.input.text("description", {
+              defaultValue: product.description,
+              multiline: true,
+            }),
+            order: io.input.number("order", {
+              defaultValue: product.order,
+            }),
+            subscription: io.select.single("subscription", {
+              options: ["none", "allowed", "required"],
+              defaultValue: product.subscription || "none",
+            }),
+            ...Object.fromEntries(
+              Object.entries(ProductTags.shape).map(([key, value]) => [
+                key,
+                value._def.innerType instanceof z.ZodBoolean
+                  ? io.input
+                      .boolean(key, {
+                        defaultValue:
+                          (product.tags?.[key as keyof ProductTags] as any) ===
+                          true,
+                      })
+                      .optional()
+                  : io.input
+                      .text(key, {
+                        defaultValue: product.tags?.[
+                          key as keyof ProductTags
+                        ] as any,
+                      })
+                      .optional(),
+              ]),
+            ),
+          });
+        console.log(tags);
         await Product.edit({
           id: product.id,
           name,
           description,
           order,
-          filters: filters.map((item) => item.value as Filter),
           subscription:
             subscription === "none" ? undefined : (subscription as any),
           tags: {
             ...product.tags,
-            featured: featured ? "true" : "false",
-            color: color,
+            ...tags,
           },
         });
         await ctx.redirect({

@@ -41,7 +41,7 @@ export module Examples {
     variants: [ProductVariant],
     order: 100,
     subscription: "allowed" as const,
-    tags: { featured: "true" },
+    tags: { featured: true },
     filters: [],
   };
 

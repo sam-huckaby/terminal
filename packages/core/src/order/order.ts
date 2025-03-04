@@ -42,7 +42,7 @@ import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
 import { Product } from "../product";
 import { Cart } from "../cart";
-import { filter, useFilterContext } from "../product/filter";
+import { ProductFilter } from "../product/filter";
 
 export module Order {
   export const Item = z
@@ -228,7 +228,7 @@ export module Order {
       const items = await tx
         .select({
           productVariantID: cartItemTable.productVariantID,
-          filters: productTable.filters,
+          tags: productTable.tags,
           quantity: cartItemTable.quantity,
           subtotal: sql`(${cartItemTable.quantity} * ${productVariantTable.price})`,
         })
@@ -268,12 +268,12 @@ export module Order {
     });
     if (!cart) throw new Error("No cart found");
     const filterCtx = {
-      ...useFilterContext(),
+      ...ProductFilter.use(),
       region: undefined,
       country: cart.shipping.country,
     };
     for (const item of items) {
-      if (!filter(filterCtx, item.filters))
+      if (!ProductFilter.run(filterCtx, item.tags || {}))
         throw new Error("This product cannot be purchased.");
     }
     const orderID = createID("order");
@@ -380,7 +380,7 @@ export module Order {
       const items = await useTransaction(async (tx) =>
         tx
           .select({
-            filters: productTable.filters,
+            tags: productTable.tags,
             id: productVariantTable.id,
             price: productVariantTable.price,
           })
@@ -393,7 +393,7 @@ export module Order {
           .then((rows) =>
             rows.map((row) => ({
               id: row.id,
-              filters: row.filters,
+              tags: row.tags,
               price: row.price * (input.variants[row.id] ?? 0),
               quantity: input.variants[row.id] ?? 0,
               weight:
@@ -404,12 +404,12 @@ export module Order {
       );
 
       const filterCtx = {
-        ...useFilterContext(),
+        ...ProductFilter.use(),
         region: undefined,
         country: match.shipping.country,
       };
       for (const item of items) {
-        if (!filter(filterCtx, item.filters))
+        if (!ProductFilter.run(filterCtx, item.tags || {}))
           throw new Error("This product cannot be purchased.");
       }
 
