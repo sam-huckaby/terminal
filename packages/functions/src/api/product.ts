@@ -30,7 +30,6 @@ export module ProductApi {
       },
     }),
     async (c) => {
-      c.header("Cache-Control", "s-maxage=60");
       return c.json(
         {
           data: await Product.list(),
