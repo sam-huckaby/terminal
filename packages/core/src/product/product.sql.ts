@@ -19,6 +19,8 @@ export const ProductTags = z.object({
   app: z.string().optional(),
   color: z.string().optional(),
   featured: z.boolean().optional(),
+  market_na: z.boolean().optional(),
+  market_eu: z.boolean().optional(),
 });
 export type ProductTags = z.infer<typeof ProductTags>;
 

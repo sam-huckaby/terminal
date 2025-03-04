@@ -87,63 +87,14 @@ const auth: MiddlewareHandler = async (c, next) => {
   return ActorContext.with({ type: "public", properties: {} }, next);
 };
 
-const countryToRegion = (country: string | undefined) => {
-  if (!country) return undefined;
-
-  const countryCode = country.toLowerCase();
-  if (countryCode === "us" || countryCode === "ca" || countryCode === "mx")
-    return "na";
-
-  const euCountries = [
-    "at", // Austria
-    "be", // Belgium
-    "bg", // Bulgaria
-    "hr", // Croatia
-    "cy", // Cyprus
-    "cz", // Czechia
-    "dk", // Denmark
-    "ee", // Estonia
-    "fi", // Finland
-    "fr", // France
-    "de", // Germany
-    "gr", // Greece
-    "hu", // Hungary
-    "ie", // Ireland
-    "it", // Italy
-    "lv", // Latvia
-    "lt", // Lithuania
-    "lu", // Luxembourg
-    "mt", // Malta
-    "nl", // Netherlands
-    "pl", // Poland
-    "pt", // Portugal
-    "ro", // Romania
-    "sk", // Slovakia
-    "si", // Slovenia
-    "es", // Spain
-    "se", // Sweden
-    "eu", // European Union
-    "is", // Iceland
-    "li", // Liechtenstein
-    "no", // Norway
-    "ch", // Switzerland
-  ];
-  if (euCountries.includes(countryCode)) return "eu";
-
-  return undefined;
-};
-
 const filter: MiddlewareHandler = async (c, next) => {
-  const country = (
-    c.req.header("x-terminal-country") ??
-    c.req.header("CloudFront-Viewer-Country")
-  )?.toLowerCase();
-
   return ProductFilter.provide(
     {
-      region:
-        (c.req.header("x-terminal-region") as any) ?? countryToRegion(country),
-      country,
+      region: c.req.header("x-terminal-region") as any,
+      country: (
+        c.req.header("x-terminal-country") ??
+        c.req.header("CloudFront-Viewer-Country")
+      )?.toLowerCase(),
       ip:
         c.req.header("x-terminal-ip") ??
         c.req.header("CloudFront-Viewer-Address")?.split(":")[0],
@@ -152,7 +103,10 @@ const filter: MiddlewareHandler = async (c, next) => {
       sdkVersion: c.req.header("X-Stainless-Package-Version"),
       os: c.req.header("X-Stainless-OS"),
     },
-    next,
+    () => {
+      console.log("filter", ProductFilter.use());
+      return next();
+    },
   );
 };
 
