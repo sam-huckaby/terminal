@@ -1,4 +1,5 @@
 import { database } from "./database";
+import { allSecrets } from "./secret";
 
 const key = new random.RandomPassword("OpenControlPassword", {
   length: 16,
@@ -7,7 +8,7 @@ const key = new random.RandomPassword("OpenControlPassword", {
 
 export const opencontrol = new sst.aws.Function("OpenControl", {
   handler: "packages/functions/src/opencontrol.handler",
-  link: [database],
+  link: [database, ...allSecrets],
   environment: {
     OPENCONTROL_KEY: key.result,
   },
