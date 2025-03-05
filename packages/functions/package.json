@@ -15,6 +15,7 @@
     "airtable": "0.12.2",
     "hono": "*",
     "hono-openapi": "0.4.4",
+    "opencontrol": "0.0.4",
     "sst": "3.9.23",
     "zod": "*",
     "zod-openapi": "4.1.0"
