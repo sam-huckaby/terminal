@@ -51,9 +51,4 @@ new sst.aws.Service("SSH", {
     directory: "packages/go",
     command: "go run ./cmd/ssh",
   },
-  transform: {
-    target: {
-      preserveClientIp: "true",
-    },
-  },
 });
