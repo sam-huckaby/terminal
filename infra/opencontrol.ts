@@ -1,3 +1,4 @@
+import { api } from "./api";
 import { database } from "./database";
 import { allSecrets } from "./secret";
 
@@ -8,7 +9,7 @@ const key = new random.RandomPassword("OpenControlPassword", {
 
 export const opencontrol = new sst.aws.Function("OpenControl", {
   handler: "packages/functions/src/opencontrol.handler",
-  link: [database, ...allSecrets],
+  link: [database, ...allSecrets, api],
   environment: {
     OPENCONTROL_KEY: key.result,
   },
@@ -16,6 +17,5 @@ export const opencontrol = new sst.aws.Function("OpenControl", {
 });
 
 export const outputs = {
-  opencontrol: opencontrol.url,
-  opencontrolKey: key.result,
+  opencontrol: $interpolate`${opencontrol.url}${key.result}`,
 };

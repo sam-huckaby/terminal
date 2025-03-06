@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { db } from "@terminal/core/drizzle/index";
 import { Inventory } from "@terminal/core/inventory/index";
-import { Stripe } from "@terminal/core/stripe";
 import { Resource } from "sst";
 
 const database = tool({
@@ -59,9 +58,44 @@ const stripe = tool({
   },
 });
 
+export const terminal = [
+  tool({
+    name: "terminal_openapi",
+    description:
+      "OpenAPI documentation for the terminal API, which is used to order coffee",
+    async run() {
+      return fetch(Resource.Api.url + "/doc").then((res) => res.json());
+    },
+  }),
+  tool({
+    name: "terminal_call",
+    description: "Call the terminal API",
+    args: z.object({
+      method: z.string().describe("HTTP method to use"),
+      path: z.string().describe("Path to call"),
+      query: z.record(z.string()).optional().describe("Query params"),
+      body: z.any().optional().describe("HTTP body to use if it is not GET"),
+      token: z
+        .string()
+        .describe("Personal access token that you should ask the user for"),
+    }),
+    async run(input) {
+      console.log(input.method, Resource.Api.url + input.path);
+      return fetch(Resource.Api.url + input.path, {
+        method: input.method,
+        headers: {
+          Authorization: `Bearer ${input.token}`,
+          "Content-Type": "application/json",
+        },
+        body: input.body ? JSON.stringify(input.body) : undefined,
+      }).then((res) => res.text());
+    },
+  }),
+];
+
 const app = create({
   key: process.env.OPENCONTROL_KEY,
-  tools: [database, inventory, stripe],
+  tools: [database, inventory, stripe, ...terminal],
 });
 
 // @ts-ignore
