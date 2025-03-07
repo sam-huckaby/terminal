@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { Result, ErrorResponses, authRequired } from "./common";
 import { User } from "@terminal/core/user/index";
 import { useUserID } from "@terminal/core/actor";
 import { Cart } from "@terminal/core/cart/index";
@@ -60,8 +60,12 @@ export module ViewApi {
           },
           description: "Initial app data.",
         },
+        401: ErrorResponses[401],
+        429: ErrorResponses[429],
+        500: ErrorResponses[500],
       },
     }),
+    authRequired,
     async (c) => {
       const [
         user,

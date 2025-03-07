@@ -1,3 +1,4 @@
+import "zod-openapi/extend";
 import { bus } from "sst/aws/bus";
 import { Order } from "@terminal/core/order/order";
 import { Shippo } from "@terminal/core/shippo/index";

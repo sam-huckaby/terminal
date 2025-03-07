@@ -8,6 +8,8 @@ import { randomBytes } from "crypto";
 import { Resource } from "sst";
 import { Common } from "../common";
 import { Examples } from "../examples";
+import { useTransaction } from "../drizzle/transaction";
+import { ErrorCodes, VisibleError } from "../error";
 
 export namespace Api {
   export namespace Client {
@@ -92,17 +94,24 @@ export namespace Api {
         .then((rows) => rows.map(serialize));
     }
 
-    export const remove = fn(
-      Info.shape.id,
-      async (input) =>
-        await db
+    export const remove = fn(Info.shape.id, (input) =>
+      useTransaction(async (tx) => {
+        const response = await tx
           .delete(apiClientTable)
           .where(
             and(
               eq(apiClientTable.id, input),
               eq(apiClientTable.userID, useUserID()),
             ),
-          ),
+          );
+        if (response.rowsAffected === 0) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "App not found",
+          );
+        }
+      }),
     );
 
     function obfuscate(secret: string) {
@@ -122,13 +131,21 @@ export namespace Api {
       };
     }
 
-    export const fromID = fn(Info.shape.id, async (input) => {
-      return db
-        .select()
-        .from(apiClientTable)
-        .where(eq(apiClientTable.id, input))
-        .then((rows) => serialize(rows.at(0)!));
-    });
+    export const fromID = fn(Info.shape.id, (id) =>
+      useTransaction(async (tx) => {
+        const rows = await tx
+          .select()
+          .from(apiClientTable)
+          .where(
+            and(
+              eq(apiClientTable.id, id),
+              eq(apiClientTable.userID, useUserID()),
+            ),
+          )
+          .limit(1);
+        return rows.map(serialize).at(0);
+      }),
+    );
   }
 
   export namespace Personal {
@@ -172,17 +189,24 @@ export namespace Api {
       };
     }
 
-    export const remove = fn(
-      Info.shape.id,
-      async (input) =>
-        await db
+    export const remove = fn(Info.shape.id, (input) =>
+      useTransaction(async (tx) => {
+        const response = await tx
           .delete(apiPersonalTokenTable)
           .where(
             and(
               eq(apiPersonalTokenTable.id, input),
               eq(apiPersonalTokenTable.userID, useUserID()),
             ),
-          ),
+          );
+        if (response.rowsAffected === 0) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "Token not found",
+          );
+        }
+      }),
     );
 
     export async function list(): Promise<Info[]> {
@@ -214,13 +238,21 @@ export namespace Api {
       };
     }
 
-    export const fromID = fn(Info.shape.id, async (input) => {
-      return db
-        .select()
-        .from(apiPersonalTokenTable)
-        .where(eq(apiPersonalTokenTable.id, input))
-        .then((rows) => serialize(rows.at(0)!));
-    });
+    export const fromID = fn(Info.shape.id, (id) =>
+      useTransaction(async (tx) => {
+        const rows = await tx
+          .select()
+          .from(apiPersonalTokenTable)
+          .where(
+            and(
+              eq(apiPersonalTokenTable.id, id),
+              eq(apiPersonalTokenTable.userID, useUserID()),
+            ),
+          )
+          .limit(1);
+        return rows.map(serialize).at(0);
+      }),
+    );
 
     export async function fromToken(token: string) {
       return db

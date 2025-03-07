@@ -130,6 +130,7 @@ declare module "sst" {
     "Urls": {
       "api": string
       "auth": string
+      "openapi": string
       "short": string
       "site": string
       "type": "sst.sst.Linkable"

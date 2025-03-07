@@ -1,3 +1,4 @@
+import "zod-openapi/extend";
 import { Link } from "@terminal/core/link/index";
 import { Hono } from "hono";
 import { handle, streamHandle } from "hono/aws-lambda";

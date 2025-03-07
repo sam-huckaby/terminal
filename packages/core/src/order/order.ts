@@ -33,7 +33,7 @@ import { Resource } from "sst";
 import { stripe } from "../stripe";
 import { Stripe } from "stripe";
 import { Shippo } from "../shippo/index";
-import { VisibleError } from "../error";
+import { ErrorCodes, VisibleError } from "../error";
 import { inventoryRecordTable } from "../inventory/inventory.sql";
 import { pipe, groupBy, values, map } from "remeda";
 import { Common } from "../common";
@@ -196,28 +196,30 @@ export module Order {
           eq(orderItemTable.productVariantID, productVariantTable.id),
         )
         .where(eq(orderTable.id, input))
-        .then(
-          (rows): Info => ({
-            id: rows[0]!.order.id,
-            shipping: rows[0]!.order.shippingAddress,
-            amount: {
-              shipping: rows[0]!.order.shippingAmount,
-              subtotal: rows.reduce(
-                (acc, row) => acc + row.order_item.amount,
-                0,
-              ),
-            },
-            tracking: {
-              number: rows[0]!.order.trackingNumber || undefined,
-              url: rows[0]!.order.trackingURL || undefined,
-            },
-            items: rows.map((row) => ({
-              id: row.order_item.id,
-              amount: row.order_item.amount,
-              quantity: row.order_item.quantity,
-              productVariantID: row.product_variant?.id,
-            })),
-          }),
+        .then((rows): Info | undefined =>
+          rows.length === 0
+            ? undefined
+            : {
+                id: rows[0]!.order.id,
+                shipping: rows[0]!.order.shippingAddress,
+                amount: {
+                  shipping: rows[0]!.order.shippingAmount,
+                  subtotal: rows.reduce(
+                    (acc, row) => acc + row.order_item.amount,
+                    0,
+                  ),
+                },
+                tracking: {
+                  number: rows[0]!.order.trackingNumber || undefined,
+                  url: rows[0]!.order.trackingURL || undefined,
+                },
+                items: rows.map((row) => ({
+                  id: row.order_item.id,
+                  amount: row.order_item.amount,
+                  quantity: row.order_item.quantity,
+                  productVariantID: row.product_variant?.id,
+                })),
+              },
         ),
     ),
   );
@@ -348,7 +350,11 @@ export module Order {
       });
     } catch (ex: unknown) {
       if (ex instanceof Stripe.errors.StripeCardError) {
-        throw new VisibleError("input", "payment.invalid", ex.message);
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_STATE,
+          ex.message,
+        );
       }
       throw ex;
     }
@@ -452,11 +458,15 @@ export module Order {
       if ("err" in result) {
         if (result.err instanceof Stripe.errors.StripeCardError)
           throw new VisibleError(
-            "input",
-            "payment.invalid",
+            "validation",
+            ErrorCodes.Validation.INVALID_STATE,
             result.err.message,
           );
-        throw new Error("Payment failed");
+        throw new VisibleError(
+          "internal",
+          ErrorCodes.Server.INTERNAL_ERROR,
+          "Payment failed",
+        );
       }
 
       await useTransaction(async (tx) => {

@@ -10,7 +10,7 @@ import { Examples } from "../examples";
 import { Shippo } from "../shippo";
 import { cartTable } from "../cart/cart.sql";
 import { subscriptionTable } from "../subscription/subscription.sql";
-import { VisibleError } from "../error";
+import { VisibleError, ErrorCodes } from "../error";
 
 export module Address {
   export const Inner = z
@@ -106,9 +106,10 @@ export module Address {
         .where(eq(subscriptionTable.addressID, input));
       if (subscriptions.length > 0) {
         throw new VisibleError(
-          "input",
-          "address.in-use",
-          "address is in use by a subscription, please cancel the subscription first.",
+          "validation",
+          ErrorCodes.Validation.IN_USE,
+          "Address is in use by a subscription, please cancel the subscription first.",
+          "id",
         );
       }
 
@@ -116,11 +117,31 @@ export module Address {
         .update(cartTable)
         .set({ addressID: null })
         .where(eq(cartTable.addressID, input));
-      await tx
+      const response = await tx
         .delete(addressTable)
         .where(
           and(eq(addressTable.id, input), eq(addressTable.userID, useUserID())),
         );
+      if (response.rowsAffected === 0) {
+        throw new VisibleError(
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+          "Address not found",
+        );
+      }
+    }),
+  );
+
+  export const fromID = fn(Info.shape.id, (id) =>
+    useTransaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(addressTable)
+        .where(
+          and(eq(addressTable.id, id), eq(addressTable.userID, useUserID())),
+        )
+        .limit(1);
+      return rows.map(serialize).at(0);
     }),
   );
 

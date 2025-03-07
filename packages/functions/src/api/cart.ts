@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { ErrorResponses, Result, validator, authRequired } from "./common";
 import { Cart } from "@terminal/core/cart/index";
 import { describeRoute } from "hono-openapi";
-import { validator } from "hono-openapi/zod";
 import { Hono } from "hono";
 import { Card } from "@terminal/core/card/index";
 import { Examples } from "@terminal/core/examples";
@@ -31,8 +30,12 @@ export module CartApi {
             },
             description: "The current user's cart.",
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         return c.json(
           {
@@ -62,8 +65,13 @@ export module CartApi {
             },
             description: "The updated cart.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
         z.object({
@@ -98,8 +106,13 @@ export module CartApi {
             },
             description: "Address was set successfully.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
         z.object({
@@ -131,8 +144,13 @@ export module CartApi {
             },
             description: "Card was set successfully.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
         z.object({
@@ -169,8 +187,13 @@ export module CartApi {
             },
             description: "Cart was converted successfully.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         const orderID = await Order.convertCart();
         return c.json({ data: await Order.fromID(orderID) }, 200);

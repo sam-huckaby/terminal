@@ -8,7 +8,7 @@ import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
 import { useUserID } from "../actor";
 import { cardTable } from "../card/card.sql";
 import { Shippo } from "../shippo/";
-import { VisibleError } from "../error";
+import { ErrorCodes, VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
@@ -291,8 +291,8 @@ export module Cart {
           .then((rows) => rows[0]);
         if (!variant) {
           throw new VisibleError(
-            "input",
-            "variant",
+            "validation",
+            ErrorCodes.Validation.INVALID_PARAMETER,
             "Product variant not found",
           );
         }

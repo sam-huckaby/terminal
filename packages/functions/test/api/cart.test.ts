@@ -1,0 +1,88 @@
+import { describe, expect } from "bun:test";
+import {
+  getTestAddressID,
+  getTestCardID,
+  getTestProductVariantID,
+  setupApiTest,
+} from "./util";
+import { Examples } from "@terminal/core/examples";
+import { Address } from "@terminal/core/address/index";
+import { Card } from "@terminal/core/card/index";
+import { Cart } from "@terminal/core/cart/index";
+
+const { test, validateOpenAPIRoute } = setupApiTest();
+
+describe("cart", () => {
+  test("GET /cart", async () => {
+    const response = await validateOpenAPIRoute("get", "/cart");
+    expect(response.data).toBeDefined();
+    expect(response.data.items).toBeArray();
+  });
+
+  test("PUT /cart/item", async () => {
+    const productVariantID = await getTestProductVariantID();
+    const response = await validateOpenAPIRoute(
+      "put",
+      "/cart/item",
+      undefined,
+      {
+        productVariantID: productVariantID,
+        quantity: Examples.CartItem.quantity,
+      },
+    );
+    expect(response.data).toBeDefined();
+    expect(response.data.items).toBeArray();
+    expect(
+      response.data.items.some(
+        (item: any) =>
+          item.productVariantID === productVariantID &&
+          item.quantity === Examples.CartItem.quantity,
+      ),
+    ).toBe(true);
+  });
+
+  test("PUT /cart/address", async () => {
+    const addressID = await getTestAddressID();
+    const response = await validateOpenAPIRoute(
+      "put",
+      "/cart/address",
+      undefined,
+      { addressID },
+    );
+    expect(response.data).toBe("ok");
+  });
+
+  test("PUT /cart/card", async () => {
+    const cardID = await getTestCardID();
+    const response = await validateOpenAPIRoute(
+      "put",
+      "/cart/card",
+      undefined,
+      { cardID },
+    );
+    expect(response.data).toBe("ok");
+    await Card.remove(cardID);
+  });
+
+  test("POST /cart/convert", async () => {
+    const productVariantID = await getTestProductVariantID();
+    await Cart.setItem({
+      productVariantID: productVariantID,
+      quantity: Examples.CartItem.quantity,
+    });
+    const addressID = await getTestAddressID();
+    await Cart.setAddress(addressID);
+    const cardID = await getTestCardID();
+    await Cart.setCard(cardID);
+
+    // Now convert the cart to an order
+    const response = await validateOpenAPIRoute("post", "/cart/convert");
+    expect(response.data).toBeDefined();
+    expect(response.data.id).toBeDefined();
+    expect(response.data.items).toBeArray();
+
+    await Card.remove(cardID);
+    await Address.remove(addressID);
+  });
+});
+

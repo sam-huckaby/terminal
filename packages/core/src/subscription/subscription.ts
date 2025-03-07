@@ -12,6 +12,7 @@ import { Examples } from "../examples";
 import { DateTime } from "luxon";
 import { Order } from "../order/order";
 import { filter, groupBy, pipe, values } from "remeda";
+import { ErrorCodes, VisibleError } from "../error";
 
 export module Subscription {
   export const Info = z
@@ -59,19 +60,7 @@ export module Subscription {
         .select()
         .from(subscriptionTable)
         .where(eq(subscriptionTable.userID, useUserID()))
-        .then((rows) =>
-          rows.map(
-            (r): Info => ({
-              id: r.id,
-              cardID: r.cardID,
-              quantity: r.quantity,
-              addressID: r.addressID,
-              productVariantID: r.productVariantID,
-              next: r.timeNext || undefined,
-              schedule: r.schedule || undefined,
-            }),
-          ),
-        ),
+        .then((rows) => rows.map(serialize)),
     );
 
   export const create = fn(Info.omit({ id: true }), async (input) =>
@@ -88,7 +77,12 @@ export module Subscription {
         )
         .where(eq(productVariantTable.id, input.productVariantID))
         .then((rows) => rows[0]);
-      if (!product) throw new Error("Product variant not found");
+      if (!product)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Product variant not found",
+        );
       // if (!product?.subscription) {
       //   throw new Error("Product variant does not allow subscriptions");
       // }
@@ -118,8 +112,72 @@ export module Subscription {
             timeDeleted: null,
           },
         });
+      const subscription = await tx
+        .select({
+          id: subscriptionTable.id,
+        })
+        .from(subscriptionTable)
+        .where(
+          and(
+            eq(subscriptionTable.userID, useUserID()),
+            eq(subscriptionTable.productVariantID, input.productVariantID),
+          ),
+        )
+        .limit(1)
+        .then((rows) => rows[0]!);
+      return subscription.id;
     }),
   );
+
+  export const remove = fn(z.string(), (input) =>
+    useTransaction(async (tx) => {
+      const response = await tx
+        .delete(subscriptionTable)
+        .where(
+          and(
+            eq(subscriptionTable.id, input),
+            eq(subscriptionTable.userID, useUserID()),
+          ),
+        );
+      if (response.rowsAffected === 0) {
+        throw new VisibleError(
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+          "Subscription not found",
+        );
+      }
+    }),
+  );
+
+  export const fromID = fn(Info.shape.id, (id) =>
+    useTransaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(subscriptionTable)
+        .where(
+          and(
+            eq(subscriptionTable.id, id),
+            eq(subscriptionTable.userID, useUserID()),
+          ),
+        )
+        .limit(1);
+      return rows.map(serialize).at(0);
+    }),
+  );
+
+  function serialize(
+    input: typeof subscriptionTable.$inferSelect,
+  ): z.infer<typeof Info> {
+    return {
+      id: input.id,
+      cardID: input.cardID,
+      quantity: input.quantity,
+      addressID: input.addressID,
+      productVariantID: input.productVariantID,
+      next: input.timeNext || undefined,
+      schedule: input.schedule || undefined,
+    };
+  }
 
   export const next = fn(
     z.object({
@@ -196,17 +254,4 @@ export module Subscription {
       );
     }
   }
-
-  export const remove = fn(z.string(), (input) =>
-    useTransaction(async (tx) => {
-      await tx
-        .delete(subscriptionTable)
-        .where(
-          and(
-            eq(subscriptionTable.id, input),
-            eq(subscriptionTable.userID, useUserID()),
-          ),
-        );
-    }),
-  );
 }

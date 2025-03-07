@@ -13,6 +13,7 @@ resources:
       productVariant: ProductVariant
     methods:
       list: get /product
+      get: get /product/{id}
   profile:
     models:
       profile: Profile
@@ -24,6 +25,7 @@ resources:
       address: Address
     methods:
       list: get /address
+      get: get /address/{id}
       create: post /address
       delete: delete /address/{id}
   card:
@@ -31,6 +33,7 @@ resources:
       card: Card
     methods:
       list: get /card
+      get: get /card/{id}
       create: post /card
       collect: post /card/collect
       delete: delete /card/{id}
@@ -47,14 +50,15 @@ resources:
     models:
       order: Order
     methods:
+      list: get /order
       get: get /order/{id}
       create: post /order
-      list: get /order
   subscription:
     models:
       subscription: Subscription
     methods:
       list: get /subscription
+      get: get /subscription/{id}
       create: post /subscription
       delete: delete /subscription/{id}
   token:
@@ -62,16 +66,16 @@ resources:
       token: Token
     methods:
       list: get /token
-      create: post /token
       get: get /token/{id}
+      create: post /token
       delete: delete /token/{id}
   app:
     models:
       app: App
     methods:
       list: get /app
-      create: post /app
       get: get /app/{id}
+      create: post /app
       delete: delete /app/{id}
   email:
     methods:

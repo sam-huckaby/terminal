@@ -1,3 +1,4 @@
+import "zod-openapi/extend";
 import { issuer } from "@openauthjs/openauth";
 import { PasswordProvider } from "@openauthjs/openauth/provider/password";
 import { Provider } from "@openauthjs/openauth/provider/provider";

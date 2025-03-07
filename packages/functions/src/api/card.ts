@@ -1,14 +1,15 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { Result, validator, ErrorResponses, authRequired } from "./common";
 import { Card } from "@terminal/core/card/index";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
-import { validator } from "hono-openapi/zod";
+
 import { Examples } from "@terminal/core/examples";
 import { Resource } from "sst";
 import { Link } from "@terminal/core/link/index";
 import { User } from "@terminal/core/user/index";
 import { useUserID } from "@terminal/core/actor";
+import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
 export module CardApi {
   export const route = new Hono()
@@ -32,8 +33,12 @@ export module CardApi {
               },
             },
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         return c.json(
           {
@@ -41,6 +46,55 @@ export module CardApi {
           },
           200,
         );
+      },
+    )
+    .get(
+      "/:id",
+      describeRoute({
+        tags: ["Card"],
+        summary: "Get card",
+        description:
+          "Get a credit card by ID associated with the current user.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(
+                  Card.Info.openapi({
+                    description: "Credit card.",
+                    example: Examples.Card,
+                  }),
+                ),
+              },
+            },
+            description: "Credit card details.",
+          },
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
+        },
+      }),
+      authRequired,
+      validator(
+        "param",
+        z.object({
+          id: z.string().openapi({
+            description: "ID of the card to get.",
+            example: Examples.Card.id,
+          }),
+        }),
+      ),
+      async (c) => {
+        const data = await Card.fromID(c.req.valid("param").id);
+        if (!data) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "Card not found",
+          );
+        }
+        return c.json({ data }, 200);
       },
     )
     .post(
@@ -64,8 +118,13 @@ export module CardApi {
             },
             description: "ID of the card.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
         z.object({
@@ -100,8 +159,15 @@ export module CardApi {
             },
             description: "Card was deleted successfully.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          403: ErrorResponses[403],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "param",
         z.object({
@@ -146,8 +212,12 @@ export module CardApi {
             },
             description: "URL for collecting card information.",
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         const authorization = c.req.header("authorization");
         const token = authorization?.replace("Bearer ", "");

@@ -4,6 +4,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
+    "test": "sst shell -- bun test --timeout 10000",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {},

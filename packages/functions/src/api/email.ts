@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { Result, validator, ErrorResponses } from "./common";
 import { EmailOctopus } from "@terminal/core/email-octopus";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
-import { validator, resolver } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
 
 export module EmailApi {
@@ -15,14 +14,6 @@ export module EmailApi {
       description: "Subscribe to email updates from Terminal.",
       security: [],
       responses: {
-        400: {
-          content: {
-            "application/json": {
-              schema: resolver(z.object({ error: z.string() })),
-            },
-          },
-          description: "Error response.",
-        },
         200: {
           content: {
             "application/json": {
@@ -31,6 +22,9 @@ export module EmailApi {
           },
           description: "Email subscription was created.",
         },
+        400: ErrorResponses[400],
+        429: ErrorResponses[429],
+        500: ErrorResponses[500],
       },
     }),
     validator(
@@ -44,7 +38,6 @@ export module EmailApi {
     ),
     async (c) => {
       const body = c.req.valid("json");
-      if (!body.email) return c.json({ error: "Email is required" }, 400);
       await EmailOctopus.subscribe({ email: body.email });
       return c.json({ data: "ok" as const }, 200);
     },

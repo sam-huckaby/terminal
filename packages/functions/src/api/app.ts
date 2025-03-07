@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { authRequired, ErrorResponses, Result, validator } from "./common";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
-import { validator, resolver } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
 import { Api } from "@terminal/core/api/api";
+import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
 export module AppApi {
   export const route = new Hono()
@@ -28,8 +28,12 @@ export module AppApi {
             },
             description: "List of apps.",
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         const apps = await Api.Client.list();
         return c.json({ data: apps }, 200);
@@ -42,14 +46,6 @@ export module AppApi {
         summary: "Get app",
         description: "Get the app with the given ID.",
         responses: {
-          404: {
-            content: {
-              "application/json": {
-                schema: resolver(z.object({ error: z.string() })),
-              },
-            },
-            description: "App not found.",
-          },
           200: {
             content: {
               "application/json": {
@@ -63,8 +59,13 @@ export module AppApi {
             },
             description: "App.",
           },
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "param",
         z.object({
@@ -75,10 +76,15 @@ export module AppApi {
         }),
       ),
       async (c) => {
-        const param = c.req.valid("param");
-        const app = await Api.Client.fromID(param.id);
-        if (!app) return c.json({ error: "App not found." }, 404);
-        return c.json({ data: app }, 200);
+        const data = await Api.Client.fromID(c.req.valid("param").id);
+        if (!data) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "App not found",
+          );
+        }
+        return c.json({ data }, 200);
       },
     )
     .post(
@@ -107,11 +113,16 @@ export module AppApi {
             },
             description: "OAuth 2.0 client ID and secret.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
-        Api.Client.create.schema.openapi({
+        z.object({ name: z.string(), redirectURI: z.string() }).openapi({
           description: "Basic app information.",
           example: {
             name: Examples.App.name,
@@ -139,6 +150,12 @@ export module AppApi {
             },
             description: "App was deleted successfully.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          403: ErrorResponses[403],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
       validator(

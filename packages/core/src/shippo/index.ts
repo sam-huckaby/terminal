@@ -4,7 +4,7 @@ import { fn } from "../util/fn";
 import { useTransaction } from "../drizzle/transaction";
 import { orderItemTable, orderTable } from "../order/order.sql";
 import { productTable, productVariantTable } from "../product/product.sql";
-import { VisibleError } from "../error";
+import { ErrorCodes, VisibleError } from "../error";
 import { z } from "zod";
 import { userTable } from "../user/user.sql";
 import { Product } from "../product";
@@ -109,8 +109,8 @@ export module Shippo {
       console.error(JSON.stringify(shipment));
       if (shipment.status !== "SUCCESS" || !shipment.rates?.length) {
         throw new VisibleError(
-          "input",
-          "shipment.rate",
+          "validation",
+          ErrorCodes.Validation.INVALID_FORMAT,
           "Failed to get shipping rates.",
         );
       }
@@ -287,7 +287,11 @@ export module Shippo {
 
   export class AddressInvalidError extends VisibleError {
     constructor() {
-      super("input", "address.invalid", "Address is invalid");
+      super(
+        "validation",
+        ErrorCodes.Validation.INVALID_FORMAT,
+        "Address is invalid",
+      );
     }
   }
 

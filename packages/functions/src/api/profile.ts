@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { Result, validator, ErrorResponses, authRequired } from "./common";
 import { User } from "@terminal/core/user/index";
 import { useUserID } from "@terminal/core/actor";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
-import { validator, resolver } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
 
 export module ProfileApi {
@@ -26,14 +25,6 @@ export module ProfileApi {
         summary: "Get profile",
         description: "Get the current user's profile.",
         responses: {
-          404: {
-            content: {
-              "application/json": {
-                schema: resolver(z.object({ error: z.string() })),
-              },
-            },
-            description: "User profile not found.",
-          },
           200: {
             content: {
               "application/json": {
@@ -47,11 +38,14 @@ export module ProfileApi {
             },
             description: "User profile information.",
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         const user = await User.fromID(useUserID());
-        if (!user) return c.json({ error: "User profile not found." }, 404);
         return c.json({ data: { user } }, 200);
       },
     )
@@ -62,14 +56,6 @@ export module ProfileApi {
         summary: "Update profile",
         description: "Update the current user's profile.",
         responses: {
-          404: {
-            content: {
-              "application/json": {
-                schema: resolver(z.object({ error: z.string() })),
-              },
-            },
-            description: "User profile not found.",
-          },
           200: {
             content: {
               "application/json": {
@@ -83,11 +69,16 @@ export module ProfileApi {
             },
             description: "Updated user profile information.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
-        User.update.schema.omit({ id: true }).openapi({
+        z.object({ name: z.string(), email: z.string().email() }).openapi({
           description: "The user's updated profile information.",
           example: { name: Examples.User.name, email: Examples.User.email },
         }),
@@ -96,8 +87,7 @@ export module ProfileApi {
         const id = useUserID();
         await User.update({ id, ...c.req.valid("json") });
         const user = await User.fromID(id);
-        if (!user) return c.json({ error: "User profile not found" }, 404);
-        return c.json({ data: user }, 200);
+        return c.json({ data: { user } }, 200);
       },
     );
 }

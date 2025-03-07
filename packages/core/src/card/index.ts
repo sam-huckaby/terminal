@@ -7,7 +7,7 @@ import { userTable } from "../user/user.sql";
 import { createID } from "../util/id";
 import { useUserID } from "../actor";
 import { cardTable } from "./card.sql";
-import { VisibleError } from "../error";
+import { ErrorCodes, VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { cartTable } from "../cart/cart.sql";
@@ -82,8 +82,8 @@ export module Card {
         if (typeof paymentMethod === "string") {
           console.error(paymentMethod);
           throw new VisibleError(
-            "input",
-            "payment.invalid",
+            "validation",
+            ErrorCodes.Validation.INVALID_FORMAT,
             "Card details are invalid",
           );
         }
@@ -96,8 +96,8 @@ export module Card {
         );
         if (existing)
           throw new VisibleError(
-            "input",
-            "payment.invalid",
+            "validation",
+            ErrorCodes.Validation.ALREADY_EXISTS,
             "Payment method already exists",
           );
 
@@ -105,7 +105,11 @@ export module Card {
           .attach(paymentMethod.id, { customer: user.stripeCustomerID })
           .catch((e) => e.message as string);
         if (typeof attached === "string")
-          throw new VisibleError("input", "payment.invalid", attached);
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.INVALID_FORMAT,
+            attached,
+          );
 
         const id = createID("card");
         await tx
@@ -136,6 +140,17 @@ export module Card {
     },
   );
 
+  export const fromID = fn(Info.shape.id, (id) =>
+    useTransaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(cardTable)
+        .where(and(eq(cardTable.id, id), eq(cardTable.userID, useUserID())))
+        .limit(1);
+      return rows.map(serialize).at(0);
+    }),
+  );
+
   export const remove = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
       const subscriptions = await tx
@@ -144,9 +159,9 @@ export module Card {
         .where(eq(subscriptionTable.cardID, input));
       if (subscriptions.length > 0) {
         throw new VisibleError(
-          "input",
-          "card.in-use",
-          "card is in use by a subscription, please cancel the subscription first.",
+          "validation",
+          ErrorCodes.Validation.IN_USE,
+          "Card is in use by a subscription, please cancel the subscription first.",
         );
       }
 
@@ -154,11 +169,11 @@ export module Card {
         .select({ stripePaymentMethodID: cardTable.stripePaymentMethodID })
         .from(cardTable)
         .where(eq(cardTable.id, input))
-        .then((r) => r[0]!.stripePaymentMethodID);
+        .then((r) => r[0]?.stripePaymentMethodID);
       if (!paymentMethodID)
         throw new VisibleError(
-          "input",
-          "payment.invalid",
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
           "Stripe payment method not found",
         );
       await stripe.paymentMethods

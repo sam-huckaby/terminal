@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { createContext } from "./context";
 import { useTransaction } from "./drizzle/transaction";
 import { UserFlags, userTable } from "./user/user.sql";
-import { VisibleError } from "./error";
+import { ErrorCodes, VisibleError } from "./error";
 
 export interface UserActor {
   type: "user";
@@ -32,9 +32,9 @@ export function useUserID() {
   const actor = ActorContext.use();
   if (actor.type === "user") return actor.properties.userID;
   throw new VisibleError(
-    "auth",
-    "unauthorized",
-    `You don't have permission to access this resource`,
+    "authentication",
+    ErrorCodes.Authentication.UNAUTHORIZED,
+    `You don't have permission to access this resource.`,
   );
 }
 
@@ -48,8 +48,8 @@ export async function assertFlag(flag: keyof UserFlags) {
         const flags = rows[0]?.flags;
         if (!flags)
           throw new VisibleError(
-            "auth",
-            "user.flags",
+            "forbidden",
+            ErrorCodes.Permission.INSUFFICIENT_PERMISSIONS,
             "Actor does not have " + flag + " flag",
           );
       }),
@@ -67,6 +67,10 @@ export function useActor() {
 export function assertActor<T extends Actor["type"]>(type: T) {
   const actor = useActor();
   if (actor.type !== type)
-    throw new VisibleError("auth", "actor.invalid", `Actor is not "${type}"`);
+    throw new VisibleError(
+      "authentication",
+      ErrorCodes.Authentication.UNAUTHORIZED,
+      `Actor is not "${type}"`,
+    );
   return actor as Extract<Actor, { type: T }>;
 }

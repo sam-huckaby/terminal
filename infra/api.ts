@@ -17,6 +17,7 @@ export const urls = new sst.Linkable("Urls", {
     auth: "https://auth." + domain,
     site: $dev ? "http://localhost:4321" : "https://www." + domain,
     short: "https://" + shortDomain,
+    openapi: "https://api." + domain + "/doc",
   },
 });
 

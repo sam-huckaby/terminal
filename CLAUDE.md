@@ -1,6 +1,7 @@
 # Terminal Shop - Development Guide
 
 ## Repository Structure
+
 - `/infra/`: AWS/SST infrastructure definitions
 - `/packages/core/`: Business logic, data models, Drizzle ORM, and database access
 - `/packages/functions/`: AWS Lambda functions for API endpoints using Hono.js
@@ -9,6 +10,7 @@
 - `/packages/forge/`, `/packages/vhs/`, `/packages/workers/`: Supporting services
 
 ## Build & Test Commands
+
 - `bun dev`: Run development environment with SST
 - `bun typecheck`: Run type checking across all packages
 - `bun test path/to/file.test.ts`: Run specific test file
@@ -17,6 +19,7 @@
 - `bun db:connect`: Connect to MySQL database (in core package)
 
 ## Code Style Guidelines
+
 - **Imports**: Group by source, internal imports after external
 - **Types**: Use Zod for runtime validation, explicit TypeScript types for interfaces
 - **Naming**: PascalCase for modules/namespaces, camelCase for functions/variables

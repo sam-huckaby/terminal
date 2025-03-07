@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { Result } from "./common";
+import { Result, validator, ErrorResponses, authRequired } from "./common";
 import { Order } from "@terminal/core/order/order";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
-import { validator, resolver } from "hono-openapi/zod";
 import { Examples } from "@terminal/core/examples";
+import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
 export module OrderApi {
   export const route = new Hono()
@@ -28,8 +28,12 @@ export module OrderApi {
             },
             description: "List of orders.",
           },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       async (c) => {
         const data = await Order.list();
         return c.json(
@@ -47,14 +51,6 @@ export module OrderApi {
         summary: "Get order",
         description: "Get the order with the given ID.",
         responses: {
-          404: {
-            content: {
-              "application/json": {
-                schema: resolver(z.object({ error: z.string() })),
-              },
-            },
-            description: "Order not found.",
-          },
           200: {
             content: {
               "application/json": {
@@ -68,8 +64,13 @@ export module OrderApi {
             },
             description: "Order information.",
           },
+          401: ErrorResponses[401],
+          404: ErrorResponses[404],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "param",
         z.object({
@@ -80,10 +81,15 @@ export module OrderApi {
         }),
       ),
       async (c) => {
-        const param = c.req.valid("param");
-        const order = await Order.fromID(param.id);
-        if (!order) return c.json({ error: "Order not found" }, 404);
-        return c.json({ data: order }, 200);
+        const data = await Order.fromID(c.req.valid("param").id);
+        if (!data) {
+          throw new VisibleError(
+            "not_found",
+            ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+            "Order not found",
+          );
+        }
+        return c.json({ data }, 200);
       },
     )
     .post(
@@ -107,8 +113,13 @@ export module OrderApi {
             },
             description: "Order ID.",
           },
+          400: ErrorResponses[400],
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
         },
       }),
+      authRequired,
       validator(
         "json",
         z

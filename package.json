@@ -7,7 +7,6 @@
     "typecheck": "bun --filter=* typecheck",
     "sso": "aws sso login --sso-session=terminal --no-browser",
     "sdk": "sst shell ./packages/scripts/stainless",
-    "openapi": "sst shell ./packages/scripts/openapi",
     "cli": "cd ./packages/go && sst shell --stage=dev go run ./cmd/cli/main.go"
   },
   "workspaces": [
