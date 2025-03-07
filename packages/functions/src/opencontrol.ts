@@ -33,28 +33,25 @@ const stripe = tool({
   name: "stripe",
   description: "make a call to the stripe api",
   args: z.object({
-    url: z.string().describe("Full url to call included query params"),
-    method: z.string().optional().describe("HTTP method to use"),
-    contentType: z
-      .string()
-      .optional()
-      .describe("HTTP content type to use if not GET"),
-    body: z
-      .string()
-      .optional()
-      .describe("HTTP body to use, do not include for GET"),
+    method: z.string().describe("HTTP method to use"),
+    path: z.string().describe("Path to call"),
+    query: z.record(z.string()).optional().describe("Query params"),
+    contentType: z.string().optional().describe("HTTP content type to use"),
+    body: z.string().optional().describe("HTTP body to use if it is not GET"),
   }),
   async run(input) {
-    const response = await fetch(input.url, {
+    const url = new URL("https://api.stripe.com" + input.path);
+    if (input.query) url.search = new URLSearchParams(input.query).toString();
+    const response = await fetch(url.toString(), {
       method: input.method,
       headers: {
         Authorization: `Bearer ${Resource.StripeSecret.value}`,
         "Content-Type": input.contentType,
       },
-      body: input.body,
+      body: input.body ? input.body : undefined,
     });
     if (!response.ok) throw new Error(await response.text());
-    return response.json();
+    return response.text();
   },
 });
 
@@ -98,5 +95,4 @@ const app = create({
   tools: [database, inventory, stripe, ...terminal],
 });
 
-// @ts-ignore
 export const handler = handle(app);
