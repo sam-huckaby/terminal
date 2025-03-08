@@ -61,7 +61,9 @@ new sst.aws.Service("SSH", {
         ? undefined
         : {
             name: domain,
-            dns: sst.cloudflare.dns(),
+            dns: sst.cloudflare.dns({
+              proxy: true,
+            }),
           },
     rules: [
       { listen: "22/tcp", forward: "2222/tcp" },

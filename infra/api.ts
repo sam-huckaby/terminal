@@ -1,5 +1,5 @@
 import { secret } from "./secret";
-import { domain, shortDomain } from "./dns";
+import { domain, shortDomain, zone } from "./dns";
 import { database } from "./database";
 import { webhook } from "./stripe";
 import { bus } from "./bus";
@@ -52,7 +52,9 @@ export const auth = new sst.aws.Auth("Auth", {
   },
   domain: {
     name: "auth." + domain,
-    dns: sst.cloudflare.dns(),
+    dns: sst.cloudflare.dns({
+      proxy: true,
+    }),
   },
   forceUpgrade: "v2",
 });
@@ -73,13 +75,31 @@ const apiFn = new sst.aws.Function("ApiFn", {
   url: true,
 });
 
+// Rate limiting configuration
+export const apiRateLimit = new cloudflare.RateLimit("ApiRateLimit", {
+  zoneId: zone.id,
+  description: "API rate limit by IP address",
+  match: {
+    request: {
+      urlPattern: `api.${domain}/*`,
+    },
+  },
+  threshold: 10,
+  period: 60,
+  action: {
+    mode: "challenge",
+  },
+});
+
 export const api = new sst.aws.Router("Api", {
   routes: {
     "/*": apiFn.url,
   },
   domain: {
     name: "api." + domain,
-    dns: sst.cloudflare.dns(),
+    dns: sst.cloudflare.dns({
+      proxy: true,
+    }),
   },
 });
 
