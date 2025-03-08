@@ -108,10 +108,10 @@ func (m model) reorderProducts() model {
 
 	// Split into featured and originals while maintaining relative order within each category
 	for _, p := range m.products {
-		if val, exists := p.Tags["featured"]; !exists || val != "true" {
-			originals = append(originals, p)
-		} else {
+		if p.Tags.Featured {
 			featured = append(featured, p)
+		} else {
+			originals = append(originals, p)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (m model) ShopView() string {
 		if w > menuWidth {
 			menuWidth = w
 		}
-		if val, exists := p.Tags["featured"]; exists && val == "true" {
+		if p.Tags.Featured {
 			featuredCount++
 		}
 	}
@@ -327,11 +327,7 @@ func (m model) ShopView() string {
 func (m model) UpdateSelectedTheme() model {
 	var highlight string
 	product := m.products[m.state.shop.selected]
-	for key, value := range product.Tags {
-		if key == "color" {
-			highlight = value
-		}
-	}
+	highlight = product.Tags.Color
 
 	if highlight != "" {
 		m.theme = theme.BasicTheme(m.renderer, &highlight)

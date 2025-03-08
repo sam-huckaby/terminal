@@ -112,10 +112,8 @@ func (m model) AppsFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		form := m.state.apps.form
 		return m, func() tea.Msg {
 			params := terminal.AppNewParams{
-				App: terminal.AppParam{
-					Name:        terminal.F(form.GetString("name")),
-					RedirectUri: terminal.F(form.GetString("redirectUri")),
-				},
+				Name:        terminal.F(form.GetString("name")),
+				RedirectUri: terminal.F(form.GetString("redirectUri")),
 			}
 			response, err := m.client.App.New(m.context, params)
 			if err != nil {
