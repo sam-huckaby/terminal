@@ -75,22 +75,6 @@ const apiFn = new sst.aws.Function("ApiFn", {
   url: true,
 });
 
-// Rate limiting configuration
-export const apiRateLimit = new cloudflare.RateLimit("ApiRateLimit", {
-  zoneId: zone.id,
-  description: "API rate limit by IP address",
-  match: {
-    request: {
-      urlPattern: `api.${domain}/*`,
-    },
-  },
-  threshold: 10,
-  period: 60,
-  action: {
-    mode: "challenge",
-  },
-});
-
 export const api = new sst.aws.Router("Api", {
   routes: {
     "/*": apiFn.url,
