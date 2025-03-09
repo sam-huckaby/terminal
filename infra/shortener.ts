@@ -17,7 +17,6 @@ export const linkShortener = new sst.aws.Router("LinkShortener", {
     name: shortDomain,
     dns: sst.cloudflare.dns({
       zone: shortZone.id,
-      proxy: true,
     }),
   },
 });

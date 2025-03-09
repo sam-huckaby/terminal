@@ -70,8 +70,6 @@ export const vhs = new sst.aws.Cdn("VhsCdn", {
   },
   domain: {
     name: "vhs2." + domain,
-    dns: sst.cloudflare.dns({
-      proxy: true,
-    }),
+    dns: sst.cloudflare.dns({}),
   },
 });
