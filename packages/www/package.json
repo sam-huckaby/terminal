@@ -44,7 +44,7 @@
     "react": "19.0.0",
     "remark-directive": "3.0.0",
     "solid-js": "^1.8.16",
-    "sst": "3.9.27",
+    "sst": "3.9.33",
     "stripe": "*",
     "zod": "*"
   }
