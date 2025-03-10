@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@terminal/core/drizzle/index";
 import { Inventory } from "@terminal/core/inventory/index";
 import { Resource } from "sst";
+import { tools } from "sst/opencontrol";
 
 const database = tool({
   name: "database_query_readonly",
@@ -92,7 +93,7 @@ export const terminal = [
 
 const app = create({
   key: process.env.OPENCONTROL_KEY,
-  tools: [database, inventory, stripe, ...terminal],
+  tools: [database, inventory, stripe, ...terminal, ...tools],
 });
 
 export const handler = handle(app);
