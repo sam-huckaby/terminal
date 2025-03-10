@@ -7,15 +7,13 @@ const key = new random.RandomPassword("OpenControlPassword", {
   special: false,
 });
 
-export const opencontrol = new sst.aws.Function("OpenControl", {
-  handler: "packages/functions/src/opencontrol.handler",
-  link: [database, ...allSecrets, api],
-  environment: {
-    OPENCONTROL_KEY: key.result,
+new sst.aws.OpenControl("OpenControl", {
+  server: {
+    handler: "packages/functions/src/opencontrol.handler",
+    link: [database, ...allSecrets, api],
+    environment: {
+      OPENCONTROL_KEY: key.result,
+    },
+    url: true,
   },
-  url: true,
 });
-
-export const outputs = {
-  opencontrol: $interpolate`${opencontrol.url}${key.result}`,
-};
