@@ -7,7 +7,6 @@ import { productTable, productVariantTable } from "../product/product.sql";
 import { ErrorCodes, VisibleError } from "../error";
 import { z } from "zod";
 import { userTable } from "../user/user.sql";
-import { Product } from "../product";
 
 const TERMINAL_ADDRESS = {
   name: "Terminal Products Inc",
@@ -144,6 +143,7 @@ export module Shippo {
           existingRateID: orderTable.shippoRateID,
           email: userTable.email,
           price: productVariantTable.price,
+          weight: productVariantTable.weight,
         })
         .from(orderTable)
         .innerJoin(orderItemTable, eq(orderItemTable.orderID, orderTable.id))
@@ -169,7 +169,7 @@ export module Shippo {
       const rate = await createShipmentRate({
         address: terminalOrder.address,
         ounces: items
-          .map((item) => item.quantity * Product.TEMPORARY_FIXED_WEIGHT_OZ)
+          .map((item) => item.quantity * item.weight)
           .reduce((a, b) => a + b, 0),
         subtotal: items.map((item) => item.amount).reduce((a, b) => a + b, 0),
       });
@@ -178,7 +178,7 @@ export module Shippo {
     const shipping = terminalOrder.address;
 
     const weight = items.reduce(
-      (sum, item) => sum + item.quantity * Product.TEMPORARY_FIXED_WEIGHT_OZ,
+      (sum, item) => sum + item.quantity * item.weight,
       0,
     );
     const order = await api("POST", "/v1/orders", {
