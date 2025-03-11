@@ -110,18 +110,19 @@ export module Template {
       `Amount: $${dollarValue}`,
       ``,
       `To redeem your gift card, simply enter this code during checkout at our Terminal shop.`,
-      `You can access our terminal shop via SSH: ssh shop@terminal.co`,
+      `You can access the Terminal shop via SSH: ssh terminal.shop`,
       ``,
-      `Happy shopping!`,
+      `Enjoy!`,
       `The Terminal Team`,
       ``,
+      `p.s. No HTML tags were released into the atmosphere producing this 100% organic, css-free, plain text email`,
     ].join("\n");
 
     await Email.send(
-      "giftcard",
+      "support",
       giftCard.recipientEmail,
-      `Your $${dollarValue} Terminal Gift Card`,
-      body
+      `Your Terminal Gift Card`,
+      body,
     );
   }
 }
