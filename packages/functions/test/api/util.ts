@@ -82,10 +82,10 @@ export function setupApiTest() {
 
   beforeAll(async () => {
     // console.debug = mock();
-    console.log = mock();
-    console.info = mock();
-    console.warn = mock();
-    console.error = mock();
+    // console.log = mock();
+    // console.info = mock();
+    // console.warn = mock();
+    // console.error = mock();
 
     userID = await User.create({ fingerprint: "__test-user" });
     await withContext(async () => {

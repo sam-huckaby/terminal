@@ -141,16 +141,16 @@ export const routes = app
   .route("/hook", Hook.route)
   .route("/print", Print.route)
   .onError((error, c) => {
-    // console.error("api error:", error);
-
     // Handle our custom VisibleError
     if (error instanceof VisibleError) {
+      console.error("api error:", error);
       // @ts-expect-error
       return c.json(error.toResponse(), error.statusCode());
     }
 
     // Handle HTTP exceptions
     if (error instanceof HTTPException) {
+      console.error("http error:", error);
       return c.json(
         {
           type: "validation",
@@ -162,7 +162,7 @@ export const routes = app
     }
 
     // Handle any other errors as internal server errors
-    console.error("Unhandled error:", error);
+    console.error("unhandled error:", error);
     return c.json(
       {
         type: "internal",

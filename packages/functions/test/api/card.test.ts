@@ -19,6 +19,11 @@ describe("card", () => {
   });
 
   test("POST /card", async () => {
+    // Remove any existing cards so we don't get
+    // "already exists" errors
+    const cards = await Card.list();
+    await Promise.all(cards.map((c) => Card.remove(c.id)));
+
     const response = await validateOpenAPIRoute("post", "/card", undefined, {
       token: "tok_visa",
     });
