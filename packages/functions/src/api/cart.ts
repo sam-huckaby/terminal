@@ -178,7 +178,8 @@ export module CartApi {
             "application/json": {
               schema: z.object({
                 recipientEmail: z.string().email().optional().openapi({
-                  description: "Email address for gift card recipient (required if cart contains gift cards)",
+                  description:
+                    "Email address for gift card recipient (required if cart contains gift cards)",
                 }),
               }),
             },
@@ -207,9 +208,11 @@ export module CartApi {
       authRequired,
       validator(
         "json",
-        z.object({
-          recipientEmail: z.string().email().optional(),
-        }).optional(),
+        z
+          .object({
+            recipientEmail: z.string().email().optional(),
+          })
+          .optional(),
       ),
       async (c) => {
         const body = c.req.valid("json");
@@ -240,13 +243,15 @@ export module CartApi {
             content: {
               "application/json": {
                 schema: Result(
-                  z.object({
-                    giftCardID: z.string(),
-                    appliedAmount: z.number().int(),
-                    remainingBalance: z.number().int(),
-                  }).openapi({
-                    description: "Gift card redemption result",
-                  }),
+                  z
+                    .object({
+                      giftCardID: z.string(),
+                      appliedAmount: z.number().int(),
+                      remainingBalance: z.number().int(),
+                    })
+                    .openapi({
+                      description: "Gift card redemption result",
+                    }),
                 ),
               },
             },

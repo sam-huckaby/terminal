@@ -13,6 +13,8 @@ export function Result<T extends z.ZodTypeAny>(schema: T) {
   );
 }
 
+export const noop: MiddlewareHandler = (_c, next) => next();
+
 export const authRequired: MiddlewareHandler = async (c, next) => {
   if (!c.req.header("authorization"))
     throw new VisibleError(
@@ -31,7 +33,6 @@ export const authRequired: MiddlewareHandler = async (c, next) => {
 export const validator = function (
   target: Parameters<typeof zodValidator>[0],
   schema: Parameters<typeof zodValidator>[1],
-  errorHandler?: Parameters<typeof zodValidator>[2],
 ) {
   // Create a custom error handler that formats errors according to our standards
   const standardErrorHandler: Parameters<typeof zodValidator>[2] = (
@@ -107,9 +108,6 @@ export const validator = function (
       console.log("Validation error in validator:", response);
       return c.json(response, 400);
     }
-
-    // If custom error handler is provided, call it with the result
-    if (errorHandler) return errorHandler(result, c);
   };
 
   // Use the original validator with our custom error handler

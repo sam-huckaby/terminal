@@ -151,7 +151,6 @@ export const routes = app
 
     // Handle HTTP exceptions
     if (error instanceof HTTPException) {
-      console.debug({ error });
       return c.json(
         {
           type: "validation",
