@@ -22,6 +22,8 @@ export const orderTable = mysqlTable("order", {
   shippingAddress: address("shipping_address").notNull(),
   shippingAmount: dollar("shipping_amount").notNull(),
   card: json("card").$type<Omit<Card.Info, "id">>(),
+  giftCardID: ulid("gift_card_id"),
+  giftCardAmount: dollar("gift_card_amount"),
   trackingNumber: text("tracking_number"),
   trackingURL: text("tracking_url"),
   labelURL: text("label_url"),

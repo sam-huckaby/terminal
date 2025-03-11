@@ -13,7 +13,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
 import { Address } from "../address";
-import { Product } from "../product";
+import { GiftCard } from "../giftcard";
 
 export module Cart {
   export const Item = z
@@ -65,6 +65,9 @@ export module Cart {
         description: "ID of the card selected on the current user's cart.",
         example: Examples.Cart.cardID,
       }),
+      giftCardID: z.string().optional().openapi({
+        description: "ID of the gift card applied to the current user's cart.",
+      }),
       amount: z
         .object({
           subtotal: z.number().int().openapi({
@@ -75,6 +78,14 @@ export module Cart {
             description:
               "Shipping amount of the current user's cart, in cents (USD).",
             example: Examples.Cart.amount.shipping,
+          }),
+          giftCard: z.number().int().optional().openapi({
+            description:
+              "Amount applied from gift card on the current user's cart, in cents (USD).",
+          }),
+          total: z.number().int().optional().openapi({
+            description:
+              "Total amount after gift card applied, in cents (USD).",
           }),
         })
         .openapi({
@@ -113,6 +124,8 @@ export module Cart {
         .select({
           cardID: cardTable.id,
           addressID: addressTable.id,
+          giftCardID: cartTable.giftCardID,
+          giftCardAmount: cartTable.giftCardAmount,
           shippingAmount: cartTable.shippingAmount,
           shippingService: cartTable.shippingService,
           shippingDeliveryEstimate: cartTable.shippingDeliveryEstimate,
@@ -133,15 +146,24 @@ export module Cart {
         };
       const items = await list();
       const subtotal = items.reduce((acc, item) => item.subtotal + acc, 0);
+
+      // Calculate the total after applying gift card amount
+      const shippingAmount = cart.shippingAmount ?? 0;
+      const giftCardAmount = cart.giftCardAmount ?? 0;
+      const total = Math.max(0, subtotal + shippingAmount - giftCardAmount);
+
       return {
         items,
         subtotal,
         amount: {
           subtotal,
-          shipping: cart.shippingAmount ?? undefined,
+          shipping: shippingAmount || undefined,
+          giftCard: giftCardAmount || undefined,
+          total: total || undefined,
         },
         cardID: cart.cardID || undefined,
         addressID: cart.addressID || undefined,
+        giftCardID: cart.giftCardID || undefined,
         shipping: {
           service: cart.shippingService || undefined,
           timeframe: cart.shippingDeliveryEstimate || undefined,
@@ -156,6 +178,7 @@ export module Cart {
     ounces: number,
     address: Address.Inner,
   ) {
+    if (ounces === 0) return undefined;
     const rate = await Shippo.createShipmentRate({ ounces, address, subtotal });
     if (address.country === "US") {
       return {
@@ -199,6 +222,10 @@ export module Cart {
             sql`sum(${productVariantTable.price} * ${cartItemTable.quantity})`.mapWith(
               Number,
             ),
+          weight:
+            sql`sum(${productVariantTable.weight} * ${cartItemTable.quantity})`.mapWith(
+              Number,
+            ),
           address: addressTable.address,
         })
         .from(cartItemTable)
@@ -210,7 +237,7 @@ export module Cart {
         .where(eq(cartItemTable.userID, useUserID()))
         .then((rows) => rows[0]!);
 
-      const weight = response.count * Product.TEMPORARY_FIXED_WEIGHT_OZ;
+      const weight = response.weight;
       const address = response.address;
       return await calculateShipping(response.subtotal, weight, address);
     });
@@ -340,5 +367,119 @@ export module Cart {
     );
   }
 
-  export async function subtotal() {}
+  export const redeemGiftCard = fn(z.string(), async (giftCardID) => {
+    return createTransaction(async (tx) => {
+      // Verify the gift card exists and has available balance
+      const giftCard = await GiftCard.fromID(giftCardID);
+
+      if (!giftCard) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Gift card not found",
+          "giftCardID",
+        );
+      }
+
+      if (giftCard.balance <= 0) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_STATE,
+          "Gift card has zero balance",
+          "giftCardID",
+        );
+      }
+
+      // Get the cart information
+      const cartInfo = await tx
+        .select({
+          id: cartTable.id,
+          subtotal: sql<string>`(
+              SELECT SUM(ci.quantity * pv.price)
+              FROM cart_item ci
+              JOIN product_variant pv ON ci.product_variant_id = pv.id
+              WHERE ci.user_id = ${useUserID()}
+            )`,
+          shippingAmount: cartTable.shippingAmount,
+        })
+        .from(cartTable)
+        .where(eq(cartTable.userID, useUserID()))
+        .then((rows) => rows[0]);
+
+      if (!cartInfo) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_STATE,
+          "No active cart found",
+        );
+      }
+
+      // Calculate the total amount to pay
+      const subtotal = cartInfo.subtotal ? parseInt(cartInfo.subtotal, 10) : 0;
+      const shipping = cartInfo.shippingAmount || 0;
+      const totalBeforeDiscount = subtotal + shipping;
+
+      // Calculate the amount to apply from gift card (min of balance and total)
+      const amountToApply = Math.min(giftCard.balance, totalBeforeDiscount);
+
+      // Update the gift card balance
+      const newBalance = giftCard.balance - amountToApply;
+      await GiftCard.updateBalance({
+        id: giftCardID,
+        newBalance,
+      });
+
+      // Update the cart with gift card information
+      await tx
+        .update(cartTable)
+        .set({
+          giftCardID,
+          giftCardAmount: amountToApply,
+        })
+        .where(eq(cartTable.id, cartInfo.id));
+
+      return {
+        giftCardID,
+        appliedAmount: amountToApply,
+        remainingBalance: newBalance,
+      };
+    });
+  });
+
+  export const removeGiftCard = fn(z.void(), async () => {
+    return useTransaction(async (tx) => {
+      const cartWithGiftCard = await tx
+        .select({
+          giftCardID: cartTable.giftCardID,
+          giftCardAmount: cartTable.giftCardAmount,
+        })
+        .from(cartTable)
+        .where(eq(cartTable.userID, useUserID()))
+        .then((rows) => rows[0]);
+      if (!cartWithGiftCard?.giftCardID)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_STATE,
+          "Cart does not have a gift card",
+        );
+      const giftCard = await GiftCard.fromID(cartWithGiftCard.giftCardID);
+      if (!giftCard)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_STATE,
+          "Could not find gift card",
+        );
+      await GiftCard.updateBalance({
+        id: cartWithGiftCard.giftCardID,
+        newBalance: giftCard.balance + (cartWithGiftCard.giftCardAmount ?? 0),
+      });
+      await tx
+        .update(cartTable)
+        .set({
+          giftCardID: null,
+          giftCardAmount: null,
+        })
+        .where(eq(cartTable.userID, useUserID()));
+    });
+  });
 }

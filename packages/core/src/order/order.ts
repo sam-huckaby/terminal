@@ -40,9 +40,9 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
-import { Product } from "../product";
 import { Cart } from "../cart";
 import { ProductFilter } from "../product/filter";
+import { GiftCard } from "../giftcard";
 
 export module Order {
   export const Item = z
@@ -224,140 +224,48 @@ export module Order {
     ),
   );
 
-  export async function convertCart() {
+  export async function convertCart(recipientEmail?: string) {
     const userID = useUserID();
     const { items, cart } = await useTransaction(async (tx) => {
       const items = await tx
-        .select({
-          productVariantID: cartItemTable.productVariantID,
-          tags: productTable.tags,
-          quantity: cartItemTable.quantity,
-          subtotal: sql`(${cartItemTable.quantity} * ${productVariantTable.price})`,
-        })
+        .select()
         .from(cartItemTable)
-        .innerJoin(
-          productVariantTable,
-          eq(cartItemTable.productVariantID, productVariantTable.id),
-        )
-        .innerJoin(
-          productTable,
-          eq(productVariantTable.productID, productTable.id),
-        )
-        .where(eq(cartItemTable.userID, userID))
-        .then((rows) =>
-          rows.map((row) => ({
-            ...row,
-            subtotal: z.coerce.number().int().parse(row.subtotal),
-          })),
-        );
-
+        .where(eq(cartItemTable.userID, userID));
       const cart = await tx
-        .select({
-          shipping: addressTable.address,
-          card: getTableColumns(cardTable),
-          stripeCustomerID: userTable.stripeCustomerID,
-          email: userTable.email,
-          shippingAmount: cartTable.shippingAmount,
-          shippoRateID: cartTable.shippoRateID,
-        })
+        .select()
         .from(cartTable)
-        .innerJoin(addressTable, eq(cartTable.addressID, addressTable.id))
-        .innerJoin(cardTable, eq(cartTable.cardID, cardTable.id))
-        .innerJoin(userTable, eq(cartTable.userID, userTable.id))
         .where(eq(cartTable.userID, userID))
         .then((rows) => rows[0]);
       return { items, cart };
     });
-    if (!cart) throw new Error("No cart found");
-    const filterCtx = {
-      ...ProductFilter.use(),
-      region: undefined,
-      country: cart.shipping.country,
-    };
-    for (const item of items) {
-      if (!ProductFilter.run(filterCtx, item.tags || {}))
-        throw new Error("This product cannot be purchased.");
-    }
-    const orderID = createID("order");
-    const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
-    const shipping = cart.shippingAmount;
-    if (shipping === null) throw new Error("Shipping amount not set");
-    try {
-      const payment = [
-        "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
-        "usr_01J1KHKPA8QK82MBHQDBQP78XK",
-        "usr_01J1KHPJ88QEFEQ6K27QA9C4WN",
-        "usr_01JG4BDDCKTY6CYWF6JXKVPNNT",
-      ].includes(userID)
-        ? undefined
-        : await stripe.paymentIntents.create({
-            amount: subtotal + shipping,
-            automatic_payment_methods: {
-              enabled: true,
-              allow_redirects: "never",
-            },
-            confirm: true,
-            currency: "usd",
-            shipping: {
-              name: cart.shipping.name,
-              address: {
-                city: cart.shipping.city,
-                line1: cart.shipping.street1,
-                line2: cart.shipping.street2,
-                postal_code: cart.shipping.zip,
-                state: cart.shipping.province,
-                country: cart.shipping.country,
-              },
-            },
-            customer: cart.stripeCustomerID,
-            metadata: {
-              orderID,
-            },
-            payment_method: cart.card.stripePaymentMethodID,
-          });
-      return createTransaction(async (tx) => {
-        await tx.insert(orderTable).values({
-          id: orderID,
-          userID,
-          email: cart.email,
-          stripePaymentIntentID: payment?.id,
-          shippingAddress: cart.shipping,
-          shippingAmount: shipping,
-          shippoRateID: cart.shippoRateID,
-          card: {
-            brand: cart.card.brand,
-            last4: cart.card.last4,
-            expiration: {
-              month: cart.card.expirationMonth,
-              year: cart.card.expirationYear,
-            },
-          },
-        });
-        await tx.insert(orderItemTable).values(
-          items.map((item) => ({
-            id: createID("cartItem"),
-            amount: item.subtotal,
-            orderID: orderID,
-            productVariantID: item.productVariantID,
-            quantity: item.quantity,
-          })),
-        );
-        await tx.delete(cartItemTable).where(eq(cartItemTable.userID, userID));
-        await afterTx(() =>
-          bus.publish(Resource.Bus, Event.Created, { orderID }),
-        );
-        return orderID;
-      });
-    } catch (ex: unknown) {
-      if (ex instanceof Stripe.errors.StripeCardError) {
-        throw new VisibleError(
-          "validation",
-          ErrorCodes.Validation.INVALID_STATE,
-          ex.message,
-        );
-      }
-      throw ex;
-    }
+    if (!cart?.addressID)
+      throw new VisibleError(
+        "validation",
+        ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
+        "No shipping address added to cart.",
+      );
+    if (!cart?.cardID)
+      throw new VisibleError(
+        "validation",
+        ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
+        "No card added to cart.",
+      );
+    const orderID = await create({
+      addressID: cart.addressID,
+      cardID: cart.cardID,
+      variants: items.reduce(
+        (acc, item) => {
+          acc[item.productVariantID] = item.quantity;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+      recipientEmail,
+    });
+    await createTransaction(async (tx) => {
+      await tx.delete(cartItemTable).where(eq(cartItemTable.userID, userID));
+    });
+    return orderID;
   }
 
   export const create = fn(
@@ -365,6 +273,7 @@ export module Order {
       variants: z.record(z.number().int()),
       cardID: z.string(),
       addressID: z.string(),
+      recipientEmail: z.string().email().optional(),
     }),
     async (input) => {
       const userID = useUserID();
@@ -382,13 +291,20 @@ export module Order {
           .where(eq(userTable.id, userID))
           .then((rows) => rows[0]),
       );
-      if (!match) throw new Error("Card or address not found");
+      if (!match)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Card or address not found.",
+        );
       const items = await useTransaction(async (tx) =>
         tx
           .select({
             tags: productTable.tags,
             id: productVariantTable.id,
             price: productVariantTable.price,
+            productID: productTable.id,
+            weight: productVariantTable.weight,
           })
           .from(productVariantTable)
           .where(inArray(productVariantTable.id, Object.keys(input.variants)))
@@ -399,15 +315,27 @@ export module Order {
           .then((rows) =>
             rows.map((row) => ({
               id: row.id,
-              tags: row.tags,
+              productID: row.productID,
+              tags: row.tags || {},
               price: row.price * (input.variants[row.id] ?? 0),
               quantity: input.variants[row.id] ?? 0,
-              weight:
-                Product.TEMPORARY_FIXED_WEIGHT_OZ *
-                (input.variants[row.id] ?? 0),
+              weight: row.weight * (input.variants[row.id] ?? 0),
             })),
           ),
       );
+
+      // Check if any of the items is a gift card
+      const hasGiftCard = items.some((item) => item.tags.type === "giftcard");
+
+      // If there's a gift card in the cart, recipient email is required
+      if (hasGiftCard && !input.recipientEmail) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
+          "Recipient email is required for gift card orders.",
+          "recipientEmail",
+        );
+      }
 
       const filterCtx = {
         ...ProductFilter.use(),
@@ -416,9 +344,14 @@ export module Order {
       };
       for (const item of items) {
         if (!ProductFilter.run(filterCtx, item.tags || {}))
-          throw new Error("This product cannot be purchased.");
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.INVALID_PARAMETER,
+            "This product cannot be purchased.",
+          );
       }
 
+      const orderID = createID("order");
       const subtotal = items.reduce((acc, item) => acc + item.price, 0);
       const weight = items.reduce((acc, item) => acc + item.weight, 0);
       const shipping = await Cart.calculateShipping(
@@ -426,79 +359,130 @@ export module Order {
         weight,
         match.shipping,
       );
-      const orderID = createID("order");
-      const result = await stripe.paymentIntents
-        .create({
-          amount: subtotal + shipping.shippingAmount,
-          automatic_payment_methods: {
-            enabled: true,
-            allow_redirects: "never",
-          },
-          confirm: true,
-          currency: "usd",
-          shipping: {
-            name: match.shipping.name,
-            address: {
-              city: match.shipping.city,
-              line1: match.shipping.street1,
-              line2: match.shipping.street2,
-              postal_code: match.shipping.zip,
-              state: match.shipping.province,
-              country: match.shipping.country,
-            },
-          },
-          customer: match.stripeCustomerID,
-          metadata: {
-            orderID,
-          },
-          payment_method: match.card.stripePaymentMethodID,
-        })
-        .catch((ex) => ({ err: ex }));
 
-      if ("err" in result) {
-        if (result.err instanceof Stripe.errors.StripeCardError)
+      // Check for gift card applied in cart
+      const cartWithGiftCard = await useTransaction(async (tx) =>
+        tx
+          .select({
+            giftCardID: cartTable.giftCardID,
+            giftCardAmount: cartTable.giftCardAmount,
+          })
+          .from(cartTable)
+          .where(eq(cartTable.userID, userID))
+          .then((rows) => rows[0]),
+      );
+
+      const giftCardAmount = cartWithGiftCard?.giftCardAmount || 0;
+      const shippingAmount = shipping?.shippingAmount || 0;
+      const totalChargeAmount = Math.max(
+        0,
+        subtotal + shippingAmount - giftCardAmount,
+      );
+      const needsPayment =
+        totalChargeAmount > 0 &&
+        ![
+          "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
+          "usr_01J1KHKPA8QK82MBHQDBQP78XK",
+          "usr_01J1KHPJ88QEFEQ6K27QA9C4WN",
+          "usr_01JG4BDDCKTY6CYWF6JXKVPNNT",
+        ].includes(userID);
+
+      try {
+        let result: Stripe.Response<Stripe.PaymentIntent> | undefined;
+
+        // Only create a payment intent if we need to charge the customer
+        if (needsPayment) {
+          result = await stripe.paymentIntents.create({
+            amount: totalChargeAmount,
+            automatic_payment_methods: {
+              enabled: true,
+              allow_redirects: "never",
+            },
+            confirm: true,
+            currency: "usd",
+            shipping: {
+              name: match.shipping.name,
+              address: {
+                city: match.shipping.city,
+                line1: match.shipping.street1,
+                line2: match.shipping.street2,
+                postal_code: match.shipping.zip,
+                state: match.shipping.province,
+                country: match.shipping.country,
+              },
+            },
+            customer: match.stripeCustomerID,
+            metadata: {
+              orderID,
+              giftCardID: cartWithGiftCard?.giftCardID || null,
+              giftCardAmount:
+                giftCardAmount > 0 ? giftCardAmount.toString() : null,
+            },
+            payment_method: match.card.stripePaymentMethodID,
+          });
+        }
+
+        await createTransaction(async (tx) => {
+          await tx.insert(orderTable).values({
+            id: orderID,
+            email: match.email,
+            stripePaymentIntentID: result?.id,
+            shippingAmount: shipping?.shippingAmount || 0,
+            shippingAddress: match.shipping,
+            shippoRateID: shipping?.shippoRateID,
+            card: {
+              brand: match.card.brand,
+              last4: match.card.last4,
+              expiration: {
+                month: match.card.expirationMonth,
+                year: match.card.expirationYear,
+              },
+            },
+            giftCardID: cartWithGiftCard?.giftCardID || null,
+            giftCardAmount: giftCardAmount || null,
+            userID,
+          });
+
+          for (const item of items) {
+            await tx.insert(orderItemTable).values({
+              id: createID("cartItem"),
+              amount: item.price,
+              productVariantID: item.id,
+              quantity: item.quantity,
+              orderID,
+            });
+
+            // If this item is a gift card, create a gift card entry for each quantity
+            if (item.tags.type === "giftcard" && input.recipientEmail) {
+              for (let i = 0; i < item.quantity; i++) {
+                await GiftCard.create({
+                  orderID,
+                  value: item.price,
+                  recipientEmail: input.recipientEmail,
+                });
+              }
+            }
+          }
+
+          await afterTx(() =>
+            bus.publish(Resource.Bus, Event.Created, { orderID }),
+          );
+        });
+      } catch (ex) {
+        if (ex instanceof Stripe.errors.StripeCardError) {
           throw new VisibleError(
             "validation",
             ErrorCodes.Validation.INVALID_STATE,
-            result.err.message,
+            ex.message,
+            "cardID",
           );
+        }
         throw new VisibleError(
           "internal",
           ErrorCodes.Server.INTERNAL_ERROR,
-          "Payment failed",
+          "Payment failed.",
         );
       }
-
-      await useTransaction(async (tx) => {
-        await tx.insert(orderTable).values({
-          id: orderID,
-          email: match.email,
-          shippingAmount: shipping.shippingAmount,
-          shippingAddress: match.shipping,
-          shippoRateID: shipping.shippoRateID,
-          card: {
-            brand: match.card.brand,
-            last4: match.card.last4,
-            expiration: {
-              month: match.card.expirationMonth,
-              year: match.card.expirationYear,
-            },
-          },
-          userID,
-        });
-        for (const item of items) {
-          await tx.insert(orderItemTable).values({
-            id: createID("cartItem"),
-            amount: item.price,
-            productVariantID: item.id,
-            quantity: item.quantity,
-            orderID,
-          });
-        }
-        await afterTx(() =>
-          bus.publish(Resource.Bus, Event.Created, { orderID }),
-        );
-      });
 
       return orderID;
     },
@@ -517,7 +501,7 @@ export module Order {
         address: input.address,
         subtotal: 0,
       });
-      await useTransaction(async (tx) => {
+      return await useTransaction(async (tx) => {
         const orderID = createID("order");
         await tx.insert(orderTable).values({
           id: orderID,
@@ -541,6 +525,7 @@ export module Order {
         await afterTx(() =>
           bus.publish(Resource.Bus, Event.Created, { orderID }),
         );
+        return orderID;
       });
     },
   );

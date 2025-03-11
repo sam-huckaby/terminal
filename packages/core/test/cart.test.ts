@@ -61,9 +61,9 @@ describe("cart", async () => {
     console.log(orderID);
     const order = await Order.fromID(orderID);
 
-    expect(order.items.length).toEqual(1);
-    expect(order.items[0]!.productVariantID).toEqual(variantID);
-    expect(order.items[0]!.quantity).toEqual(quantity);
-    expect(order.amount.subtotal).toEqual(quantity * price);
+    expect(order?.items.length).toEqual(1);
+    expect(order?.items[0]!.productVariantID).toEqual(variantID);
+    expect(order?.items[0]!.quantity).toEqual(quantity);
+    expect(order?.amount.subtotal).toEqual(quantity * price);
   });
 });

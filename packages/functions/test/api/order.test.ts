@@ -33,9 +33,6 @@ describe("order", () => {
       id: orderID,
     });
     expect(response.data.id).toBe(orderID);
-
-    await Card.remove(cardID);
-    await Address.remove(addressID);
   });
 
   test("POST /order", async () => {
@@ -53,9 +50,5 @@ describe("order", () => {
     const created = await Order.fromID(response.data);
     expect(created).toBeDefined();
     expect(created!.items).toHaveLength(1);
-
-    await Card.remove(cardID);
-    await Address.remove(addressID);
   });
 });
-

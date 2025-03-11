@@ -9,6 +9,8 @@ import { Card } from "@terminal/core/card/index";
 import { Product } from "@terminal/core/product/index";
 import { Address } from "@terminal/core/address/index";
 import { Examples } from "@terminal/core/examples";
+import { GiftCard } from "@terminal/core/giftcard/index";
+import { Order } from "@terminal/core/order/order";
 
 export const getTestCardID = async () => {
   const [card] = await Card.list();
@@ -42,6 +44,30 @@ export const getTestProductVariantID = async (subscription?: boolean) => {
   return product.variants[0]!.id;
 };
 
+export const getTestOrderID = async () => {
+  const [order] = await Order.list();
+  if (order) return order.id;
+
+  const orderID = await Order.create({
+    variants: {
+      [await getTestProductVariantID()]: 1,
+    },
+    cardID: await getTestCardID(),
+    addressID: await getTestAddressID(),
+  });
+
+  return orderID;
+};
+
+export const getTestGiftCard = async (value: number = 2500) => {
+  const giftCard = await GiftCard.create({
+    orderID: await getTestOrderID(),
+    value,
+    recipientEmail: "test@example.com",
+  });
+  return giftCard;
+};
+
 /**
  * Setup API test environment with authentication and utility functions
  */
@@ -56,10 +82,10 @@ export function setupApiTest() {
 
   beforeAll(async () => {
     // console.debug = mock();
-    console.log = mock();
-    console.info = mock();
-    console.warn = mock();
-    console.error = mock();
+    // console.log = mock();
+    // console.info = mock();
+    // console.warn = mock();
+    // console.error = mock();
 
     userID = await User.create({ fingerprint: "__test-user" });
     await withContext(async () => {

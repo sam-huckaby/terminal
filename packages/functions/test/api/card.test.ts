@@ -16,7 +16,6 @@ describe("card", () => {
       id: cardID,
     });
     expect(response.data.id).toBe(cardID);
-    await Card.remove(cardID);
   });
 
   test("POST /card", async () => {
@@ -25,7 +24,6 @@ describe("card", () => {
     });
     const created = await Card.fromID(response.data);
     expect(created).toBeDefined();
-    await Card.remove(created!.id);
   });
 
   test("DELETE /card/:id", async () => {
@@ -43,4 +41,3 @@ describe("card", () => {
     expect(response.data.url).toBeDefined();
   });
 });
-

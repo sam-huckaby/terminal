@@ -4,6 +4,7 @@ import { orderTable, orderItemTable } from "../order/order.sql";
 import { and, count, eq, lt, sql } from "drizzle-orm";
 import { Email } from "./index";
 import { productTable, productVariantTable } from "../product/product.sql";
+import { giftCardTable } from "../giftcard/giftcard.sql";
 
 export module Template {
   export async function sendOrderConfirmation(orderID: string) {
@@ -79,5 +80,48 @@ export module Template {
     ].join("\n");
 
     await Email.send("order", order.email!, `Terminal Order #${index}`, body);
+  }
+
+  export async function sendGiftCardCode(giftCardID: string) {
+    const giftCard = await useTransaction((tx) =>
+      tx
+        .select({
+          id: giftCardTable.id,
+          value: giftCardTable.value,
+          recipientEmail: giftCardTable.recipientEmail,
+          orderID: giftCardTable.orderID,
+          email: orderTable.email, // purchaser's email
+        })
+        .from(giftCardTable)
+        .leftJoin(orderTable, eq(giftCardTable.orderID, orderTable.id))
+        .where(eq(giftCardTable.id, giftCardID))
+        .then((rows) => rows[0]),
+    );
+
+    if (!giftCard || !giftCard.recipientEmail) return;
+
+    const dollarValue = (giftCard.value / 100).toFixed(2);
+    const body = [
+      `Hello from Terminal!`,
+      ``,
+      `You've received a $${dollarValue} gift card to use at Terminal.`,
+      ``,
+      `Gift Card Code: ${giftCard.id}`,
+      `Amount: $${dollarValue}`,
+      ``,
+      `To redeem your gift card, simply enter this code during checkout at our Terminal shop.`,
+      `You can access our terminal shop via SSH: ssh shop@terminal.co`,
+      ``,
+      `Happy shopping!`,
+      `The Terminal Team`,
+      ``,
+    ].join("\n");
+
+    await Email.send(
+      "giftcard",
+      giftCard.recipientEmail,
+      `Your $${dollarValue} Terminal Gift Card`,
+      body
+    );
   }
 }

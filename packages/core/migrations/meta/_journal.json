@@ -204,6 +204,20 @@
       "when": 1740589324123,
       "tag": "0028_sad_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1741702001333,
+      "tag": "0029_clever_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1741703782530,
+      "tag": "0030_open_supernaut",
+      "breakpoints": true
     }
   ]
 }

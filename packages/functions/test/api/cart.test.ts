@@ -3,12 +3,14 @@ import {
   getTestAddressID,
   getTestCardID,
   getTestProductVariantID,
+  getTestGiftCard,
   setupApiTest,
 } from "./util";
 import { Examples } from "@terminal/core/examples";
 import { Address } from "@terminal/core/address/index";
 import { Card } from "@terminal/core/card/index";
 import { Cart } from "@terminal/core/cart/index";
+import { GiftCard } from "@terminal/core/giftcard/index";
 
 const { test, validateOpenAPIRoute } = setupApiTest();
 
@@ -61,7 +63,6 @@ describe("cart", () => {
       { cardID },
     );
     expect(response.data).toBe("ok");
-    await Card.remove(cardID);
   });
 
   test("POST /cart/convert", async () => {
@@ -76,13 +77,65 @@ describe("cart", () => {
     await Cart.setCard(cardID);
 
     // Now convert the cart to an order
-    const response = await validateOpenAPIRoute("post", "/cart/convert");
+    const response = await validateOpenAPIRoute(
+      "post",
+      "/cart/convert",
+      undefined,
+      {},
+    );
     expect(response.data).toBeDefined();
     expect(response.data.id).toBeDefined();
     expect(response.data.items).toBeArray();
+  });
 
-    await Card.remove(cardID);
-    await Address.remove(addressID);
+  test("PUT /cart/gift-card", async () => {
+    // First create a gift card to test with
+    const giftCard = await getTestGiftCard(1000); // $10 gift card
+
+    // Set up a cart
+    const productVariantID = await getTestProductVariantID();
+    await Cart.setItem({
+      productVariantID: productVariantID,
+      quantity: 1,
+    });
+
+    // Apply the gift card to the cart
+    const response = await validateOpenAPIRoute(
+      "put",
+      "/cart/gift-card",
+      undefined,
+      {
+        giftCardID: giftCard,
+      },
+    );
+
+    expect(response.data).toBeDefined();
+    expect(response.data.giftCardID).toBe(giftCard);
+    expect(response.data.appliedAmount).toBeNumber();
+    expect(response.data.remainingBalance).toBeNumber();
+
+    // Verify gift card was applied - check the cart
+    const cart = await Cart.get();
+    expect(cart.giftCardID).toBe(giftCard);
+    expect(cart.amount.giftCard).toBeDefined();
+  });
+
+  test("DELETE /cart/gift-card", async () => {
+    // First create a gift card and apply it
+    const giftCard = await getTestGiftCard(1000);
+    await Cart.redeemGiftCard(giftCard);
+
+    // Now remove it
+    const response = await validateOpenAPIRoute("delete", "/cart/gift-card");
+    expect(response.data).toBe("ok");
+
+    // Verify gift card was removed - check the cart
+    const cart = await Cart.get();
+    expect(cart.giftCardID).toBeUndefined();
+    expect(cart.amount.giftCard).toBeUndefined();
+
+    // Verify gift card has original balance
+    const gc = await GiftCard.fromID(giftCard);
+    expect(gc?.balance).toBe(1000);
   });
 });
-
