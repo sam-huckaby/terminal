@@ -2,6 +2,7 @@ package tui
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -70,8 +71,13 @@ func (m model) SplashInit() tea.Cmd {
 			// Get country code from IP address using ipinfo.io
 			countryCode := api.GetCountryFromIP(m.context, *clientIP)
 
-			// Add the country header if we got a country code
-			options = append(options, option.WithHeader("x-terminal-country", countryCode))
+			// Convert country code to region (na, eu, or empty string)
+			region := countryToRegion(countryCode)
+
+			// Add the region header if we determined a region
+			if region != "" {
+				options = append(options, option.WithHeader("x-terminal-region", region))
+			}
 
 			// Add the client IP header if we got a client IP
 			options = append(options, option.WithHeader("x-terminal-ip", *clientIP))
@@ -114,4 +120,63 @@ func (m model) SplashView() string {
 		lipgloss.Center,
 		m.LogoView(),
 	)
+}
+
+// countryToRegion converts a country code to a region ("na", "eu", or empty string if no match)
+func countryToRegion(country string) string {
+	if country == "" {
+		return ""
+	}
+
+	countryCode := strings.ToLower(country)
+
+	// North America
+	if countryCode == "us" || countryCode == "ca" || countryCode == "mx" {
+		return "na"
+	}
+
+	// European Union countries and related
+	euCountries := []string{
+		"at", // Austria
+		"be", // Belgium
+		"bg", // Bulgaria
+		"hr", // Croatia
+		"cy", // Cyprus
+		"cz", // Czechia
+		"dk", // Denmark
+		"ee", // Estonia
+		"fi", // Finland
+		"fr", // France
+		"de", // Germany
+		"gr", // Greece
+		"hu", // Hungary
+		"ie", // Ireland
+		"it", // Italy
+		"lv", // Latvia
+		"lt", // Lithuania
+		"lu", // Luxembourg
+		"mt", // Malta
+		"nl", // Netherlands
+		"pl", // Poland
+		"pt", // Portugal
+		"ro", // Romania
+		"sk", // Slovakia
+		"si", // Slovenia
+		"es", // Spain
+		"se", // Sweden
+		"eu", // European Union
+		"is", // Iceland
+		"li", // Liechtenstein
+		"no", // Norway
+		"ch", // Switzerland
+		"uk", // United Kingdom
+	}
+
+	for _, eu := range euCountries {
+		if countryCode == eu {
+			return "eu"
+		}
+	}
+
+	return ""
 }

@@ -54,6 +54,7 @@ export namespace ProductFilter {
     }
   }
 }
+
 function countryToRegion(country: string | undefined) {
   if (!country) return undefined;
 
