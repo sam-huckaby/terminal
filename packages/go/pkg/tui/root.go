@@ -108,10 +108,14 @@ type children struct {
 func NewModel(
 	renderer *lipgloss.Renderer,
 	fingerprint string,
+	clientIP *string,
 ) (tea.Model, error) {
 	api.Init()
 
 	ctx := context.Background()
+
+	// Store the client IP to use it when creating the client
+	ctx = context.WithValue(ctx, "client_ip", clientIP)
 
 	result := model{
 		context:  ctx,

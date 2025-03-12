@@ -139,7 +139,12 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	fingerprint := s.Context().Value("fingerprint").(string)
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
 
-	model, err := tui.NewModel(renderer, fingerprint)
+	// Get client IP address from the SSH session
+	clientAddr := s.RemoteAddr().String()
+	host, _, _ := net.SplitHostPort(clientAddr)
+	slog.Info("client connected", "ip", host)
+
+	model, err := tui.NewModel(renderer, fingerprint, &host)
 	if err != nil {
 		return nil, []tea.ProgramOption{}
 	}

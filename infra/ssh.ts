@@ -51,7 +51,14 @@ new sst.aws.Service("SSH", {
   image: {
     context: "./packages/go",
   },
-  link: [api, auth, secret.StripePublic, authFingerprintKey, key],
+  link: [
+    api,
+    auth,
+    secret.StripePublic,
+    secret.IpinfoToken,
+    authFingerprintKey,
+    key,
+  ],
   environment: {
     VERSION: !$dev ? execSync("git rev-parse HEAD").toString().trim() : "",
   },

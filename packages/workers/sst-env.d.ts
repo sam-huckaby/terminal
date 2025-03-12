@@ -65,16 +65,15 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "IpinfoToken": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "LinkShortener": {
       "type": "sst.aws.Router"
       "url": string
     }
     "LinkShortenerFn": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
-    }
-    "OpenControl": {
       "name": string
       "type": "sst.aws.Function"
       "url": string

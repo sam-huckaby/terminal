@@ -56,11 +56,27 @@ func (m model) SplashInit() tea.Cmd {
 			return tea.Quit
 		}
 
+		// Setup options for the Terminal SDK client
 		options := []option.RequestOption{
 			option.WithBaseURL(resource.Resource.Api.Url),
 			option.WithBearerToken(token.AccessToken),
 			option.WithAppID("ssh"),
 		}
+
+		// Get client IP from context
+		clientIP, _ := m.context.Value("client_ip").(*string)
+
+		if clientIP != nil {
+			// Get country code from IP address using ipinfo.io
+			countryCode := api.GetCountryFromIP(m.context, *clientIP)
+
+			// Add the country header if we got a country code
+			options = append(options, option.WithHeader("x-terminal-country", countryCode))
+
+			// Add the client IP header if we got a client IP
+			options = append(options, option.WithHeader("x-terminal-ip", *clientIP))
+		}
+
 		client := terminal.NewClient(options...)
 
 		return UserSignedInMsg{

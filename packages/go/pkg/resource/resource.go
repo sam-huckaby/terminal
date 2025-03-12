@@ -17,6 +17,9 @@ type resource struct {
 	StripePublic struct {
 		Value string `json:"value"`
 	}
+	IpinfoToken struct {
+		Value string `json:"value"`
+	}
 	AuthFingerprintKey struct {
 		Value string `json:"value"`
 	}
