@@ -15,12 +15,6 @@ export namespace ProductFilter {
   export type Func = (context: Context, tags: Record<string, any>) => boolean;
 
   export const All = [
-    // Raycast
-    (context: Context, tags: ProductTags) => {
-      if (context.app !== "raycast") return true;
-      return tags.app === "raycast";
-    },
-
     // Region filter
     (context: Context, tags: ProductTags) => {
       const regions = [
