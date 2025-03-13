@@ -220,88 +220,9 @@ export module CartApi {
         },
       }),
       authRequired,
-      validator(
-        "json",
-        z
-          .object({
-            recipientEmail: z.string().email().optional(),
-          })
-          .optional(),
-      ),
       async (c) => {
-        const body = c.req.valid("json");
-        const orderID = await Order.convertCart(body?.recipientEmail);
+        const orderID = await Order.convertCart();
         return c.json({ data: await Order.fromID(orderID) }, 200);
-      },
-    )
-    .put(
-      "/gift-card",
-      describeRoute({
-        tags: ["Cart"],
-        summary: "Redeem gift card",
-        description: "Apply a gift card to the current user's cart.",
-        responses: {
-          200: {
-            content: {
-              "application/json": {
-                schema: Result(
-                  z
-                    .object({
-                      giftCardID: z.string(),
-                      appliedAmount: z.number().int(),
-                      remainingBalance: z.number().int(),
-                    })
-                    .openapi({
-                      description: "Gift card redemption result",
-                    }),
-                ),
-              },
-            },
-            description: "Gift card was applied successfully.",
-          },
-          400: ErrorResponses[400],
-          401: ErrorResponses[401],
-          429: ErrorResponses[429],
-          500: ErrorResponses[500],
-        },
-      }),
-      authRequired,
-      validator(
-        "json",
-        z.object({
-          giftCardID: z.string(),
-        }),
-      ),
-      async (c) => {
-        const body = c.req.valid("json");
-        const result = await Cart.redeemGiftCard(body.giftCardID);
-        return c.json({ data: result }, 200);
-      },
-    )
-    .delete(
-      "/gift-card",
-      describeRoute({
-        tags: ["Cart"],
-        summary: "Remove gift card",
-        description: "Remove the gift card from the current user's cart.",
-        responses: {
-          200: {
-            content: {
-              "application/json": {
-                schema: Result(z.literal("ok")),
-              },
-            },
-            description: "Gift card was removed successfully.",
-          },
-          401: ErrorResponses[401],
-          429: ErrorResponses[429],
-          500: ErrorResponses[500],
-        },
-      }),
-      authRequired,
-      async (c) => {
-        await Cart.removeGiftCard();
-        return c.json({ data: "ok" as const }, 200);
       },
     );
 }

@@ -42,7 +42,6 @@ import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
 import { Cart } from "../cart";
 import { ProductFilter } from "../product/filter";
-import { GiftCard } from "../giftcard";
 
 export module Order {
   export const Item = z
@@ -224,7 +223,7 @@ export module Order {
     ),
   );
 
-  export async function convertCart(recipientEmail?: string) {
+  export async function convertCart() {
     const userID = useUserID();
     const { items, cart } = await useTransaction(async (tx) => {
       const items = await tx
@@ -260,7 +259,6 @@ export module Order {
         },
         {} as Record<string, number>,
       ),
-      recipientEmail,
     });
     await createTransaction(async (tx) => {
       await tx.delete(cartItemTable).where(eq(cartItemTable.userID, userID));
@@ -273,7 +271,6 @@ export module Order {
       variants: z.record(z.number().int()),
       cardID: z.string(),
       addressID: z.string(),
-      recipientEmail: z.string().email().optional(),
     }),
     async (input) => {
       const userID = useUserID();
@@ -324,19 +321,6 @@ export module Order {
           ),
       );
 
-      // Check if any of the items is a gift card
-      const hasGiftCard = items.some((item) => item.tags.type === "giftcard");
-
-      // If there's a gift card in the cart, recipient email is required
-      if (hasGiftCard && !input.recipientEmail) {
-        throw new VisibleError(
-          "validation",
-          ErrorCodes.Validation.MISSING_REQUIRED_FIELD,
-          "Recipient email is required for gift card orders.",
-          "recipientEmail",
-        );
-      }
-
       const filterCtx = {
         ...ProductFilter.use(),
         region: undefined,
@@ -360,32 +344,14 @@ export module Order {
         match.shipping,
       );
 
-      // Check for gift card applied in cart
-      const cartWithGiftCard = await useTransaction(async (tx) =>
-        tx
-          .select({
-            giftCardID: cartTable.giftCardID,
-            giftCardAmount: cartTable.giftCardAmount,
-          })
-          .from(cartTable)
-          .where(eq(cartTable.userID, userID))
-          .then((rows) => rows[0]),
-      );
-
-      const giftCardAmount = cartWithGiftCard?.giftCardAmount || 0;
       const shippingAmount = shipping?.shippingAmount || 0;
-      const totalChargeAmount = Math.max(
-        0,
-        subtotal + shippingAmount - giftCardAmount,
-      );
-      const needsPayment =
-        totalChargeAmount > 0 &&
-        ![
-          "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
-          "usr_01J1KHKPA8QK82MBHQDBQP78XK",
-          "usr_01J1KHPJ88QEFEQ6K27QA9C4WN",
-          "usr_01JG4BDDCKTY6CYWF6JXKVPNNT",
-        ].includes(userID);
+      const totalChargeAmount = subtotal + shippingAmount;
+      const needsPayment = ![
+        "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
+        "usr_01J1KHKPA8QK82MBHQDBQP78XK",
+        "usr_01J1KHPJ88QEFEQ6K27QA9C4WN",
+        "usr_01JG4BDDCKTY6CYWF6JXKVPNNT",
+      ].includes(userID);
 
       try {
         let result: Stripe.Response<Stripe.PaymentIntent> | undefined;
@@ -414,9 +380,6 @@ export module Order {
             customer: match.stripeCustomerID,
             metadata: {
               orderID,
-              giftCardID: cartWithGiftCard?.giftCardID || null,
-              giftCardAmount:
-                giftCardAmount > 0 ? giftCardAmount.toString() : null,
             },
             payment_method: match.card.stripePaymentMethodID,
           });
@@ -438,8 +401,6 @@ export module Order {
                 year: match.card.expirationYear,
               },
             },
-            giftCardID: cartWithGiftCard?.giftCardID || null,
-            giftCardAmount: giftCardAmount || null,
             userID,
           });
 
@@ -451,17 +412,6 @@ export module Order {
               quantity: item.quantity,
               orderID,
             });
-
-            // If this item is a gift card, create a gift card entry for each quantity
-            if (item.tags.type === "giftcard" && input.recipientEmail) {
-              for (let i = 0; i < item.quantity; i++) {
-                await GiftCard.create({
-                  orderID,
-                  value: item.price,
-                  recipientEmail: input.recipientEmail,
-                });
-              }
-            }
           }
 
           await afterTx(() =>

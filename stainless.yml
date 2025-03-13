@@ -46,8 +46,6 @@ resources:
       setItem: put /cart/item
       setAddress: put /cart/address
       setCard: put /cart/card
-      redeemGiftCard: put /cart/gift-card
-      removeGiftCard: delete /cart/gift-card
       convert: post /cart/convert
   order:
     models:

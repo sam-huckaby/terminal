@@ -9,7 +9,6 @@ import { Card } from "@terminal/core/card/index";
 import { Product } from "@terminal/core/product/index";
 import { Address } from "@terminal/core/address/index";
 import { Examples } from "@terminal/core/examples";
-import { GiftCard } from "@terminal/core/giftcard/index";
 import { Order } from "@terminal/core/order/order";
 import { ProductFilter } from "@terminal/core/product/filter";
 
@@ -60,14 +59,6 @@ export const getTestOrderID = async () => {
   return orderID;
 };
 
-export const getTestGiftCard = async (value: number = 2500) => {
-  const giftCard = await GiftCard.create({
-    orderID: await getTestOrderID(),
-    value,
-    recipientEmail: "test@example.com",
-  });
-  return giftCard;
-};
 
 /**
  * Setup API test environment with authentication and utility functions

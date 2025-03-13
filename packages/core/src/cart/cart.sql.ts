@@ -42,8 +42,6 @@ export const cartTable = mysqlTable("cart", {
   cardID: ulid("card_id").references(() => cardTable.id, {
     onDelete: "set null",
   }),
-  giftCardID: ulid("gift_card_id"),
-  giftCardAmount: dollar("gift_card_amount"),
   shippingAmount: dollar("shipping_amount"),
   shippingService: text("shipping_service"),
   shippoRateID: text("shippo_rate_id"),

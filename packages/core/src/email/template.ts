@@ -4,7 +4,6 @@ import { orderTable, orderItemTable } from "../order/order.sql";
 import { and, count, eq, lt, sql } from "drizzle-orm";
 import { Email } from "./index";
 import { productTable, productVariantTable } from "../product/product.sql";
-import { giftCardTable } from "../giftcard/giftcard.sql";
 
 export module Template {
   export async function sendOrderConfirmation(orderID: string) {
@@ -82,47 +81,4 @@ export module Template {
     await Email.send("order", order.email!, `Terminal Order #${index}`, body);
   }
 
-  export async function sendGiftCardCode(giftCardID: string) {
-    const giftCard = await useTransaction((tx) =>
-      tx
-        .select({
-          id: giftCardTable.id,
-          value: giftCardTable.value,
-          recipientEmail: giftCardTable.recipientEmail,
-          orderID: giftCardTable.orderID,
-          email: orderTable.email, // purchaser's email
-        })
-        .from(giftCardTable)
-        .leftJoin(orderTable, eq(giftCardTable.orderID, orderTable.id))
-        .where(eq(giftCardTable.id, giftCardID))
-        .then((rows) => rows[0]),
-    );
-
-    if (!giftCard || !giftCard.recipientEmail) return;
-
-    const dollarValue = (giftCard.value / 100).toFixed(2);
-    const body = [
-      `Hello from Terminal!`,
-      ``,
-      `You've received a $${dollarValue} gift card to use at Terminal.`,
-      ``,
-      `Gift Card Code: ${giftCard.id}`,
-      `Amount: $${dollarValue}`,
-      ``,
-      `To redeem your gift card, simply enter this code during checkout at our Terminal shop.`,
-      `You can access the Terminal shop via SSH: ssh terminal.shop`,
-      ``,
-      `Enjoy!`,
-      `The Terminal Team`,
-      ``,
-      `p.s. No HTML tags were released into the atmosphere producing this 100% organic, css-free, plain text email`,
-    ].join("\n");
-
-    await Email.send(
-      "support",
-      giftCard.recipientEmail,
-      `Your Terminal Gift Card`,
-      body,
-    );
-  }
 }
