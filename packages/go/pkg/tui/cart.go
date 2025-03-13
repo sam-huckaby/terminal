@@ -32,6 +32,10 @@ func (m model) CartItemCount() int {
 func (m model) VisibleCartItems() []terminal.CartItem {
 	items := []terminal.CartItem{}
 	for _, i := range m.cart.Items {
+		product, _ := m.GetProduct(i)
+		if product == nil {
+			continue
+		}
 		if i.Quantity > 0 {
 			items = append(items, i)
 		}
@@ -215,6 +219,9 @@ func (m model) CartView() string {
 	var lines []string
 	for i, item := range m.VisibleCartItems() {
 		product, _ := m.GetProduct(item)
+		if product == nil {
+			continue
+		}
 		name := accent(product.Name)
 		description := base(strings.ToLower(product.Variants[0].Name))
 		quantity := base("  ") + accent(strconv.FormatInt(item.Quantity, 10)) + base("    ")

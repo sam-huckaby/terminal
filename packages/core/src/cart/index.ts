@@ -375,7 +375,7 @@ export module Cart {
   );
 
   export async function clear() {
-    return useTransaction(async (tx) =>
+    await useTransaction(async (tx) =>
       tx.delete(cartItemTable).where(eq(cartItemTable.userID, useUserID())),
     );
   }
