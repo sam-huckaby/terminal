@@ -1,9 +1,18 @@
+import { z } from "zod";
 import { createContext } from "../context";
 import { ProductTags } from "./product.sql";
 
 export namespace ProductFilter {
+  export const Region = z.enum(["eu", "na"]).openapi({
+    ref: "Region",
+    description: "A Terminal shop user's region.",
+    examples: ["na", "eu"],
+  });
+
+  export type Region = z.infer<typeof Region>;
+
   type Context = {
-    region?: "eu" | "na";
+    region?: Region;
     country?: string;
     ip?: string;
     app?: string;

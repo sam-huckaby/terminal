@@ -82,6 +82,8 @@ resources:
     methods:
       create: post /email
   view:
+    models:
+      app: App
     methods:
       init: get /view/init
 settings:

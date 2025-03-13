@@ -23,6 +23,7 @@ import { ViewApi } from "./view";
 import { AppApi } from "./app";
 import { TokenApi } from "./token";
 import { ProductFilter } from "@terminal/core/product/filter";
+import { getRegionFromIP } from "./ipinfo";
 
 const client = createClient({
   clientID: "api",
@@ -94,16 +95,30 @@ const auth: MiddlewareHandler = async (c, next) => {
 };
 
 const filter: MiddlewareHandler = async (c, next) => {
+  // Get IP address from headers
+  const ip = c.req.header("x-terminal-ip") ??
+    c.req.header("CloudFront-Viewer-Address")?.split(":")[0];
+  
+  // Get existing region header if present
+  let region = c.req.header("x-terminal-region") as any;
+  
+  // If no region header but we have an IP, look up the region
+  if (!region && ip) {
+    try {
+      region = await getRegionFromIP(ip);
+    } catch (error) {
+      console.error("Error getting region from IP:", error);
+    }
+  }
+  
   return ProductFilter.provide(
     {
-      region: c.req.header("x-terminal-region") as any,
+      region,
       country: (
         c.req.header("x-terminal-country") ??
         c.req.header("CloudFront-Viewer-Country")
       )?.toLowerCase(),
-      ip:
-        c.req.header("x-terminal-ip") ??
-        c.req.header("CloudFront-Viewer-Address")?.split(":")[0],
+      ip,
       app: c.req.header("x-terminal-app-id"), // ie, 'raycast', 'console.log', 'ssh'
       sdk: c.req.header("X-Stainless-Lang"),
       sdkVersion: c.req.header("X-Stainless-Package-Version"),

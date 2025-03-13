@@ -3,6 +3,7 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/terminaldotshop/terminal-sdk-go"
 )
 
 type footerState struct {
@@ -17,13 +18,13 @@ type footerCommand struct {
 // ToggleRegion switches between regions and creates a new client with the updated region header
 func (m model) ToggleRegion() (model, tea.Cmd) {
 	// Toggle between "na" and "eu"
-	newRegion := "eu"
-	if m.region == "eu" {
-		newRegion = "na"
+	newRegion := terminal.RegionEu
+	if m.region != nil && *m.region == terminal.RegionEu {
+		newRegion = terminal.RegionNa
 	}
 
 	// Update the model's region
-	m.region = newRegion
+	m.region = &newRegion
 
 	// Create new client with updated region
 	m.client = m.CreateSDKClient()
@@ -54,15 +55,16 @@ func (m model) FooterView() string {
 		return table.Render(bold("m") + base(" menu"))
 	}
 
-	// Create region selector with flag emojis
+	// Note: Region selection is now handled server-side based on client IP
+	// but we keep the UI indicator to show which region's products are displayed
 	naFlag := "🇺🇸" // US flag for North America
 	euFlag := "🇪🇺" // EU flag
 
 	var regionSelector string
-	if m.region == "na" {
-		regionSelector = base(" " + naFlag + "  (US)")
+	if m.region == nil || *m.region == terminal.RegionNa {
+		regionSelector = base(" " + naFlag + " (US)")
 	} else {
-		regionSelector = base(" " + euFlag + "  (EU)")
+		regionSelector = base(" " + euFlag + " (EU)")
 	}
 
 	// Add other commands

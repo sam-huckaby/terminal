@@ -65,6 +65,7 @@ const apiFn = new sst.aws.Function("ApiFn", {
     secret.StripeSecret,
     secret.ShippoSecret,
     secret.EmailOctopusSecret,
+    secret.IpinfoToken,
     auth,
     database,
     webhook,

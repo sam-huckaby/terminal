@@ -16,6 +16,7 @@
     "airtable": "0.12.2",
     "hono": "*",
     "hono-openapi": "0.4.4",
+    "node-ipinfo": "4.0.1",
     "opencontrol": "0.0.6",
     "sst": "3.9.33",
     "zod": "*",

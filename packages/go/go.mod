@@ -12,9 +12,8 @@ require (
 	github.com/charmbracelet/wish v1.4.0
 	github.com/foize/go.sgr v0.0.0-20140220094842-40bdfc98040c
 	github.com/google/uuid v1.6.0
-	github.com/ipinfo/go/v2 v2.10.0
 	github.com/stripe/stripe-go/v78 v78.2.0
-	github.com/terminaldotshop/terminal-sdk-go v1.3.0
+	github.com/terminaldotshop/terminal-sdk-go v1.6.0
 	golang.org/x/crypto v0.21.0
 	rsc.io/qr v0.2.0
 )
@@ -40,7 +39,6 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

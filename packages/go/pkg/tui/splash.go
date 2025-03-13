@@ -20,15 +20,14 @@ func (m model) CreateSDKClient() *terminal.Client {
 		option.WithAppID("ssh"),
 	}
 
-	// Add the region header if provided
-	if m.region != "" {
-		options = append(options, option.WithHeader("x-terminal-region", m.region))
-	}
-
-	// Add client IP header if in context
+	// Only add client IP header if in context
+	// Region lookup will be performed server-side
 	clientIP, _ := m.context.Value("client_ip").(*string)
 	if clientIP != nil {
 		options = append(options, option.WithHeader("x-terminal-ip", *clientIP))
+	}
+	if m.region != nil {
+		options = append(options, option.WithHeader("x-terminal-region", string(*m.region)))
 	}
 
 	return terminal.NewClient(options...)

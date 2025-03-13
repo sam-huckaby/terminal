@@ -13,6 +13,7 @@ import { Examples } from "@terminal/core/examples";
 import { Address } from "@terminal/core/address/index";
 import { ProfileApi } from "./profile";
 import { Api } from "@terminal/core/api/api";
+import { ProductFilter } from "@terminal/core/product/filter";
 
 export module ViewApi {
   export const route = new Hono().get(
@@ -38,6 +39,7 @@ export module ViewApi {
                     orders: Order.Info.array(),
                     tokens: Api.Personal.Info.array(),
                     apps: Api.Client.Info.array(),
+                    region: ProductFilter.Region,
                   })
                   .openapi({
                     description: "Initial app data.",
@@ -52,6 +54,7 @@ export module ViewApi {
                         orders: [Examples.Order],
                         tokens: [Examples.Token],
                         apps: [Examples.App],
+                        region: "na",
                       },
                     ],
                   }),
@@ -88,6 +91,10 @@ export module ViewApi {
         Api.Personal.list(),
         Api.Client.list(),
       ]);
+      // Get the current region from the ProductFilter context
+      const filterContext = ProductFilter.use();
+      const region = filterContext.region || "na";
+
       return c.json(
         {
           data: {
@@ -100,6 +107,7 @@ export module ViewApi {
             orders,
             tokens,
             apps,
+            region,
           },
         },
         200,

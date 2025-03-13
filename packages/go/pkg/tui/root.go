@@ -3,7 +3,6 @@ package tui
 import (
 	"context"
 	"math"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -51,7 +50,7 @@ type model struct {
 	hasMenu       bool
 	checkout      bool
 	state         state
-	region        string
+	region        *terminal.Region
 	context       context.Context
 	client        *terminal.Client
 	user          terminal.Profile
@@ -117,22 +116,9 @@ func NewModel(
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "client_ip", clientIP)
 
-	// Determine region from IP if available
-	var region string
-	if clientIP != nil {
-		// Get country code from IP address using ipinfo.io
-		countryCode := api.GetCountryFromIP(ctx, *clientIP)
-		// Convert country code to region (na, eu, or empty string)
-		region = countryToRegion(countryCode)
-	}
-
-	if region == "" {
-		region = "na"
-	}
-
 	result := model{
 		context:  ctx,
-		region:   region,
+		region:   nil,
 		page:     splashPage,
 		renderer: renderer,
 		// output:      renderer.Output(),
@@ -262,6 +248,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tokens = msg.Tokens
 		m.apps = msg.Apps
 		m.orders = msg.Orders
+		m.region = &msg.Region
 		m = m.reorderProducts()
 	case terminal.Profile:
 		m.user = msg
@@ -523,63 +510,4 @@ func (m model) updateViewport() model {
 	}
 
 	return m
-}
-
-// countryToRegion converts a country code to a region ("na", "eu", or empty string if no match)
-func countryToRegion(country string) string {
-	if country == "" {
-		return ""
-	}
-
-	countryCode := strings.ToLower(country)
-
-	// North America
-	if countryCode == "us" || countryCode == "ca" || countryCode == "mx" {
-		return "na"
-	}
-
-	// European Union countries and related
-	euCountries := []string{
-		"at", // Austria
-		"be", // Belgium
-		"bg", // Bulgaria
-		"hr", // Croatia
-		"cy", // Cyprus
-		"cz", // Czechia
-		"dk", // Denmark
-		"ee", // Estonia
-		"fi", // Finland
-		"fr", // France
-		"de", // Germany
-		"gr", // Greece
-		"hu", // Hungary
-		"ie", // Ireland
-		"it", // Italy
-		"lv", // Latvia
-		"lt", // Lithuania
-		"lu", // Luxembourg
-		"mt", // Malta
-		"nl", // Netherlands
-		"pl", // Poland
-		"pt", // Portugal
-		"ro", // Romania
-		"sk", // Slovakia
-		"si", // Slovenia
-		"es", // Spain
-		"se", // Sweden
-		"eu", // European Union
-		"is", // Iceland
-		"li", // Liechtenstein
-		"no", // Norway
-		"ch", // Switzerland
-		"uk", // United Kingdom
-	}
-
-	for _, eu := range euCountries {
-		if countryCode == eu {
-			return "eu"
-		}
-	}
-
-	return ""
 }
