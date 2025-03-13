@@ -235,7 +235,14 @@ export module Cart {
         )
         .innerJoin(addressTable, eq(addressTable.id, addressID))
         .where(eq(cartItemTable.userID, useUserID()))
-        .then((rows) => rows[0]!);
+        .then((rows) => rows[0]);
+      if (!response) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Address not found.",
+        );
+      }
 
       const weight = response.weight;
       const address = response.address;
@@ -277,7 +284,11 @@ export module Cart {
         .where(and(eq(cardTable.id, input), eq(cardTable.userID, useUserID())))
         .then((rows) => rows[0]?.cardID);
       if (!cardID) {
-        throw new Error("card not found");
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Card not found.",
+        );
       }
       await tx
         .insert(cartTable)
@@ -320,7 +331,7 @@ export module Cart {
           throw new VisibleError(
             "validation",
             ErrorCodes.Validation.INVALID_PARAMETER,
-            "Product variant not found",
+            "Product variant not found.",
           );
         }
         if (input.quantity <= 0) {
@@ -335,7 +346,9 @@ export module Cart {
           return;
         }
         if (variant.susbcription === "required") {
-          throw new Error(
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.INVALID_STATE,
             "This product cannot be added to a cart, it must be purchased via a subscription.",
           );
         }
@@ -376,8 +389,7 @@ export module Cart {
         throw new VisibleError(
           "validation",
           ErrorCodes.Validation.INVALID_PARAMETER,
-          "Gift card not found",
-          "giftCardID",
+          "Gift card not found.",
         );
       }
 
@@ -385,8 +397,7 @@ export module Cart {
         throw new VisibleError(
           "validation",
           ErrorCodes.Validation.INVALID_STATE,
-          "Gift card has zero balance",
-          "giftCardID",
+          "Gift card has zero balance.",
         );
       }
 
@@ -410,7 +421,7 @@ export module Cart {
         throw new VisibleError(
           "validation",
           ErrorCodes.Validation.INVALID_STATE,
-          "No active cart found",
+          "No active cart found.",
         );
       }
 
@@ -460,14 +471,14 @@ export module Cart {
         throw new VisibleError(
           "validation",
           ErrorCodes.Validation.INVALID_STATE,
-          "Cart does not have a gift card",
+          "Cart does not have a gift card.",
         );
       const giftCard = await GiftCard.fromID(cartWithGiftCard.giftCardID);
       if (!giftCard)
         throw new VisibleError(
           "validation",
-          ErrorCodes.Validation.INVALID_STATE,
-          "Could not find gift card",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Could not find gift card.",
         );
       await GiftCard.updateBalance({
         id: cartWithGiftCard.giftCardID,

@@ -1165,7 +1165,7 @@ export class SchemaValidator {
                 }
               }
 
-              return validBody;
+              return undefined;
             }
           }
         } catch (error) {
@@ -1208,7 +1208,7 @@ export class SchemaValidator {
             }
           }
 
-          return validBody;
+          return undefined;
         }
       }
     }
@@ -1247,7 +1247,7 @@ export class SchemaValidator {
           }
         }
 
-        return validBody;
+        return undefined;
       }
     }
 

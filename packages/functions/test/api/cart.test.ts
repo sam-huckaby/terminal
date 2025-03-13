@@ -7,8 +7,6 @@ import {
   setupApiTest,
 } from "./util";
 import { Examples } from "@terminal/core/examples";
-import { Address } from "@terminal/core/address/index";
-import { Card } from "@terminal/core/card/index";
 import { Cart } from "@terminal/core/cart/index";
 import { GiftCard } from "@terminal/core/giftcard/index";
 
@@ -19,6 +17,15 @@ describe("cart", () => {
     const response = await validateOpenAPIRoute("get", "/cart");
     expect(response.data).toBeDefined();
     expect(response.data.items).toBeArray();
+  });
+
+  test("DELETE /cart", async () => {
+    const response = await validateOpenAPIRoute("delete", "/cart");
+    expect(response.data).toBeDefined();
+    expect(response.data).toBe("ok");
+
+    const cart = await Cart.get();
+    expect(cart.items).toBeEmpty();
   });
 
   test("PUT /cart/item", async () => {

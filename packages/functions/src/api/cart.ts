@@ -45,6 +45,32 @@ export module CartApi {
         );
       },
     )
+    .delete(
+      "/",
+      describeRoute({
+        tags: ["Cart"],
+        summary: "Clear cart",
+        description: "Clear the current user's cart.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(z.literal("ok")),
+              },
+            },
+            description: "Cart was cleared successfully.",
+          },
+          401: ErrorResponses[401],
+          429: ErrorResponses[429],
+          500: ErrorResponses[500],
+        },
+      }),
+      authRequired,
+      async (c) => {
+        await Cart.clear();
+        return c.json({ data: "ok" as const }, 200);
+      },
+    )
     .put(
       "/item",
       describeRoute({
@@ -173,18 +199,6 @@ export module CartApi {
         tags: ["Cart"],
         summary: "Convert to order",
         description: "Convert the current user's cart to an order.",
-        requestBody: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                recipientEmail: z.string().email().optional().openapi({
-                  description:
-                    "Email address for gift card recipient (required if cart contains gift cards)",
-                }),
-              }),
-            },
-          },
-        },
         responses: {
           200: {
             content: {
@@ -226,18 +240,6 @@ export module CartApi {
         tags: ["Cart"],
         summary: "Redeem gift card",
         description: "Apply a gift card to the current user's cart.",
-        requestBody: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                giftCardID: z.string().openapi({
-                  description: "ID of the gift card to apply to the cart",
-                  example: "gft_01HXXXXXXXXXXXX",
-                }),
-              }),
-            },
-          },
-        },
         responses: {
           200: {
             content: {

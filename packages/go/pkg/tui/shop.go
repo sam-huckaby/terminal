@@ -40,6 +40,8 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		product := m.products[m.state.shop.selected]
 		switch msg.String() {
+		case "r":
+			return m.ToggleRegion()
 		case "tab", "down", "j":
 			return m.UpdateSelected(false)
 		case "shift+tab", "up", "k":

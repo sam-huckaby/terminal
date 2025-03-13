@@ -32,4 +32,3 @@ func GetCountryFromIP(ctx context.Context, ipAddress string) string {
 	slog.Info("got country from IP", "country", info.Country, "ip", ipAddress)
 	return info.Country
 }
-

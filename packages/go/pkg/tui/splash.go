@@ -2,7 +2,6 @@ package tui
 
 import (
 	"log/slog"
-	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,6 +11,28 @@ import (
 	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/resource"
 )
+
+// CreateSDKClient creates a Terminal SDK client with the given context, token, and region
+func (m model) CreateSDKClient() *terminal.Client {
+	options := []option.RequestOption{
+		option.WithBaseURL(resource.Resource.Api.Url),
+		option.WithBearerToken(m.accessToken),
+		option.WithAppID("ssh"),
+	}
+
+	// Add the region header if provided
+	if m.region != "" {
+		options = append(options, option.WithHeader("x-terminal-region", m.region))
+	}
+
+	// Add client IP header if in context
+	clientIP, _ := m.context.Value("client_ip").(*string)
+	if clientIP != nil {
+		options = append(options, option.WithHeader("x-terminal-ip", *clientIP))
+	}
+
+	return terminal.NewClient(options...)
+}
 
 type SplashState struct {
 	data  bool
@@ -57,33 +78,10 @@ func (m model) SplashInit() tea.Cmd {
 			return tea.Quit
 		}
 
-		// Setup options for the Terminal SDK client
-		options := []option.RequestOption{
-			option.WithBaseURL(resource.Resource.Api.Url),
-			option.WithBearerToken(token.AccessToken),
-			option.WithAppID("ssh"),
-		}
+		m.accessToken = token.AccessToken
 
-		// Get client IP from context
-		clientIP, _ := m.context.Value("client_ip").(*string)
-
-		if clientIP != nil {
-			// Get country code from IP address using ipinfo.io
-			countryCode := api.GetCountryFromIP(m.context, *clientIP)
-
-			// Convert country code to region (na, eu, or empty string)
-			region := countryToRegion(countryCode)
-
-			// Add the region header if we determined a region
-			if region != "" {
-				options = append(options, option.WithHeader("x-terminal-region", region))
-			}
-
-			// Add the client IP header if we got a client IP
-			options = append(options, option.WithHeader("x-terminal-ip", *clientIP))
-		}
-
-		client := terminal.NewClient(options...)
+		// Create the client with the region
+		client := m.CreateSDKClient()
 
 		return UserSignedInMsg{
 			accessToken: token.AccessToken,
@@ -120,63 +118,4 @@ func (m model) SplashView() string {
 		lipgloss.Center,
 		m.LogoView(),
 	)
-}
-
-// countryToRegion converts a country code to a region ("na", "eu", or empty string if no match)
-func countryToRegion(country string) string {
-	if country == "" {
-		return ""
-	}
-
-	countryCode := strings.ToLower(country)
-
-	// North America
-	if countryCode == "us" || countryCode == "ca" || countryCode == "mx" {
-		return "na"
-	}
-
-	// European Union countries and related
-	euCountries := []string{
-		"at", // Austria
-		"be", // Belgium
-		"bg", // Bulgaria
-		"hr", // Croatia
-		"cy", // Cyprus
-		"cz", // Czechia
-		"dk", // Denmark
-		"ee", // Estonia
-		"fi", // Finland
-		"fr", // France
-		"de", // Germany
-		"gr", // Greece
-		"hu", // Hungary
-		"ie", // Ireland
-		"it", // Italy
-		"lv", // Latvia
-		"lt", // Lithuania
-		"lu", // Luxembourg
-		"mt", // Malta
-		"nl", // Netherlands
-		"pl", // Poland
-		"pt", // Portugal
-		"ro", // Romania
-		"sk", // Slovakia
-		"si", // Slovenia
-		"es", // Spain
-		"se", // Sweden
-		"eu", // European Union
-		"is", // Iceland
-		"li", // Liechtenstein
-		"no", // Norway
-		"ch", // Switzerland
-		"uk", // United Kingdom
-	}
-
-	for _, eu := range euCountries {
-		if countryCode == eu {
-			return "eu"
-		}
-	}
-
-	return ""
 }

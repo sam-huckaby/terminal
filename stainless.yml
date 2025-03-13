@@ -42,6 +42,7 @@ resources:
       cart: Cart
     methods:
       get: get /cart
+      clear: delete /cart
       setItem: put /cart/item
       setAddress: put /cart/address
       setCard: put /cart/card

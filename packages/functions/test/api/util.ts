@@ -11,6 +11,7 @@ import { Address } from "@terminal/core/address/index";
 import { Examples } from "@terminal/core/examples";
 import { GiftCard } from "@terminal/core/giftcard/index";
 import { Order } from "@terminal/core/order/order";
+import { ProductFilter } from "@terminal/core/product/filter";
 
 export const getTestCardID = async () => {
   const [card] = await Card.list();
@@ -76,16 +77,23 @@ export function setupApiTest() {
   let pat: string;
 
   const withContext = async (fn: Parameters<typeof _test>[1]) => {
-    // @ts-expect-error
-    return ActorContext.with({ type: "user", properties: { userID } }, fn);
+    return ProductFilter.provide(
+      {
+        region: "na",
+      },
+      () => {
+        // @ts-expect-error
+        return ActorContext.with({ type: "user", properties: { userID } }, fn);
+      },
+    );
   };
 
   beforeAll(async () => {
     // console.debug = mock();
-    // console.log = mock();
-    // console.info = mock();
-    // console.warn = mock();
-    // console.error = mock();
+    console.log = mock();
+    console.info = mock();
+    console.warn = mock();
+    console.error = mock();
 
     userID = await User.create({ fingerprint: "__test-user" });
     await withContext(async () => {
@@ -100,6 +108,7 @@ export function setupApiTest() {
     return app.request(path, {
       headers: {
         authorization: `Bearer ${pat}`,
+        "x-terminal-region": "na",
         ...headers,
       },
     });
@@ -118,6 +127,7 @@ export function setupApiTest() {
       headers: {
         authorization: `Bearer ${pat}`,
         "content-type": "application/json",
+        "x-terminal-region": "na",
         ...headers,
       },
       body: JSON.stringify(body),
@@ -137,6 +147,7 @@ export function setupApiTest() {
       headers: {
         authorization: `Bearer ${pat}`,
         "content-type": "application/json",
+        "x-terminal-region": "na",
         ...headers,
       },
       body: JSON.stringify(body),
@@ -151,6 +162,7 @@ export function setupApiTest() {
       method: "delete",
       headers: {
         authorization: `Bearer ${pat}`,
+        "x-terminal-region": "na",
         ...headers,
       },
     });
