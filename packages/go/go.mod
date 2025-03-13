@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/ipinfo/go/v2 v2.10.0
 	github.com/stripe/stripe-go/v78 v78.2.0
-	github.com/terminaldotshop/terminal-sdk-go v1.2.0
+	github.com/terminaldotshop/terminal-sdk-go v1.3.0
 	golang.org/x/crypto v0.21.0
 	rsc.io/qr v0.2.0
 )
