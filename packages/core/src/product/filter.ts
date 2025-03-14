@@ -14,11 +14,6 @@ export namespace ProductFilter {
   type Context = {
     region?: Region;
     country?: string;
-    ip?: string;
-    app?: string;
-    sdk?: string;
-    sdkVersion?: string;
-    os?: string;
   };
 
   export type Func = (context: Context, tags: Record<string, any>) => boolean;

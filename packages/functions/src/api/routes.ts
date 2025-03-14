@@ -24,11 +24,14 @@ import { AppApi } from "./app";
 import { TokenApi } from "./token";
 import { ProductFilter } from "@terminal/core/product/filter";
 import { getRegionFromIP } from "./ipinfo";
+import { Log } from "@terminal/core/util/log";
 
 const client = createClient({
   clientID: "api",
   issuer: Resource.Auth.url,
 });
+
+const log = Log.create({ namespace: "api" });
 
 const auth: MiddlewareHandler = async (c, next) => {
   const authHeader =
@@ -97,23 +100,14 @@ const filter: MiddlewareHandler = async (c, next) => {
   if (!region && ip) {
     try {
       region = await getRegionFromIP(ip);
-    } catch (error) {
-      console.error("Error getting region from IP:", error);
+    } catch (error: any) {
+      log.error(error);
     }
   }
 
   return ProductFilter.provide(
     {
       region,
-      country: (
-        c.req.header("x-terminal-country") ??
-        c.req.header("CloudFront-Viewer-Country")
-      )?.toLowerCase(),
-      ip,
-      app: c.req.header("x-terminal-app-id"), // ie, 'raycast', 'console.log', 'ssh'
-      sdk: c.req.header("X-Stainless-Lang"),
-      sdkVersion: c.req.header("X-Stainless-Package-Version"),
-      os: c.req.header("X-Stainless-OS"),
     },
     () => {
       console.log("filter", ProductFilter.use());
