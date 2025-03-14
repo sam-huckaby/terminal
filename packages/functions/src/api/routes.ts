@@ -4,7 +4,7 @@ import { logger } from "hono/logger";
 import { VisibleError, ErrorCodes } from "@terminal/core/error";
 import { ProductApi } from "./product";
 import { CartApi } from "./cart";
-import { ActorContext } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { CardApi } from "./card";
 import { OrderApi } from "./order";
 import { Hook } from "./hook";
@@ -52,16 +52,11 @@ const auth: MiddlewareHandler = async (c, next) => {
           ErrorCodes.Authentication.INVALID_TOKEN,
           "Invalid personal access token",
         );
-      return ActorContext.with(
+      return Actor.provide(
+        "token",
         {
-          type: "user",
-          properties: {
-            userID: token.userID,
-            auth: {
-              type: "personal",
-              token: token.id,
-            },
-          },
+          userID: token.userID,
+          tokenID: token.id,
         },
         next,
       );
@@ -75,23 +70,18 @@ const auth: MiddlewareHandler = async (c, next) => {
         "Invalid bearer token",
       );
     if (result.subject.type === "user") {
-      return ActorContext.with(
+      return Actor.provide(
+        "user",
         {
-          type: "user",
-          properties: {
-            userID: result.subject.properties.userID,
-            auth: {
-              type: "oauth",
-              clientID: result.aud,
-            },
-          },
+          userID: result.subject.properties.userID,
+          clientID: result.aud,
         },
         next,
       );
     }
   }
 
-  return ActorContext.with({ type: "public", properties: {} }, next);
+  return Actor.provide("public", {}, next);
 };
 
 const filter: MiddlewareHandler = async (c, next) => {

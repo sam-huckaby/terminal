@@ -7,6 +7,7 @@ import { productTable, productVariantTable } from "../product/product.sql";
 import { ErrorCodes, VisibleError } from "../error";
 import { z } from "zod";
 import { userTable } from "../user/user.sql";
+import { Log } from "../util/log";
 
 const TERMINAL_ADDRESS = {
   name: "Terminal Products Inc",
@@ -42,6 +43,7 @@ const CUSTOMS_DECLARATION_ITEM = {
 };
 
 export module Shippo {
+  const log = Log.create({ namespace: "shippo" });
   const Address = z.object({
     name: z.string(),
     street1: z.string(),
@@ -105,7 +107,7 @@ export module Shippo {
         // carrier_accounts: ["6c1d6acf7cc74ec5a1a4e64a5bd19107"],
       });
 
-      console.error(JSON.stringify(shipment));
+      log.info("shipment data", { shipment: JSON.stringify(shipment) });
       if (shipment.status !== "SUCCESS" || !shipment.rates?.length) {
         throw new VisibleError(
           "validation",
@@ -120,7 +122,7 @@ export module Shippo {
       );
       const rate = shipment.rates[0];
       const shippingAmount = Number.parseFloat(rate.amount) * 100;
-      console.log(rate);
+      log.info("selected rate", { rate });
       return {
         shippoRateID: rate.object_id,
         shippingAmount,
@@ -161,7 +163,7 @@ export module Shippo {
     );
     if (!items.length) throw new Error("Order not found");
     if (items.some((item) => item.shippoLabelID)) {
-      console.log("shipment already created", orderID);
+      log.info("shipment already created", { orderID });
       return;
     }
     const terminalOrder = items[0]!;
@@ -204,9 +206,9 @@ export module Shippo {
       weight,
       weight_unit: "oz",
     });
-    console.log({ order });
+    log.info("order data", { order });
     const rate = await api("GET", "/rates/" + terminalOrder.shippoRateID);
-    console.log({ rate });
+    log.info("rate data", { rate });
 
     const shipment = await api("POST", "/v1/transactions", {
       rate: terminalOrder.shippoRateID,
@@ -215,7 +217,7 @@ export module Shippo {
       }),
       order: order.object_id,
     });
-    console.log({ shipment });
+    log.info("shipment data", { shipment });
     if (shipment.object_state !== "VALID") {
       throw new Error("Shipment invalid");
     }
@@ -232,7 +234,7 @@ export module Shippo {
 
     while (true) {
       const result = await api("GET", "/transactions/" + shipment.object_id);
-      console.log({ polling: JSON.stringify(result, null, 2) });
+      log.info("polling", { data: JSON.stringify(result, null, 2) });
       if (result.status === "ERROR") throw new Error("Shipment invalid");
       if (result.status !== "SUCCESS") {
         await new Promise((r) => setTimeout(r, 1000));
@@ -280,7 +282,7 @@ export module Shippo {
           phone: result.phone,
         };
       }
-      console.log({ result });
+      log.info("result data", { result });
       throw new AddressInvalidError();
     },
   );

@@ -5,7 +5,7 @@ import {
 } from "../drizzle/transaction";
 import { createID } from "../util/id";
 import { orderItemTable, orderTable } from "./order.sql";
-import { assertFlag, useUserID } from "../actor";
+import { Actor } from "../actor";
 import { userTable } from "../user/user.sql";
 import {
   and,
@@ -42,8 +42,10 @@ import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
 import { Cart } from "../cart";
 import { ProductFilter } from "../product/filter";
+import { Log } from "../util/log";
 
 export module Order {
+  const log = Log.create({ namespace: "order" });
   export const Item = z
     .object({
       id: z.string().openapi({
@@ -149,7 +151,7 @@ export module Order {
           productVariantTable,
           eq(orderItemTable.productVariantID, productVariantTable.id),
         )
-        .where(eq(orderTable.userID, useUserID()))
+        .where(eq(orderTable.userID, Actor.userID()))
         .orderBy(desc(orderTable.id));
       const result = pipe(
         rows,
@@ -224,7 +226,7 @@ export module Order {
   );
 
   export async function convertCart() {
-    const userID = useUserID();
+    const userID = Actor.userID();
     const { items, cart } = await useTransaction(async (tx) => {
       const items = await tx
         .select()
@@ -273,7 +275,7 @@ export module Order {
       addressID: z.string(),
     }),
     async (input) => {
-      const userID = useUserID();
+      const userID = Actor.userID();
       const match = await useTransaction(async (tx) =>
         tx
           .select({
@@ -481,7 +483,7 @@ export module Order {
   );
 
   export const setPrinted = fn(Info.shape.id, async (input) => {
-    assertFlag("printer");
+    await Actor.assertFlag("printer");
     await useTransaction(async (tx) =>
       tx
         .update(orderTable)
@@ -493,7 +495,7 @@ export module Order {
   });
 
   export async function getNextLabel() {
-    await assertFlag("printer");
+    await Actor.assertFlag("printer");
     const result = await useTransaction((tx) =>
       tx
         .select({
@@ -536,7 +538,7 @@ export module Order {
         )
         .groupBy(productVariantInventoryTable.inventoryID);
       if (items.length === 0) {
-        console.log("No inventory to track");
+        log.info("No inventory to track");
         return;
       }
       await tx.insert(inventoryRecordTable).values(
@@ -571,7 +573,7 @@ export module Order {
             updated.map((row) => row.id),
           ),
         );
-      console.log("Tracked inventory", result.rowsAffected);
+      log.info("Tracked inventory", { count: result.rowsAffected });
     }, "repeatable read");
   }
 }

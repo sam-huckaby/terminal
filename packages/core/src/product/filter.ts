@@ -53,7 +53,7 @@ export namespace ProductFilter {
 
   const FilterContext = createContext<Context>();
 
-  export const provide = FilterContext.with;
+  export const provide = FilterContext.provide;
 
   export function use() {
     try {

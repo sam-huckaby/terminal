@@ -10,7 +10,7 @@ export function createContext<T>() {
       }
       return result;
     },
-    with<R>(value: T, fn: () => R) {
+    provide<R>(value: T, fn: () => R) {
       return storage.run<R>(value, fn);
     },
   };

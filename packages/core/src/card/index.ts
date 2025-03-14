@@ -5,15 +5,17 @@ import { stripe } from "../stripe";
 import { fn } from "../util/fn";
 import { userTable } from "../user/user.sql";
 import { createID } from "../util/id";
-import { useUserID } from "../actor";
+import { Actor } from "../actor";
 import { cardTable } from "./card.sql";
 import { ErrorCodes, VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { cartTable } from "../cart/cart.sql";
 import { subscriptionTable } from "../subscription/subscription.sql";
+import { Log } from "../util/log";
 
 export module Card {
+  const log = Log.create({ namespace: "card" });
   export const Info = z
     .object({
       id: z.string().openapi({
@@ -57,7 +59,7 @@ export module Card {
       tx
         .select()
         .from(cardTable)
-        .where(eq(cardTable.userID, useUserID()))
+        .where(eq(cardTable.userID, Actor.userID()))
         .orderBy(cardTable.timeCreated)
         .execute()
         .then((rows) => rows.map(serialize)),
@@ -71,7 +73,7 @@ export module Card {
         const user = await tx
           .select()
           .from(userTable)
-          .where(eq(userTable.id, useUserID()))
+          .where(eq(userTable.id, Actor.userID()))
           .limit(1)
           .then((r) => r[0]);
         if (!user) throw new Error("User not found");
@@ -145,7 +147,7 @@ export module Card {
       const rows = await tx
         .select()
         .from(cardTable)
-        .where(and(eq(cardTable.id, id), eq(cardTable.userID, useUserID())))
+        .where(and(eq(cardTable.id, id), eq(cardTable.userID, Actor.userID())))
         .limit(1);
       return rows.map(serialize).at(0);
     }),
@@ -185,13 +187,13 @@ export module Card {
         .where(eq(cartTable.cardID, input));
       await tx
         .delete(cardTable)
-        .where(and(eq(cardTable.id, input), eq(cardTable.userID, useUserID())));
+        .where(and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())));
     }),
   );
 
   export const sync = fn(z.string(), (customerID) => {
     return useTransaction(async (tx) => {
-      console.log("card.sync", customerID);
+      log.info("syncing", { customerID });
       const user = await tx
         .select()
         .from(userTable)
@@ -202,7 +204,7 @@ export module Card {
       const methods = await stripe.customers
         .listPaymentMethods(customerID)
         .then((r) => r.data);
-      console.log("syncing", methods.length, "cards");
+      log.info("syncing cards", { count: methods.length });
       if (methods.length) {
         await tx
           .insert(cardTable)

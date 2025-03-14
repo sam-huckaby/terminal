@@ -3,7 +3,6 @@ import { and, eq } from "drizzle-orm";
 import { useTransaction } from "../drizzle/transaction";
 import { fn } from "../util/fn";
 import { createID } from "../util/id";
-import { useUserID } from "../actor";
 import { addressTable } from "./address.sql";
 import { Common } from "../common";
 import { Examples } from "../examples";
@@ -11,8 +10,9 @@ import { Shippo } from "../shippo";
 import { cartTable } from "../cart/cart.sql";
 import { subscriptionTable } from "../subscription/subscription.sql";
 import { VisibleError, ErrorCodes } from "../error";
+import { Actor } from "../actor";
 
-export module Address {
+export namespace Address {
   export const Inner = z
     .object({
       name: z.string().openapi({
@@ -79,7 +79,7 @@ export module Address {
       tx
         .select()
         .from(addressTable)
-        .where(eq(addressTable.userID, useUserID()))
+        .where(eq(addressTable.userID, Actor.userID()))
         .execute()
         .then((rows) => rows.map(serialize)),
     );
@@ -91,7 +91,7 @@ export module Address {
       const id = createID("userShipping");
       await tx.insert(addressTable).values({
         id,
-        userID: useUserID(),
+        userID: Actor.userID(),
         address: validated,
       });
       return id;
@@ -120,7 +120,10 @@ export module Address {
       const response = await tx
         .delete(addressTable)
         .where(
-          and(eq(addressTable.id, input), eq(addressTable.userID, useUserID())),
+          and(
+            eq(addressTable.id, input),
+            eq(addressTable.userID, Actor.userID()),
+          ),
         );
       if (response.rowsAffected === 0) {
         throw new VisibleError(
@@ -138,7 +141,7 @@ export module Address {
         .select()
         .from(addressTable)
         .where(
-          and(eq(addressTable.id, id), eq(addressTable.userID, useUserID())),
+          and(eq(addressTable.id, id), eq(addressTable.userID, Actor.userID())),
         )
         .limit(1);
       return rows.map(serialize).at(0);

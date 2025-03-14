@@ -5,11 +5,13 @@ import { orderItemTable, orderTable } from "./order/order.sql";
 import { eq } from "drizzle-orm";
 import { productTable, productVariantTable } from "./product/product.sql";
 import { userTable } from "./user/user.sql";
+import { Log } from "./util/log";
 
 const CUSTOMERS_LIST = "3a96a118-0250-11ef-a951-f72c9a1b1995";
 const SUBSCRIBERS_LIST = "e4d1931a-019a-11ef-8784-674ae09367af";
 
 export module EmailOctopus {
+  const log = Log.create({ namespace: "emailOctopus" });
   export async function find(props: {
     email: string;
     list?: "customers" | "subscribers";
@@ -54,14 +56,14 @@ export module EmailOctopus {
         },
     );
 
-    console.log("EmailOctopus response", response);
+    log.info("response", { response });
 
     if (response.error?.code === "MEMBER_EXISTS_WITH_EMAIL_ADDRESS") {
-      console.log(
-        "EmailOctopus contact not found, looking up by email: " + props.email,
-      );
+      log.info("contact not found, looking up by email", { 
+        email: props.email 
+      });
       const contact = await find({ email: props.email, list: props.list });
-      console.log("EmailOctopus contact found?", contact);
+      log.info("contact found?", { contact });
       return contact;
     }
 
@@ -116,7 +118,7 @@ export module EmailOctopus {
         .execute(),
     );
     if (!items?.length) {
-      console.error("No order found: " + orderID);
+      log.error(new Error(`No order found: ${orderID}`));
       return;
     }
 
@@ -143,7 +145,7 @@ export module EmailOctopus {
         .then((r) => r.at(0)),
     );
     if (!user) {
-      console.error("No user found: " + userID);
+      log.error(new Error(`No user found: ${userID}`));
       return;
     }
 

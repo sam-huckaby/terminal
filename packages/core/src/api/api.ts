@@ -3,7 +3,7 @@ import { fn } from "../util/fn";
 import { and, db, eq, isNull } from "../drizzle";
 import { apiClientTable, apiPersonalTokenTable } from "./api.sql";
 import { createID } from "../util/id";
-import { useUserID } from "../actor";
+import { Actor } from "../actor";
 import { randomBytes } from "crypto";
 import { Resource } from "sst";
 import { Common } from "../common";
@@ -53,7 +53,7 @@ export namespace Api {
           secret,
           name: input.name,
           redirectURI: input.redirectURI,
-          userID: useUserID(),
+          userID: Actor.userID(),
         });
         return {
           id,
@@ -87,7 +87,7 @@ export namespace Api {
         .from(apiClientTable)
         .where(
           and(
-            eq(apiClientTable.userID, useUserID()),
+            eq(apiClientTable.userID, Actor.userID()),
             isNull(apiClientTable.timeDeleted),
           ),
         )
@@ -101,7 +101,7 @@ export namespace Api {
           .where(
             and(
               eq(apiClientTable.id, input),
-              eq(apiClientTable.userID, useUserID()),
+              eq(apiClientTable.userID, Actor.userID()),
             ),
           );
         if (response.rowsAffected === 0) {
@@ -139,7 +139,7 @@ export namespace Api {
           .where(
             and(
               eq(apiClientTable.id, id),
-              eq(apiClientTable.userID, useUserID()),
+              eq(apiClientTable.userID, Actor.userID()),
             ),
           )
           .limit(1);
@@ -180,7 +180,7 @@ export namespace Api {
       await db.insert(apiPersonalTokenTable).values({
         id,
         token,
-        userID: useUserID(),
+        userID: Actor.userID(),
       });
 
       return {
@@ -196,7 +196,7 @@ export namespace Api {
           .where(
             and(
               eq(apiPersonalTokenTable.id, input),
-              eq(apiPersonalTokenTable.userID, useUserID()),
+              eq(apiPersonalTokenTable.userID, Actor.userID()),
             ),
           );
         if (response.rowsAffected === 0) {
@@ -215,7 +215,7 @@ export namespace Api {
         .from(apiPersonalTokenTable)
         .where(
           and(
-            eq(apiPersonalTokenTable.userID, useUserID()),
+            eq(apiPersonalTokenTable.userID, Actor.userID()),
             isNull(apiPersonalTokenTable.timeDeleted),
           ),
         )
@@ -246,7 +246,7 @@ export namespace Api {
           .where(
             and(
               eq(apiPersonalTokenTable.id, id),
-              eq(apiPersonalTokenTable.userID, useUserID()),
+              eq(apiPersonalTokenTable.userID, Actor.userID()),
             ),
           )
           .limit(1);

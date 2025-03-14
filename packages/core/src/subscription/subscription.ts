@@ -3,7 +3,7 @@ import { isNull, lt } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
 import { useTransaction } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
-import { ActorContext, useUserID } from "../actor";
+import { Actor } from "../actor";
 import { createID } from "../util/id";
 import { fn } from "../util/fn";
 import { productTable, productVariantTable } from "../product/product.sql";
@@ -13,8 +13,10 @@ import { DateTime } from "luxon";
 import { Order } from "../order/order";
 import { filter, groupBy, pipe, values } from "remeda";
 import { ErrorCodes, VisibleError } from "../error";
+import { Log } from "../util/log";
 
-export module Subscription {
+export namespace Subscription {
+  const log = Log.create({ namespace: "subscription" });
   export const Info = z
     .object({
       id: z.string().openapi({
@@ -59,7 +61,7 @@ export module Subscription {
       tx
         .select()
         .from(subscriptionTable)
-        .where(eq(subscriptionTable.userID, useUserID()))
+        .where(eq(subscriptionTable.userID, Actor.userID()))
         .then((rows) => rows.map(serialize)),
     );
 
@@ -96,7 +98,7 @@ export module Subscription {
                 last: new Date(),
               })
             : undefined,
-          userID: useUserID(),
+          userID: Actor.userID(),
           productVariantID: input.productVariantID,
           quantity: input.quantity,
           addressID: input.addressID,
@@ -119,7 +121,7 @@ export module Subscription {
         .from(subscriptionTable)
         .where(
           and(
-            eq(subscriptionTable.userID, useUserID()),
+            eq(subscriptionTable.userID, Actor.userID()),
             eq(subscriptionTable.productVariantID, input.productVariantID),
           ),
         )
@@ -136,7 +138,7 @@ export module Subscription {
         .where(
           and(
             eq(subscriptionTable.id, input),
-            eq(subscriptionTable.userID, useUserID()),
+            eq(subscriptionTable.userID, Actor.userID()),
           ),
         );
       if (response.rowsAffected === 0) {
@@ -157,7 +159,7 @@ export module Subscription {
         .where(
           and(
             eq(subscriptionTable.id, id),
-            eq(subscriptionTable.userID, useUserID()),
+            eq(subscriptionTable.userID, Actor.userID()),
           ),
         )
         .limit(1);
@@ -207,7 +209,7 @@ export module Subscription {
         ),
     );
 
-    console.log("processing", subs.length, "subscriptions");
+    log.info("processing", { subscriptions: subs.length });
     const grouped = pipe(
       subs,
       filter((s) => s.schedule?.type === "weekly"),
@@ -215,15 +217,13 @@ export module Subscription {
       values(),
     );
     for (const group of grouped) {
-      await ActorContext.with(
+      await Actor.provide(
+        "system",
         {
-          type: "user",
-          properties: {
-            userID: group[0].userID,
-          },
+          userID: group[0].userID,
         },
         async () => {
-          console.log("creating order for", group[0].userID);
+          log.info("creating order");
           const order = await Order.create({
             addressID: group[0].addressID,
             cardID: group[0].cardID,
@@ -231,8 +231,7 @@ export module Subscription {
               group.map((s) => [s.productVariantID, s.quantity] as const),
             ),
           }).catch((ex) => {
-            console.log("error creating order");
-            console.error(ex);
+            log.error(ex);
           });
           if (!order) return;
           for (const sub of group) {

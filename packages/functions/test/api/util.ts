@@ -59,7 +59,6 @@ export const getTestOrderID = async () => {
   return orderID;
 };
 
-
 /**
  * Setup API test environment with authentication and utility functions
  */
@@ -74,7 +73,10 @@ export function setupApiTest() {
       },
       () => {
         // @ts-expect-error
-        return ActorContext.with({ type: "user", properties: { userID } }, fn);
+        return ActorContext.provide(
+          { type: "user", properties: { userID } },
+          fn,
+        );
       },
     );
   };

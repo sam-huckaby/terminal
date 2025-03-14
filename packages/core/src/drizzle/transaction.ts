@@ -53,7 +53,7 @@ export async function createTransaction<T>(
     const effects: (() => void | Promise<void>)[] = [];
     const result = await db.transaction(
       async (tx) => {
-        return TransactionContext.with({ tx, effects }, () => callback(tx));
+        return TransactionContext.provide({ tx, effects }, () => callback(tx));
       },
       {
         isolationLevel: isolationLevel || "read committed",

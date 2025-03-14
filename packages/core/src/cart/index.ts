@@ -5,7 +5,7 @@ import { cartItemTable, cartTable } from "./cart.sql";
 import { createID } from "../util/id";
 import { productTable, productVariantTable } from "../product/product.sql";
 import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
-import { useUserID } from "../actor";
+import { Actor } from "../actor";
 import { cardTable } from "../card/card.sql";
 import { Shippo } from "../shippo/";
 import { ErrorCodes, VisibleError } from "../error";
@@ -122,7 +122,7 @@ export module Cart {
         .from(cartTable)
         .leftJoin(cardTable, eq(cartTable.cardID, cardTable.id))
         .leftJoin(addressTable, eq(cartTable.addressID, addressTable.id))
-        .where(eq(cartTable.userID, useUserID()))
+        .where(eq(cartTable.userID, Actor.userID()))
         .then((rows) => rows[0]);
       if (!cart)
         return {
@@ -187,7 +187,7 @@ export module Cart {
           productVariantTable,
           eq(cartItemTable.productVariantID, productVariantTable.id),
         )
-        .where(eq(cartItemTable.userID, useUserID()))
+        .where(eq(cartItemTable.userID, Actor.userID()))
         .then((rows): Item[] =>
           rows.map((row) => ({
             id: row.cartItem.id,
@@ -219,7 +219,7 @@ export module Cart {
           eq(productVariantTable.id, cartItemTable.productVariantID),
         )
         .innerJoin(addressTable, eq(addressTable.id, addressID))
-        .where(eq(cartItemTable.userID, useUserID()))
+        .where(eq(cartItemTable.userID, Actor.userID()))
         .then((rows) => rows[0]);
       if (!response) {
         throw new VisibleError(
@@ -245,7 +245,7 @@ export module Cart {
       await tx
         .insert(cartTable)
         .values({
-          userID: useUserID(),
+          userID: Actor.userID(),
           addressID: id,
           ...shippingInfo,
           id: createID("cart"),
@@ -266,7 +266,7 @@ export module Cart {
           cardID: cardTable.id,
         })
         .from(cardTable)
-        .where(and(eq(cardTable.id, input), eq(cardTable.userID, useUserID())))
+        .where(and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())))
         .then((rows) => rows[0]?.cardID);
       if (!cardID) {
         throw new VisibleError(
@@ -278,7 +278,7 @@ export module Cart {
       await tx
         .insert(cartTable)
         .values({
-          userID: useUserID(),
+          userID: Actor.userID(),
           cardID: cardID,
           id: createID("cart"),
         })
@@ -298,7 +298,7 @@ export module Cart {
     }),
     async (input) => {
       return useTransaction(async (tx) => {
-        const userID = useUserID();
+        const userID = Actor.userID();
         const id = input.id || createID("cartItem");
         const variant = await tx
           .select({
@@ -361,7 +361,7 @@ export module Cart {
 
   export async function clear() {
     await useTransaction(async (tx) =>
-      tx.delete(cartItemTable).where(eq(cartItemTable.userID, useUserID())),
+      tx.delete(cartItemTable).where(eq(cartItemTable.userID, Actor.userID())),
     );
   }
 }

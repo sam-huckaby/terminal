@@ -6,7 +6,7 @@ import { Examples } from "@terminal/core/examples";
 import { Api } from "@terminal/core/api/api";
 import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
-export module AppApi {
+export namespace AppApi {
   export const route = new Hono()
     .get(
       "/",

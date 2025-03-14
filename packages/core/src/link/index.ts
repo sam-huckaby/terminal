@@ -2,7 +2,7 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { useTransaction } from "../drizzle/transaction";
 import { fn } from "../util/fn";
-import { useUserID } from "../actor";
+import { Actor } from "../actor";
 import { linkTable } from "./link.sql";
 import { nanoid } from "nanoid/non-secure";
 
@@ -22,7 +22,7 @@ export module Link {
       await tx.insert(linkTable).values({
         id,
         url,
-        userID: useUserID(),
+        userID: Actor.userID(),
         timeExpired: new Date(Date.now() + 3600 * 1000),
       });
       return id;
@@ -33,7 +33,7 @@ export module Link {
     useTransaction(async (tx) => {
       await tx
         .delete(linkTable)
-        .where(and(eq(linkTable.id, id), eq(linkTable.userID, useUserID())));
+        .where(and(eq(linkTable.id, id), eq(linkTable.userID, Actor.userID())));
     }),
   );
 
