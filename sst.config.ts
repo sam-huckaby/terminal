@@ -23,6 +23,21 @@ export default $config({
       },
     };
   },
+  console: {
+    autodeploy: {
+      async workflow({ $, event }) {
+        await $`bun install`;
+        if (event.action === "removed") {
+          await $`bun sst remove`;
+          return;
+        }
+
+        await $`bun sst deploy`;
+        if (event.type === "branch" && event.branch === "dev")
+          await $`bun run test`.cwd("./packages/functions");
+      },
+    },
+  },
   async run() {
     $transform(cloudflare.WorkerScript, (script) => {
       script.logpush = true;
