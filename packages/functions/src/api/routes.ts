@@ -96,12 +96,13 @@ const auth: MiddlewareHandler = async (c, next) => {
 
 const filter: MiddlewareHandler = async (c, next) => {
   // Get IP address from headers
-  const ip = c.req.header("x-terminal-ip") ??
+  const ip =
+    c.req.header("x-terminal-ip") ??
     c.req.header("CloudFront-Viewer-Address")?.split(":")[0];
-  
+
   // Get existing region header if present
   let region = c.req.header("x-terminal-region") as any;
-  
+
   // If no region header but we have an IP, look up the region
   if (!region && ip) {
     try {
@@ -110,7 +111,7 @@ const filter: MiddlewareHandler = async (c, next) => {
       console.error("Error getting region from IP:", error);
     }
   }
-  
+
   return ProductFilter.provide(
     {
       region,
@@ -158,7 +159,6 @@ export const routes = app
   .onError((error, c) => {
     // Handle our custom VisibleError
     if (error instanceof VisibleError) {
-      console.error("api error:", error);
       // @ts-expect-error
       return c.json(error.toResponse(), error.statusCode());
     }
