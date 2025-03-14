@@ -28,6 +28,7 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/recover"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -61,9 +62,11 @@ func main() {
 		wish.WithAddress(net.JoinHostPort("0.0.0.0", sshPort)),
 		wish.WithHostKeyPEM([]byte(resource.Resource.SSHKey.Private)),
 		wish.WithMiddleware(
-			bubbletea.Middleware(teaHandler),
-			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
-			logging.Middleware(),
+			recover.Middleware(
+				bubbletea.Middleware(teaHandler),
+				activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
+				logging.Middleware(),
+			),
 		),
 		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 			hash := md5.Sum(key.Marshal())
