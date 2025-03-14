@@ -8,7 +8,7 @@ import { Examples } from "@terminal/core/examples";
 import { Resource } from "sst";
 import { Link } from "@terminal/core/link/index";
 import { User } from "@terminal/core/user/index";
-import { useUserID } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
 export module CardApi {
@@ -221,7 +221,7 @@ export module CardApi {
       async (c) => {
         const authorization = c.req.header("authorization");
         const token = authorization?.replace("Bearer ", "");
-        const user = await User.fromID(useUserID());
+        const user = await User.fromID(Actor.userID());
         const url = `${Resource.Urls.site}/pay?name=${user?.name?.split(" ")[0]}#${token}`;
         const id = await Link.create(url);
         return c.json({ data: { url: `${Resource.Urls.short}/${id}` } }, 200);

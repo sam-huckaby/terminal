@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Result, validator, ErrorResponses, authRequired } from "./common";
 import { User } from "@terminal/core/user/index";
-import { useUserID } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
@@ -45,7 +45,7 @@ export module ProfileApi {
       }),
       authRequired,
       async (c) => {
-        const user = await User.fromID(useUserID());
+        const user = await User.fromID(Actor.userID());
         return c.json({ data: { user } }, 200);
       },
     )
@@ -84,7 +84,7 @@ export module ProfileApi {
         }),
       ),
       async (c) => {
-        const id = useUserID();
+        const id = Actor.userID();
         await User.update({ id, ...c.req.valid("json") });
         const user = await User.fromID(id);
         return c.json({ data: { user } }, 200);

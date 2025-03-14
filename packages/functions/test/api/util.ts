@@ -2,7 +2,7 @@ import { beforeAll, expect, test as _test, mock } from "bun:test";
 import { app } from "../../src/api/routes";
 import { User } from "@terminal/core/user/index";
 import { Api } from "@terminal/core/api/api";
-import { ActorContext } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { z } from "zod";
 import { SchemaValidator } from "./schema-validator";
 import { Card } from "@terminal/core/card/index";
@@ -66,15 +66,14 @@ export function setupApiTest() {
   let userID: string;
   let pat: string;
 
-  const withContext = async (fn: Parameters<typeof _test>[1]) => {
+  const withContext = async <T>(fn: () => T | Promise<T>): Promise<T> => {
     return ProductFilter.provide(
       {
         region: "na",
       },
       () => {
-        // @ts-expect-error
-        return ActorContext.provide(
-          { type: "user", properties: { userID } },
+        return Actor.Context.provide(
+          { type: "user", properties: { userID, clientID: "test-client" } },
           fn,
         );
       },
@@ -171,7 +170,7 @@ export function setupApiTest() {
    */
   const test = (
     label: string,
-    fn: Parameters<typeof _test>[1],
+    fn: () => void | Promise<unknown>,
     options?: Parameters<typeof _test>[2],
   ) => {
     return _test(label, () => withContext(fn), options);

@@ -226,6 +226,7 @@ export module Order {
   );
 
   export async function convertCart() {
+    log.info("converting cart");
     const userID = Actor.userID();
     const { items, cart } = await useTransaction(async (tx) => {
       const items = await tx
@@ -275,6 +276,7 @@ export module Order {
       addressID: z.string(),
     }),
     async (input) => {
+      log.info("creating order");
       const userID = Actor.userID();
       const match = await useTransaction(async (tx) =>
         tx

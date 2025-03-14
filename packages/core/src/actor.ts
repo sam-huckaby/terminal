@@ -92,6 +92,7 @@ export namespace Actor {
       Log.provide(
         {
           actor: type,
+          ...properties,
         },
         fn,
       ),

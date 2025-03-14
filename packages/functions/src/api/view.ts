@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Result, ErrorResponses, authRequired } from "./common";
 import { User } from "@terminal/core/user/index";
-import { useUserID } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { Cart } from "@terminal/core/cart/index";
 import { Product } from "@terminal/core/product/index";
 import { Card } from "@terminal/core/card/index";
@@ -81,7 +81,7 @@ export module ViewApi {
         tokens,
         apps,
       ] = await Promise.all([
-        User.fromID(useUserID()),
+        User.fromID(Actor.userID()),
         Product.list(),
         Cart.get(),
         Address.list(),

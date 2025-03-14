@@ -2,7 +2,7 @@ import { z } from "zod";
 import { resolver } from "hono-openapi/zod";
 import { ErrorResponse, ErrorCodes, VisibleError } from "@terminal/core/error";
 import { validator as zodValidator } from "hono-openapi/zod";
-import { useUserID } from "@terminal/core/actor";
+import { Actor } from "@terminal/core/actor";
 import { MiddlewareHandler } from "hono";
 
 export function Result<T extends z.ZodTypeAny>(schema: T) {
@@ -22,7 +22,7 @@ export const authRequired: MiddlewareHandler = async (c, next) => {
       ErrorCodes.Authentication.UNAUTHORIZED,
       "Missing authorization header",
     );
-  useUserID();
+  Actor.userID();
   return next();
 };
 
