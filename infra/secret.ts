@@ -10,6 +10,7 @@ export const secret = {
   TwitchClientSecret: new sst.Secret("TwitchClientSecret"),
   SlackWebhook: new sst.Secret("SlackWebhook"),
   IpinfoToken: new sst.Secret("IpinfoToken"),
+  AnthropicApiKey: new sst.Secret("AnthropicApiKey"),
 };
 
 export const allSecrets = Object.values(secret);

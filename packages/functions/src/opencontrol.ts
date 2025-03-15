@@ -92,6 +92,7 @@ export const terminal = [
 ];
 
 const app = create({
+  anthropicApiKey: Resource.AnthropicApiKey.value,
   key: process.env.OPENCONTROL_KEY,
   tools: [database, inventory, stripe, ...terminal, ...tools],
 });
