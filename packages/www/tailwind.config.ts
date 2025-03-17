@@ -12,7 +12,10 @@ export default {
         normal: '-0.32px',
       },
       fontFamily: {
-        mono: ['geist', 'geist-fallback', ...defaultTheme.fontFamily.sans],
+        mono: [
+          ['geist', 'geist-fallback', ...defaultTheme.fontFamily.sans],
+          { fontFeatureSettings: '"ss02" on' },
+        ],
       },
       colors: {
         black: '#000000',
