@@ -8,7 +8,7 @@ import { Inventory } from "@terminal/core/inventory/index";
 import { Resource } from "sst";
 import { tools } from "sst/opencontrol";
 
-const database = tool({
+const databaseRead = tool({
   name: "database_query_readonly",
   description:
     "Readonly database query for MySQL, use this if there are no direct tools",
@@ -16,6 +16,18 @@ const database = tool({
   async run(input) {
     return db.transaction(async (tx) => tx.execute(input.query), {
       accessMode: "read only",
+      isolationLevel: "read committed",
+    });
+  },
+});
+
+const databaseWrite = tool({
+  name: "database_query_write",
+  description:
+    "DANGEROUS operation that writes to the database. You MUST triple check with the user before using this tool.",
+  args: z.object({ query: z.string() }),
+  async run(input) {
+    return db.transaction(async (tx) => tx.execute(input.query), {
       isolationLevel: "read committed",
     });
   },
@@ -94,7 +106,14 @@ export const terminal = [
 const app = create({
   anthropicApiKey: Resource.AnthropicApiKey.value,
   key: process.env.OPENCONTROL_KEY,
-  tools: [database, inventory, stripe, ...terminal, ...tools],
+  tools: [
+    databaseRead,
+    databaseWrite,
+    inventory,
+    stripe,
+    ...terminal,
+    ...tools,
+  ],
 });
 
 export const handler = handle(app);
