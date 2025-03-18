@@ -171,6 +171,7 @@ export namespace Shipping {
 
     // Generate CSV content with proper escaping
     const csvContent = stringify(csvRows);
+    console.log(csvContent);
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -187,7 +188,7 @@ export namespace Shipping {
         },
       ],
     );
-    
+
     // Mark all orders as printed so they won't be processed again
     log.info("marking orders as printed", { count: orders.length });
     for (const order of orders) {
@@ -197,7 +198,7 @@ export namespace Shipping {
           .set({
             timePrinted: new Date(),
           })
-          .where(eq(orderTable.id, order.id))
+          .where(eq(orderTable.id, order.id)),
       );
       log.info("marked as printed", { orderId: order.id });
     }

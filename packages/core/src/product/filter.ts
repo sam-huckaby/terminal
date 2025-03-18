@@ -32,8 +32,6 @@ export namespace ProductFilter {
         if (!region) return false;
         return regions.includes(region);
       }
-
-      // no geo location was pssed in so assume nothing
       return true;
     },
   ];
