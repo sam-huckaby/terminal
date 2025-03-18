@@ -13,6 +13,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
 import { Address } from "../address";
+import { Shipping } from "../shipping";
 
 export module Cart {
   export const Item = z
@@ -157,23 +158,6 @@ export module Cart {
     });
   }
 
-  const FREE_SHIPPING_THRESHOLD = 40 * 100;
-  export async function calculateShipping(
-    subtotal: number,
-    ounces: number,
-    address: Address.Inner,
-  ) {
-    if (ounces === 0) return undefined;
-    const rate = await Shippo.createShipmentRate({ ounces, address, subtotal });
-    if (address.country === "US") {
-      return {
-        ...rate,
-        shippingAmount: subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 800,
-      };
-    }
-    return rate;
-  }
-
   export const list = () =>
     useTransaction(async (tx) => {
       return tx
@@ -228,10 +212,8 @@ export module Cart {
           "Address not found.",
         );
       }
-
-      const weight = response.weight;
       const address = response.address;
-      return await calculateShipping(response.subtotal, weight, address);
+      return Shipping.calculate(response.subtotal, address);
     });
 
     await useTransaction(async (tx) => {
@@ -266,7 +248,9 @@ export module Cart {
           cardID: cardTable.id,
         })
         .from(cardTable)
-        .where(and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())))
+        .where(
+          and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())),
+        )
         .then((rows) => rows[0]?.cardID);
       if (!cardID) {
         throw new VisibleError(

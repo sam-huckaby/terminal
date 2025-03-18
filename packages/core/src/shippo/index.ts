@@ -42,7 +42,7 @@ const CUSTOMS_DECLARATION_ITEM = {
   origin_country: "US",
 };
 
-export module Shippo {
+export namespace Shippo {
   const log = Log.create({ namespace: "shippo" });
   const Address = z.object({
     name: z.string(),
@@ -140,9 +140,7 @@ export module Shippo {
           name: sql`CONCAT(${productTable.name}, " - ", ${productVariantTable.name})`,
           quantity: orderItemTable.quantity,
           amount: orderItemTable.amount,
-          shippoRateID: orderTable.shippoRateID,
           shippoLabelID: orderTable.shippoLabelID,
-          existingRateID: orderTable.shippoRateID,
           email: userTable.email,
           price: productVariantTable.price,
           weight: productVariantTable.weight,
@@ -167,16 +165,13 @@ export module Shippo {
       return;
     }
     const terminalOrder = items[0]!;
-    if (!terminalOrder.shippoRateID) {
-      const rate = await createShipmentRate({
-        address: terminalOrder.address,
-        ounces: items
-          .map((item) => item.quantity * item.weight)
-          .reduce((a, b) => a + b, 0),
-        subtotal: items.map((item) => item.amount).reduce((a, b) => a + b, 0),
-      });
-      terminalOrder.shippoRateID = rate.shippoRateID;
-    }
+    const rate = await createShipmentRate({
+      address: terminalOrder.address,
+      ounces: items
+        .map((item) => item.quantity * item.weight)
+        .reduce((a, b) => a + b, 0),
+      subtotal: items.map((item) => item.amount).reduce((a, b) => a + b, 0),
+    });
     const shipping = terminalOrder.address;
 
     const weight = items.reduce(
@@ -207,11 +202,10 @@ export module Shippo {
       weight_unit: "oz",
     });
     log.info("order data", { order });
-    const rate = await api("GET", "/rates/" + terminalOrder.shippoRateID);
     log.info("rate data", { rate });
 
     const shipment = await api("POST", "/v1/transactions", {
-      rate: terminalOrder.shippoRateID,
+      rate: rate.shippoRateID,
       metadata: JSON.stringify({
         orderID,
       }),
@@ -227,6 +221,7 @@ export module Shippo {
         .set({
           shippoOrderID: order.object_id,
           shippoLabelID: shipment.object_id,
+          shippoRateID: rate.shippoRateID,
         })
         .where(eq(orderTable.id, orderID))
         .execute(),

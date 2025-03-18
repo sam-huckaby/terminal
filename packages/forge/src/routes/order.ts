@@ -180,6 +180,10 @@ export const Order = new Page({
               and(
                 isNull(orderTable.timePrinted),
                 isNotNull(orderTable.labelURL),
+                or(
+                  eq(orderTable.fulfiller, "qc"),
+                  isNull(orderTable.fulfiller),
+                ),
               ),
             )
             .groupBy(orderTable.id)

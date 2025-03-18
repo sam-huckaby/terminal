@@ -1,4 +1,11 @@
-import { int, json, mysqlTable, text, unique } from "drizzle-orm/mysql-core";
+import {
+  int,
+  json,
+  mysqlTable,
+  text,
+  unique,
+  char,
+} from "drizzle-orm/mysql-core";
 import {
   address,
   dollar,
@@ -29,6 +36,7 @@ export const orderTable = mysqlTable("order", {
   shippoOrderID: text("shippo_order_id"),
   shippoLabelID: text("shippo_label_id"),
   timePrinted: timestamp("time_printed"),
+  fulfiller: char("fulfiller", { length: 2 }).$type<"qc" | "lp">(),
 });
 
 export const orderItemTable = mysqlTable(

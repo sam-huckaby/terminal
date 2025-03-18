@@ -8,6 +8,7 @@ import { Template } from "@terminal/core/email/template";
 import { EmailOctopus } from "@terminal/core/email-octopus";
 import { Log } from "@terminal/core/util/log";
 import { Actor } from "@terminal/core/actor";
+import { Shipping } from "@terminal/core/shipping/index";
 
 const log = Log.create({ namespace: "event" });
 export const handler = bus.subscriber(
@@ -24,7 +25,7 @@ export const handler = bus.subscriber(
         console.log(event.type, event.properties);
         switch (event.type) {
           case "order.created": {
-            await Shippo.createShipment(event.properties.orderID);
+            await Shipping.fulfillOrder(event.properties.orderID);
             await Template.sendOrderConfirmation(event.properties.orderID);
             await EmailOctopus.addToCustomersList(event.properties.orderID);
             break;

@@ -40,11 +40,11 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
-import { Cart } from "../cart";
 import { ProductFilter } from "../product/filter";
 import { Log } from "../util/log";
+import { Shipping } from "../shipping";
 
-export module Order {
+export namespace Order {
   const log = Log.create({ namespace: "order" });
   export const Item = z
     .object({
@@ -341,14 +341,15 @@ export module Order {
 
       const orderID = createID("order");
       const subtotal = items.reduce((acc, item) => acc + item.price, 0);
-      const weight = items.reduce((acc, item) => acc + item.weight, 0);
-      const shipping = await Cart.calculateShipping(
-        subtotal,
-        weight,
-        match.shipping,
-      );
+      const shipping = await Shipping.calculate(subtotal, match.shipping);
+      if (!shipping)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Cannot ship to this address",
+        );
 
-      const shippingAmount = shipping?.shippingAmount || 0;
+      const shippingAmount = shipping.shippingAmount || 0;
       const totalChargeAmount = subtotal + shippingAmount;
       const needsPayment = ![
         "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
@@ -393,10 +394,10 @@ export module Order {
           await tx.insert(orderTable).values({
             id: orderID,
             email: match.email,
+            fulfiller: shipping.fulfiller,
             stripePaymentIntentID: result?.id,
-            shippingAmount: shipping?.shippingAmount || 0,
+            shippingAmount: shipping.shippingAmount || 0,
             shippingAddress: match.shipping,
-            shippoRateID: shipping?.shippoRateID,
             card: {
               brand: match.card.brand,
               last4: match.card.last4,
@@ -515,6 +516,23 @@ export module Order {
     if (!result) return;
     return result;
   }
+
+  export const setFulfiller = fn(
+    z.object({
+      orderId: z.string(),
+      fulfiller: z.enum(["qc", "lp"]),
+    }),
+    async (input) => {
+      await useTransaction((tx) =>
+        tx
+          .update(orderTable)
+          .set({
+            fulfiller: input.fulfiller,
+          })
+          .where(eq(orderTable.id, input.orderId)),
+      );
+    },
+  );
 
   export async function trackInventory() {
     await createTransaction(async (tx) => {

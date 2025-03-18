@@ -100,6 +100,14 @@ new sst.aws.Cron("SubscriptionProcessor", {
   },
 });
 
+new sst.aws.Cron("EUFulfillment", {
+  schedule: "rate(1 day)",
+  job: {
+    link: [database, shortDomainEmail, email, secret.ShippoSecret],
+    handler: "./packages/functions/src/cron/shipping.handler",
+  },
+});
+
 export const outputs = {
   auth: auth.url,
   api: api.url,

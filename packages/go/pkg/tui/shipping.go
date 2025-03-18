@@ -318,9 +318,9 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 
 		return m, func() tea.Msg {
-			if m.state.shipping.input.country != "US" {
-				return VisibleError{message: "we're only shipping to the US, for now"}
-			}
+			// if m.state.shipping.input.country != "US" {
+			// 	return VisibleError{message: "we're only shipping to the US, for now"}
+			// }
 
 			if m.state.shipping.input.country != "US" && m.state.shipping.input.phone == "" {
 				return VisibleError{message: "phone is required for international orders"}

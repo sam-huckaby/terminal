@@ -23,6 +23,7 @@
     "@types/inquirer": "9.0.7",
     "airtable": "0.12.2",
     "cloudflare": "3.1.0",
+    "csv-stringify": "6.5.2",
     "drizzle-kit": "0.25.0",
     "drizzle-orm": "0.34.1",
     "hono": "*",

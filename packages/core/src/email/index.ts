@@ -6,33 +6,101 @@ export namespace Email {
   const log = Log.create({ namespace: "email" });
   export const Client = new SESv2Client({});
 
+  export type Attachment = {
+    filename: string;
+    content: string;
+    contentType?: string;
+  };
+
   export async function send(
     from: string,
     to: string,
     subject: string,
     body: string,
+    attachments?: Attachment[],
   ) {
     from = from + "@" + Resource.ShortDomainEmail.sender;
     log.info("sending email", { subject, from, to });
-    await Client.send(
-      new SendEmailCommand({
-        Destination: {
-          ToAddresses: [to],
-        },
-        Content: {
-          Simple: {
-            Body: {
-              Text: {
-                Data: body,
-              },
-            },
-            Subject: {
-              Data: subject,
+
+    // For SESv2, we need to manually construct the MIME message for attachments
+    if (attachments && attachments.length > 0) {
+      // Create a unique boundary for the multipart message
+      const boundary = "boundary-" + Date.now().toString(16);
+
+      let rawMessageContent = [
+        `From: Terminal <${from}>`,
+        `To: ${to}`,
+        `Subject: ${subject}`,
+        "MIME-Version: 1.0",
+        `Content-Type: multipart/mixed; boundary="${boundary}"`,
+        "",
+        `--${boundary}`,
+        "Content-Type: text/plain; charset=UTF-8",
+        "",
+        body,
+        "",
+      ];
+
+      // Add each attachment
+      for (const attachment of attachments) {
+        const contentType =
+          attachment.contentType ||
+          (attachment.filename.endsWith(".csv")
+            ? "text/csv"
+            : "application/octet-stream");
+
+        rawMessageContent = rawMessageContent.concat([
+          `--${boundary}`,
+          `Content-Type: ${contentType}; name="${attachment.filename}"`,
+          "Content-Transfer-Encoding: base64",
+          `Content-Disposition: attachment; filename="${attachment.filename}"`,
+          "",
+          Buffer.from(attachment.content).toString("base64"),
+          "",
+        ]);
+      }
+
+      // Close the MIME boundary
+      rawMessageContent.push(`--${boundary}--`);
+
+      // Create raw message
+      const rawMessage = rawMessageContent.join("\r\n");
+
+      await Client.send(
+        new SendEmailCommand({
+          Destination: {
+            ToAddresses: [to],
+          },
+          FromEmailAddress: `Terminal <${from}>`,
+          Content: {
+            Raw: {
+              Data: Buffer.from(rawMessage),
             },
           },
-        },
-        FromEmailAddress: `Terminal <${from}>`,
-      }),
-    );
+        }),
+      );
+    } else {
+      // Use simple format if no attachments
+      await Client.send(
+        new SendEmailCommand({
+          Destination: {
+            ToAddresses: [to],
+          },
+          FromEmailAddress: `Terminal <${from}>`,
+          Content: {
+            Simple: {
+              Subject: {
+                Data: subject,
+              },
+              Body: {
+                Text: {
+                  Data: body,
+                },
+              },
+            },
+          },
+        }),
+      );
+    }
   }
 }
