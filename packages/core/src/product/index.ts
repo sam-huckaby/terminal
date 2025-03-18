@@ -7,7 +7,7 @@ import {
   productVariantInventoryTable,
   productVariantTable,
 } from "./product.sql";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { first, groupBy, map, pipe, values } from "remeda";
 import { fn } from "../util/fn";
 import { createID } from "../util/id";
@@ -86,6 +86,7 @@ export module Product {
           productVariantTable,
           eq(productTable.id, productVariantTable.productID),
         )
+        .where(isNull(productTable.timeDeleted))
         .orderBy(productTable.order);
       const result = pipe(
         rows,

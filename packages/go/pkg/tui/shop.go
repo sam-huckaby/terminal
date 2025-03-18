@@ -301,7 +301,7 @@ func (m model) ShopView() string {
 	)
 
 	var content string
-	if len(m.products) == 1 {
+	if len(m.products) == 1 && false {
 		content = m.theme.Base().Width(m.widthContent).Render(detail)
 	} else if m.size < large {
 		detailStyle := m.theme.Base().
