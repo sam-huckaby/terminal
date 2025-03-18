@@ -16,6 +16,11 @@ export default {
           ['geist', 'geist-fallback', ...defaultTheme.fontFamily.sans],
           { fontFeatureSettings: '"ss02" on' },
         ],
+        serif: [
+          'instrument',
+          'instrument-fallback',
+          ...defaultTheme.fontFamily.serif,
+        ],
       },
       colors: {
         black: '#000000',
@@ -27,6 +32,15 @@ export default {
         },
         orange: 'hsla(22, 100%, 50%, 1)',
         purple: 'hsla(306, 76%, 55%, 1)',
+        cron: {
+          bg: '#EFEBE8',
+          bgDark: '#E7DFDA',
+          header: '#EEE9E5',
+          lines: '#F6F1EE',
+          border: '#C4BEBA',
+          text: '#3F3832',
+          textLight: '#3F383299',
+        },
         gray: {
           1: 'hsla(200, 7%, 9%, 1)',
           5: 'hsla(200, 88%, 93%, 0.11)',
@@ -90,6 +104,7 @@ export default {
       },
       borderColor: {
         DEFAULT: 'hsla(203, 6%, 24%, 1)',
+        'cron-lines': '#F6F1EE',
       },
     },
   },

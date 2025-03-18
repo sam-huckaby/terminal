@@ -1,0 +1,22 @@
+---
+import Layout from '@layouts/base.astro'
+import CronComponent from '@components/cron'
+import { Image } from 'astro:assets'
+import cron from '../assets/cron.png'
+import cronWord from '../assets/cron-wordmark.png'
+---
+
+<Layout light>
+  <CronComponent slot="docs" client:load>
+    <div class="absolute top-14 hidden md:block">
+      <Image
+        src={cronWord}
+        alt="cron"
+        class="max-w-none w-[1386px] h-[352px]"
+      />
+    </div>
+    <div class="z-10 w-[512px]">
+      <Image src={cron} alt="cron box" />
+    </div>
+  </CronComponent>
+</Layout>

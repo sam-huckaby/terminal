@@ -2,7 +2,7 @@
 import Layout from '@layouts/base.astro'
 import LaunchWeek from '@components/launch-week'
 import { Image } from 'astro:assets'
-import team from '../../public/images/team.png'
+import team from '../assets/team.png'
 // import Shop from '@components/shop'
 // import { Resource } from 'sst'
 ---
@@ -13,7 +13,7 @@ import team from '../../public/images/team.png'
     <Image
       src={team}
       alt="Team"
-      class="w-full h-full object-cover opacity-[44%] mix-blend-screen"
+      class="object-cover opacity-[44%] mix-blend-screen"
       style={{
         'mask-image': `radial-gradient(ellipse 42% 50% at 50% 60%, black 75%, transparent 100%), 
       linear-gradient(to bottom, transparent 0%, black 50%, black 50%, black 50%, transparent 100%);`,
