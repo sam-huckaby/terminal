@@ -24,7 +24,7 @@ const databaseRead = tool({
 const databaseWrite = tool({
   name: "database_query_write",
   description:
-    "DANGEROUS operation that writes to the database. You MUST triple check with the user before using this tool.",
+    "DANGEROUS operation that writes to the database. You MUST triple check with the user before using this tool - show them the query you are about to run.",
   args: z.object({ query: z.string() }),
   async run(input) {
     return db.transaction(async (tx) => tx.execute(input.query), {
