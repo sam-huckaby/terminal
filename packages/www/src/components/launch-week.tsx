@@ -189,7 +189,7 @@ const EventItem: Component<{ date: string; time?: string; keyword?: string; titl
       </Match>
       <Match when={!props.href}>
         <span class="md:hidden">{props.time ?? "1pm edt"}</span>
-        <span class="hidden sm:block">{props.time ?? "1.00pm edt"}</span>
+        <span class="hidden md:block">{props.time ?? "1.00pm edt"}</span>
       </Match>
     </Switch>
 
