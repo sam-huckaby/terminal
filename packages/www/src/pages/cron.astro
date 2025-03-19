@@ -30,7 +30,6 @@ import cron from '../assets/cron.png'
             'mask-size': 'cover',
           }}
         >
-          <div class="bg-cron-lines absolute inset-0"></div>
           <div
             class="bg-cron-bg absolute inset-0"
             style={{
@@ -48,8 +47,12 @@ import cron from '../assets/cron.png'
           >
           </div>
           <div
+            class="bg-cron-lines absolute inset-0 mix-blend-multiply opacity-[24%]"
+          >
+          </div>
+          <div
             id="inner-shadow"
-            class="absolute inset-0 drop-shadow-[0_2px_2px_#A9A7A6]"
+            class="absolute inset-0 drop-shadow-[0_2.5px_0px_#A9A7A6]"
           >
           </div>
         </div>

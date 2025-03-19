@@ -201,12 +201,11 @@ if (current) current.active = true
         href="/"
         id="logo"
         class:list={{
-          'relative px-6 border-r flex items-center text-[16px] tracking-[-0.15px] font-medium': true,
+          'relative px-6 border-r flex items-center text-[17px] tracking-[-0.15px] font-medium': true,
           'border-cron-border': Astro.props.light === true,
           '!text-white': !current && Astro.props.light !== true,
           '!text-gray-11': !!current && Astro.props.light !== true,
-          '!bg-cron-text': !current && Astro.props.light === true,
-          '!bg-cron-textLight': !!current && Astro.props.light === true,
+          'bg-cron-text bg-opacity-80': Astro.props.light === true,
           '[text-shadow:_2px_2px_3px_rgb(255_255_255_/_50%)] bg-clip-text !text-transparent':
             Astro.props.light === true,
         }}
@@ -235,8 +234,8 @@ if (current) current.active = true
                 'relative group/nav-item last:!border-r': true,
                 '!text-white': active && Astro.props.light !== true,
                 '!text-gray-11': !active && Astro.props.light !== true,
-                '!bg-cron-text': active && Astro.props.light === true,
-                '!bg-cron-textLight': !active && Astro.props.light === true,
+                '!bg-cron-text': Astro.props.light === true,
+                '!bg-opacity-70': !active && Astro.props.light === true,
                 '[text-shadow:_2px_2px_3px_rgb(255_255_255_/_50%)] bg-clip-text !text-transparent':
                   Astro.props.light === true,
               }}

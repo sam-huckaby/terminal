@@ -1,7 +1,50 @@
-import type { ParentProps } from "solid-js"
+import { createSignal, Match, Show, Switch, type ParentProps } from "solid-js"
 
 export type CronProps = {
 } & ParentProps
+
+function CopyButton() {
+  const [copied, setCopied] = createSignal(false)
+
+  const copy = () => {
+    navigator.clipboard.writeText('ssh terminal.shop -t cron')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  return (
+    <div class="relative group/copy-button">
+      <div classList={{
+        "absolute -top-5 inset-x-0 flex items-center justify-center": true,
+        "group-hover/copy-button:visible": true,
+        "invisible": !copied()
+      }}>
+        <span class="font-mono text-xs text-white bg-cron-text/80 mix-blend-multiply px-2 rounded">
+          <Switch>
+            <Match when={copied()}>
+              Copied
+            </Match>
+            <Match when={!copied()}>
+              Copy
+            </Match>
+          </Switch>
+        </span>
+      </div>
+      <button
+        onMouseDown={copy}
+        classList={{
+          "flex items-center justify-center": true,
+          "px-4 py-1 rounded cursor-pointer": true,
+          "font-mono font-medium text-black whitespace-nowrap": true,
+          "hover:bg-cron-text/10 hover:shadow-[inset_0_0_2px_rgba(0,0,0,0.16)]": true,
+          "active:bg-cron-text/14 active:shadow-[inset_0_0_2px_rgba(0,0,0,0.32)]": true,
+        }}>
+        ssh terminal.shop -t cron
+      </button>
+    </div>
+  )
+}
+
 
 export default function Cron(props: CronProps) {
   return (
@@ -11,7 +54,7 @@ export default function Cron(props: CronProps) {
     }}>
       <div class="relative px-4 md:px-0 md:max-w-[640px] md:mx-auto py-12">
         {/* Title section */}
-        <h1 class="text-4xl md:text-[80px] whitespace-nowrap tracking-[-0.175px] text-black text-center">
+        <h1 class="text-4xl md:text-[80px] leading-[normal] whitespace-nowrap tracking-[-0.175px] text-black text-center">
           That time of the month.
         </h1>
 
@@ -33,10 +76,8 @@ export default function Cron(props: CronProps) {
             your door. And sure, more often than not you’ll receive
             coffee, after all we are a coffee company.
           </p>
-          <div class="flex items-center justify-center font-mono font-medium text-black whitespace-nowrap my-8">
-            <p>
-              ssh terminal.shop -t cron
-            </p>
+          <div class="flex items-center justify-center my-8">
+            <CopyButton />
           </div>
           <p class="leading-[150%]">
             But sometimes you'll receive more than delicious coffee.
@@ -53,7 +94,7 @@ export default function Cron(props: CronProps) {
 
         {/* Text content (large screen) */}
         <div class="relative hidden md:flex mt-10 items-center justify-stretch gap-8">
-          <div class="flex-1 [&>p]:leading-[150%]">
+          <div class="flex-1 [&>p]:leading-[150%] [&>p]:tracking-[0] [&>p]:whitespace-nowrap">
             <p>Terminal Products, Inc. is proud to announce, “Cron”.</p>
             <p>What is Cron? Well first, let us tell you what Cron isn’t.</p>
             <p>Cron isn’t a coffee subscription. It’s a membership.</p>
@@ -64,16 +105,14 @@ export default function Cron(props: CronProps) {
             <p>your door. And sure, more often than not you’ll receive</p>
             <p>coffee, after all we are a coffee company.</p>
           </div>
-          <div class="absolute inset-0 flex items-center justify-center font-mono font-medium text-black whitespace-nowrap">
-            <p>
-              ssh terminal.shop -t cron
-            </p>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <CopyButton />
           </div>
-          <div class="flex-1 [&>p]:leading-[150%] flex flex-col items-start">
+          <div class="flex-1 [&>p]:leading-[150%] [&>p]:tracking-[0] [&>p]:whitespace-nowrap flex flex-col items-start">
             <p>But sometimes you'll receive more than delicious coffee.</p>
             <p>Can we say what? We could, or you could join and find</p>
             <p>out for yourself. We guarantee that whatever we ship</p>
-            <div class="w-1/2 self-end mr-4 [&>p]:leading-[150%]">
+            <div class="w-1/2 self-end mr-2 [&>p]:leading-[150%] [&>p]:tracking-[0] [&>p]:whitespace-nowrap">
               <p>and do it'll be worth every</p>
               <p>penny of the very reasonable</p>
               <p>price of $30 per month.</p>
@@ -85,7 +124,7 @@ export default function Cron(props: CronProps) {
         </div>
 
         {/* Footer */}
-        <div class="w-full flex flex-col items-center mt-8">
+        <div class="w-full flex flex-col items-center mt-9">
           <div class="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 32" fill="none" class="h-8">
               <g clip-path="url(#clip)">
@@ -100,7 +139,7 @@ export default function Cron(props: CronProps) {
               </defs>
             </svg>
           </div>
-          <p class="text-xs font-mono text-center text-[#918780] mt-5 leading-[150%]">
+          <p class="text-xs font-mono text-center text-[#918780] mt-6 leading-[150%]">
             Copyright © Terminal Products, Inc. 1985-2025
           </p>
         </div>
