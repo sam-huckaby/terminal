@@ -21,7 +21,7 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
 
   return (
     <AnimationContext.Provider value={{ registerEvent }}>
-      <div class="bg-black min-h-[calc(100vh-40px)] overflow-hidden" style={{
+      <div class="bg-black h-[calc(100vh-40px)] overflow-hidden" style={{
         "background-image": "linear-gradient(#180800 4px, transparent 4px);",
         "background-size": "8px 8px;"
       }}>
