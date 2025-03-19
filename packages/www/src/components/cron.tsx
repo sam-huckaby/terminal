@@ -1,50 +1,7 @@
-import { createSignal, Match, Show, Switch, type ParentProps } from "solid-js"
+import { createSignal, Match, Switch, type ParentProps } from "solid-js"
 
 export type CronProps = {
 } & ParentProps
-
-function CopyButton() {
-  const [copied, setCopied] = createSignal(false)
-
-  const copy = () => {
-    navigator.clipboard.writeText('ssh terminal.shop -t cron')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  return (
-    <div class="relative group/copy-button">
-      <div classList={{
-        "absolute -top-5 inset-x-0 flex items-center justify-center": true,
-        "group-hover/copy-button:visible": true,
-        "invisible": !copied()
-      }}>
-        <span class="font-mono text-xs text-white bg-cron-text/80 mix-blend-multiply px-2 rounded">
-          <Switch>
-            <Match when={copied()}>
-              Copied
-            </Match>
-            <Match when={!copied()}>
-              Copy
-            </Match>
-          </Switch>
-        </span>
-      </div>
-      <button
-        onMouseDown={copy}
-        classList={{
-          "flex items-center justify-center": true,
-          "px-4 py-1 rounded cursor-pointer": true,
-          "font-mono font-medium text-black whitespace-nowrap": true,
-          "hover:bg-cron-text/10 hover:shadow-[inset_0_0_2px_rgba(0,0,0,0.16)]": true,
-          "active:bg-cron-text/14 active:shadow-[inset_0_0_2px_rgba(0,0,0,0.32)]": true,
-        }}>
-        ssh terminal.shop -t cron
-      </button>
-    </div>
-  )
-}
-
 
 export default function Cron(props: CronProps) {
   return (
@@ -52,9 +9,9 @@ export default function Cron(props: CronProps) {
       "background-image": "linear-gradient(#F6F1EE 4px, transparent 4px)",
       "background-size": "8px 8px"
     }}>
-      <div class="relative px-4 md:px-0 md:max-w-[640px] md:mx-auto py-12">
+      <div class="relative px-4 sm:px-8 md:px-0 md:max-w-[640px] md:mx-auto py-12">
         {/* Title section */}
-        <h1 class="text-4xl md:text-[80px] leading-[normal] whitespace-nowrap tracking-[-0.175px] text-black text-center">
+        <h1 class="text-[44px] sm:text-[64px] md:text-[80px] leading-[normal] whitespace-nowrap tracking-[-0.175px] text-black text-center">
           That time of the month.
         </h1>
 
@@ -64,7 +21,7 @@ export default function Cron(props: CronProps) {
         </div>
 
         {/* Text content (small screen) */}
-        <div class="relative md:hidden mt-10 items-center justify-stretch gap-8 text-lg">
+        <div class="relative md:hidden mt-10 items-center justify-stretch gap-8 text-xl">
           <p class="leading-[150%]">
             Terminal Products, Inc. is proud to announce, “Cron”.
             What is Cron? Well first, let us tell you what Cron isn’t.
@@ -124,7 +81,7 @@ export default function Cron(props: CronProps) {
         </div>
 
         {/* Footer */}
-        <div class="w-full flex flex-col items-center mt-9">
+        <div class="w-full flex flex-col items-center mt-16 md:mt-9">
           <div class="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 32" fill="none" class="h-8">
               <g clip-path="url(#clip)">
@@ -144,6 +101,49 @@ export default function Cron(props: CronProps) {
           </p>
         </div>
       </div>
-    </div >
+    </div>
   )
 }
+
+function CopyButton() {
+  const [copied, setCopied] = createSignal(false)
+
+  const copy = () => {
+    navigator.clipboard.writeText('ssh terminal.shop -t cron')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  return (
+    <div class="relative group/copy-button">
+      <div classList={{
+        "absolute -top-5 inset-x-0 flex items-center justify-center": true,
+        "group-hover/copy-button:visible": true,
+        "invisible": !copied()
+      }}>
+        <span class="font-mono text-xs text-white bg-cron-text/80 mix-blend-multiply px-2 rounded">
+          <Switch>
+            <Match when={copied()}>
+              Copied
+            </Match>
+            <Match when={!copied()}>
+              Copy
+            </Match>
+          </Switch>
+        </span>
+      </div>
+      <button
+        onMouseDown={copy}
+        classList={{
+          "flex items-center justify-center": true,
+          "px-4 py-1 rounded cursor-pointer": true,
+          "font-mono font-medium text-black whitespace-nowrap": true,
+          "hover:bg-cron-text/10 hover:shadow-[inset_0_0_2px_rgba(0,0,0,0.16)]": true,
+          "active:bg-cron-text/14 active:shadow-[inset_0_0_2px_rgba(0,0,0,0.32)]": true,
+        }}>
+        ssh terminal.shop -t cron
+      </button>
+    </div>
+  )
+}
+

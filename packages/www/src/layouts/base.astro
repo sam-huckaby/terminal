@@ -192,7 +192,7 @@ if (current) current.active = true
     <!-- </Banner> -->
     <header
       class:list={{
-        'h-10 border-b flex items-stretch sticky top-0 z-50': true,
+        'h-10 border-y sm:border-t-0 flex items-stretch sticky top-0 z-50': true,
         'bg-gray-1': Astro.props.light !== true,
         'bg-cron-header border-cron-border': Astro.props.light === true,
       }}
@@ -265,6 +265,7 @@ if (current) current.active = true
         }
       </nav>
     </header>
+    {Astro.props.light && <div class="h-px bg-white w-full" />}
     <slot name="docs" />
     {
       Astro.slots.has('docs') ? null : (
