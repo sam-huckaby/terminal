@@ -1,12 +1,12 @@
-import { handle } from "hono/aws-lambda";
 import { create } from "opencontrol";
 import { tool } from "opencontrol/tool";
-import { z } from "zod";
 
+import { handle } from "hono/aws-lambda";
+import { z } from "zod";
+import { tools } from "sst/opencontrol";
 import { db } from "@terminal/core/drizzle/index";
 import { Inventory } from "@terminal/core/inventory/index";
 import { Resource } from "sst";
-import { tools } from "sst/opencontrol";
 import { createAnthropic } from "@ai-sdk/anthropic";
 
 const databaseRead = tool({
