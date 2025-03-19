@@ -264,8 +264,12 @@ if (current) current.active = true
           ))
         }
       </nav>
+      {
+        Astro.props.light && (
+          <div class="absolute -bottom-0.5 inset-x-0 h-px bg-white" />
+        )
+      }
     </header>
-    {Astro.props.light && <div class="h-px bg-white w-full" />}
     <slot name="docs" />
     {
       Astro.slots.has('docs') ? null : (
