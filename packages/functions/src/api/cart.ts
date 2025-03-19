@@ -26,6 +26,7 @@ export module CartApi {
                     example: Examples.Cart,
                   }),
                 ),
+                example: { data: Examples.Cart },
               },
             },
             description: "The current user's cart.",
@@ -56,6 +57,7 @@ export module CartApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Cart was cleared successfully.",
@@ -87,6 +89,7 @@ export module CartApi {
                     example: Examples.Cart,
                   }),
                 ),
+                example: { data: Examples.Cart },
               },
             },
             description: "The updated cart.",
@@ -128,6 +131,7 @@ export module CartApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Address was set successfully.",
@@ -166,6 +170,7 @@ export module CartApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Card was set successfully.",
@@ -209,6 +214,7 @@ export module CartApi {
                     example: Examples.Order,
                   }),
                 ),
+                example: { data: Examples.Order },
               },
             },
             description: "Cart was converted successfully.",

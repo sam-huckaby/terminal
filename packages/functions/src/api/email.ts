@@ -18,6 +18,7 @@ export module EmailApi {
           content: {
             "application/json": {
               schema: Result(z.literal("ok")),
+              example: { data: "ok" },
             },
           },
           description: "Email subscription was created.",

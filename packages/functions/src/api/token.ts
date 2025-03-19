@@ -24,6 +24,7 @@ export module TokenApi {
                     example: [Examples.Token],
                   }),
                 ),
+                example: { data: [Examples.Token] },
               },
             },
             description: "List of personal access tokens.",
@@ -55,6 +56,7 @@ export module TokenApi {
                     example: Examples.Token,
                   }),
                 ),
+                example: { data: Examples.Token },
               },
             },
             description: "Personal access token.",
@@ -110,6 +112,9 @@ export module TokenApi {
                     }),
                   }),
                 ),
+                example: {
+                  data: { id: Examples.Token.id, token: Examples.Token.token },
+                },
               },
             },
             description: "Personal access token ID and value.",
@@ -136,6 +141,7 @@ export module TokenApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Personal access token was deleted successfully.",

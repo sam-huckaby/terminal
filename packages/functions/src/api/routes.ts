@@ -25,6 +25,7 @@ import { TokenApi } from "./token";
 import { ProductFilter } from "@terminal/core/product/filter";
 import { getRegionFromIP } from "./ipinfo";
 import { Log } from "@terminal/core/util/log";
+import packageJson from "../../package.json" assert { type: "json" };
 
 const client = createClient({
   clientID: "api",
@@ -179,8 +180,8 @@ app.get(
       info: {
         title: "Terminal API",
         description:
-          "The Terminal API gives you access to the same API that powers the award winning Terminal SSH shop (`ssh terminal.shop`).",
-        version: "0.1.0",
+          "The Terminal API gives you access to the same API that powers the award winning Terminal SSH shop.",
+        version: packageJson.version ?? "1.0.0",
       },
       components: {
         securitySchemes: {
@@ -193,7 +194,7 @@ app.get(
       },
       security: [{ Bearer: [] }],
       servers: [
-        { description: "Dev", url: "https://api.dev.terminal.shop" },
+        { description: "Dev Sandbox", url: "https://api.dev.terminal.shop" },
         { description: "Production", url: "https://api.terminal.shop" },
       ],
     },

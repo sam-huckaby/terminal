@@ -25,6 +25,7 @@ export module AddressApi {
                     example: [Examples.Shipping],
                   }),
                 ),
+                example: { data: [Examples.Shipping] },
               },
             },
             description: "Shipping addresses.",
@@ -56,6 +57,7 @@ export module AddressApi {
                     example: Examples.Shipping,
                   }),
                 ),
+                example: { data: Examples.Shipping },
               },
             },
             description: "Shipping address.",
@@ -104,6 +106,7 @@ export module AddressApi {
                     example: Examples.Shipping.id,
                   }),
                 ),
+                example: { data: Examples.Shipping.id },
               },
             },
             description: "Shipping address ID.",
@@ -138,6 +141,7 @@ export module AddressApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Shipping address was deleted successfully.",

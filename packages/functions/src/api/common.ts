@@ -124,14 +124,14 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Validation error",
-            example: {
-              type: "validation",
-              code: "invalid_parameter",
-              message: "The request was invalid",
-              param: "email",
-            },
           }),
         ),
+        example: {
+          type: "validation",
+          code: "invalid_parameter",
+          message: "The request was invalid",
+          param: "email",
+        },
       },
     },
     description:
@@ -143,13 +143,13 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Authentication error",
-            example: {
-              type: "authentication",
-              code: "unauthorized",
-              message: "Authentication required",
-            },
           }),
         ),
+        example: {
+          type: "authentication",
+          code: "unauthorized",
+          message: "Authentication required",
+        },
       },
     },
     description:
@@ -161,13 +161,13 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Permission error",
-            example: {
-              type: "forbidden",
-              code: "permission_denied",
-              message: "You do not have permission to access this resource",
-            },
           }),
         ),
+        example: {
+          type: "forbidden",
+          code: "permission_denied",
+          message: "You do not have permission to access this resource",
+        },
       },
     },
     description:
@@ -179,13 +179,13 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Not found error",
-            example: {
-              type: "not_found",
-              code: "resource_not_found",
-              message: "The requested resource could not be found",
-            },
           }),
         ),
+        example: {
+          type: "not_found",
+          code: "resource_not_found",
+          message: "The requested resource could not be found",
+        },
       },
     },
     description: "Not Found - The requested resource does not exist.",
@@ -196,13 +196,13 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Rate limit error",
-            example: {
-              type: "rate_limit",
-              code: "too_many_requests",
-              message: "Rate limit exceeded",
-            },
           }),
         ),
+        example: {
+          type: "rate_limit",
+          code: "too_many_requests",
+          message: "Rate limit exceeded",
+        },
       },
     },
     description:
@@ -214,13 +214,13 @@ export const ErrorResponses = {
         schema: resolver(
           ErrorResponse.openapi({
             description: "Server error",
-            example: {
-              type: "internal",
-              code: "internal_error",
-              message: "Internal server error",
-            },
           }),
         ),
+        example: {
+          type: "internal",
+          code: "internal_error",
+          message: "Internal server error",
+        },
       },
     },
     description: "Internal Server Error - Something went wrong on our end.",

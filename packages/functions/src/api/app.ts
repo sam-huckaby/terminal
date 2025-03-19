@@ -24,6 +24,7 @@ export namespace AppApi {
                     example: [Examples.App],
                   }),
                 ),
+                example: { data: [Examples.App] },
               },
             },
             description: "List of apps.",
@@ -55,6 +56,7 @@ export namespace AppApi {
                     example: Examples.App,
                   }),
                 ),
+                example: { data: Examples.App },
               },
             },
             description: "App.",
@@ -109,6 +111,9 @@ export namespace AppApi {
                     }),
                   }),
                 ),
+                example: {
+                  data: { id: Examples.App.id, secret: Examples.App.secret },
+                },
               },
             },
             description: "OAuth 2.0 client ID and secret.",
@@ -146,6 +151,7 @@ export namespace AppApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "App was deleted successfully.",

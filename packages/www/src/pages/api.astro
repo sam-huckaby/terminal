@@ -1,0 +1,67 @@
+---
+import Layout from '@layouts/base.astro'
+import ApiReference from '@components/api-reference'
+import { dereference, load } from '@scalar/openapi-parser'
+import { fetchUrls } from '@scalar/openapi-parser/plugins/fetch-urls'
+import type { OpenAPIV3_1 } from '@scalar/openapi-types'
+
+const openapiUrl = 'https://app.stainless.com/api/spec/documented/terminal'
+
+// Fetch OpenAPI spec server-side
+let schema: OpenAPIV3_1.Document | undefined = undefined
+let specification: OpenAPIV3_1.Document | undefined = undefined
+
+try {
+  const { filesystem } = await load(openapiUrl, {
+    plugins: [fetchUrls()],
+  })
+
+  const api = await dereference(filesystem)
+  schema = api.schema as OpenAPIV3_1.Document
+  specification = api.specification as OpenAPIV3_1.Document
+} catch (error) {
+  console.error('Error loading OpenAPI specification:', error)
+}
+
+// Group endpoints by tag
+const endpointsByTag: Record<
+  string,
+  {
+    id: string
+    path: string
+    method: string
+    operation: OpenAPIV3_1.OperationObject
+  }[]
+> = {}
+
+if (schema) {
+  const paths = schema.paths || {}
+
+  Object.entries(paths).forEach(([path, pathItem]) => {
+    if (!pathItem) return
+
+    Object.entries(pathItem).forEach(([method, operation]) => {
+      if (method === 'parameters') return // Skip parameters
+
+      const tags: string[] = operation.tags || ['default']
+      tags.forEach((tag) => {
+        if (!endpointsByTag[tag]) {
+          endpointsByTag[tag] = []
+        }
+        endpointsByTag[tag].push({
+          id: operation.operationId,
+          path,
+          method,
+          operation,
+        })
+      })
+    })
+  })
+}
+---
+
+<Layout>
+  <div slot="docs">
+    <ApiReference client:load {schema} {specification} {endpointsByTag} />
+  </div>
+</Layout>

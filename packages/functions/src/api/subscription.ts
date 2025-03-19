@@ -24,6 +24,7 @@ export module SubscriptionApi {
                     example: [Examples.Subscription],
                   }),
                 ),
+                example: { data: [Examples.Subscription] },
               },
             },
             description: "List of subscriptions.",
@@ -60,6 +61,7 @@ export module SubscriptionApi {
                     example: Examples.Subscription,
                   }),
                 ),
+                example: { data: Examples.Subscription },
               },
             },
             description: "Subscription information.",
@@ -103,6 +105,7 @@ export module SubscriptionApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Subscription was created successfully.",
@@ -139,6 +142,7 @@ export module SubscriptionApi {
             content: {
               "application/json": {
                 schema: Result(z.literal("ok")),
+                example: { data: "ok" },
               },
             },
             description: "Subscription was cancelled successfully.",
