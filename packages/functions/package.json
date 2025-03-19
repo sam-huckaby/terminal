@@ -9,6 +9,7 @@
   },
   "devDependencies": {},
   "dependencies": {
+    "@ai-sdk/anthropic": "1.1.18",
     "@aws-sdk/client-sesv2": "3.606.0",
     "@hono/zod-validator": "0.4.2",
     "@openauthjs/openauth": "*",
@@ -17,7 +18,7 @@
     "hono": "*",
     "hono-openapi": "0.4.4",
     "node-ipinfo": "4.0.1",
-    "opencontrol": "0.0.12",
+    "opencontrol": "0.0.14",
     "sst": "3.9.33",
     "zod": "*",
     "zod-openapi": "4.1.0"

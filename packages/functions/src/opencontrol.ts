@@ -7,6 +7,7 @@ import { db } from "@terminal/core/drizzle/index";
 import { Inventory } from "@terminal/core/inventory/index";
 import { Resource } from "sst";
 import { tools } from "sst/opencontrol";
+import { createAnthropic } from "@ai-sdk/anthropic";
 
 const databaseRead = tool({
   name: "database_query_readonly",
@@ -104,8 +105,9 @@ export const terminal = [
 ];
 
 const app = create({
-  anthropicApiKey: Resource.AnthropicApiKey.value,
-  key: process.env.OPENCONTROL_KEY,
+  model: createAnthropic({
+    apiKey: Resource.AnthropicApiKey.value,
+  })("claude-3-7-sonnet-20250219"),
   tools: [
     databaseRead,
     databaseWrite,
