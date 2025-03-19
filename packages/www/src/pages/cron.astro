@@ -3,17 +3,57 @@ import Layout from '@layouts/base.astro'
 import CronComponent from '@components/cron'
 import { Image } from 'astro:assets'
 import cron from '../assets/cron.png'
-import cronWord from '../assets/cron-wordmark.png'
 ---
+
+<style>
+  #inner-shadow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #f6f1ee;
+    mask: url('/images/cron-mask.png'), linear-gradient(#fff 0 0);
+    mask-position: center;
+    mask-size: cover;
+    mask-composite: exclude;
+  }
+</style>
 
 <Layout light>
   <CronComponent slot="docs" client:load>
     <div class="absolute top-14 hidden md:block">
-      <Image
-        src={cronWord}
-        alt="cron"
-        class="max-w-none w-[1386px] h-[352px]"
-      />
+      <div class="drop-shadow-[0_2px_2px_rgba(255,255,255,1)]">
+        <div
+          class="max-w-none w-[1386px] h-[352px] relative"
+          style={{
+            'mask-image': "url('/images/cron-mask.png');",
+            'mask-position': 'center',
+            'mask-size': 'cover',
+          }}
+        >
+          <div class="bg-cron-lines absolute inset-0"></div>
+          <div
+            class="bg-cron-bg absolute inset-0"
+            style={{
+              'background-image':
+                'linear-gradient(transparent 4px, #F6F1EE 4px)',
+              'background-size': '8px 8px',
+            }}
+          >
+          </div>
+          <div
+            class="absolute inset-0 mix-blend-multiply"
+            style={{
+              'background-image': 'linear-gradient(to top, #FAF8F6, #E8E4E1);',
+            }}
+          >
+          </div>
+          <div
+            id="inner-shadow"
+            class="absolute inset-0 drop-shadow-[0_2px_2px_#A9A7A6]"
+          >
+          </div>
+        </div>
+      </div>
     </div>
     <div class="z-10 w-[512px]">
       <Image src={cron} alt="cron box" />
