@@ -4,6 +4,7 @@ import type { OpenAPIV3_1 } from '@scalar/openapi-types'
 import { Accordion } from '@kobalte/core/accordion'
 import TabGroup from './tab-group'
 import LineComponent from './line'
+import Code from './code'
 
 type EndpointType = {
   id: string
@@ -316,24 +317,64 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
           </div>
           <div class="pt-12 -mt-12" id="getting-started">
             <h3 class="font-bold lowercase leading-10">#getting started</h3>
-            <p class="text-gray-11">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-              voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
+            <div class="flex flex-col gap-3 text-gray-11">
+              <p>
+                The Terminal API allows you to interact with the Terminal e-commerce platform.
+                You can use it to order your own coffee however you like (cron job, neovim plugin, github action, etc.),
+                or even create apps that allow others to authenticate through OAuth 2.0 and purchase their coffee.
+              </p>
+              <p>
+                There are two environments for the Terminal API: the dev sandbox, and production.
+                The dev sandbox allows you to test out the API without creating real charges against a credit card
+                (use the Stripe test card: 4242424242424242), and, obviously, we won't be fulfilling any orders in dev.
+                The production environment is the real deal, and we will be fulfilling orders against real credit cards,
+                so be careful! Or don't, we'll gladly take your money and send you coffee, just no infinite loops, pls.
+              </p>
+              <p>
+                We don't know what you might do with it, but our OpenAPI 3.1 specification is available <a class="text-white/85" target="_blank" href="https://api.terminal.shop/doc">here</a>.
+              </p>
+            </div>
           </div>
           <div class="pt-12 -mt-12" id="authentication">
             <h3 class="font-bold lowercase leading-10">#authentication</h3>
-            <p class="text-gray-11">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-              voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
+            <div class="flex flex-col gap-3 text-gray-11">
+              <p>
+                There are two ways to authenticate with the Terminal API: using a <strong class="text-white/85">personal access token</strong>,
+                or using an <strong class="text-white/85">OAuth 2.0 client ID and secret</strong>.
+              </p>
+              <p>
+                The personal access token is a simple secret (string) that can be passed as a bearer token in the <code>Authorization</code> header.
+                All API actions will be performed on behalf of the user associated with the token (you!).
+                You can manage your personal access tokens in the Account page of the SSH shop:
+              </p>
+              <Code language='bash' code={`ssh terminal.shop -t tokens`} />
+              <p>
+                The OAuth 2.0 client ID and secret are used to authenticate with the API on behalf of another user.
+                Like personal access tokens, you can create and manage OAuth 2.0 apps in the Account page of the SSH shop:
+              </p>
+              <Code language='bash' code={`ssh terminal.shop -t apps`} />
+              <p>
+                You can find OAuth 2.0 configuration info <a class="text-white/85" target="_blank" href="https://auth.dev.terminal.shop/.well-known/oauth-authorization-server">here</a> for
+                the dev sandbox, and <a class="text-white/85" target="_blank" href="https://auth.terminal.shop/.well-known/oauth-authorization-server">here</a> for production. Note: we don't
+                do anything with <span class="text-white/85">`scope`</span>, so pass anything you like just remember that we probably log them and will post any funny values on the internet.
+              </p>
+            </div>
           </div>
           <div class="pt-12 -mt-12" id="client-sdks">
             <h3 class="font-bold lowercase leading-10">#client sdks</h3>
-            <p class="text-gray-11">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-              voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
+            <div class="flex flex-col gap-3 text-gray-11">
+              <p>
+                If you don't prefer making HTTP requests yourself, you can use one of our many client SDKs to interact with the Terminal API:
+              </p>
+              <ul>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-js">JavaScript</a></li>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-go">Go</a></li>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-python">Python</a></li>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-ruby">Ruby</a></li>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-java">Java</a></li>
+                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-kotlin">Kotlin</a></li>
+              </ul>
+            </div>
           </div>
         </div>
 
