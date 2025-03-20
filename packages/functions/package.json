@@ -18,7 +18,7 @@
     "hono": "*",
     "hono-openapi": "0.4.4",
     "node-ipinfo": "4.0.1",
-    "opencontrol": "0.0.14",
+    "opencontrol": "0.0.15",
     "sst": "3.9.44",
     "zod": "*",
     "zod-openapi": "4.1.0"

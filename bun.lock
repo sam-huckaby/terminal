@@ -69,7 +69,7 @@
         "hono": "*",
         "hono-openapi": "0.4.4",
         "node-ipinfo": "4.0.1",
-        "opencontrol": "0.0.14",
+        "opencontrol": "0.0.15",
         "sst": "3.9.44",
         "zod": "*",
         "zod-openapi": "4.1.0",
@@ -1612,7 +1612,7 @@
 
     "open": ["open@7.4.2", "", { "dependencies": { "is-docker": "^2.0.0", "is-wsl": "^2.1.1" } }, "sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q=="],
 
-    "opencontrol": ["opencontrol@0.0.14", "", { "dependencies": { "@hono/zod-validator": "0.4.3", "@modelcontextprotocol/sdk": "1.7.0", "@tsconfig/bun": "1.0.7", "ai": "4.1.63", "hono": "4.7.4", "zod": "3.24.2", "zod-to-json-schema": "3.24.4" }, "bin": { "opencontrol": "bin/index.mjs" } }, "sha512-dk489I1pFfYqrHS6qicPgSr2/qtlcB4qZFTWx3BT5UUr47DVUwdWvrBnxLndEedxGSqvaG5nCksaQ62T0pvqoQ=="],
+    "opencontrol": ["opencontrol@0.0.15", "", { "dependencies": { "@hono/zod-validator": "0.4.3", "@modelcontextprotocol/sdk": "1.7.0", "@tsconfig/bun": "1.0.7", "ai": "4.1.63", "hono": "4.7.4", "zod": "3.24.2", "zod-to-json-schema": "3.24.4" }, "bin": { "opencontrol": "bin/index.mjs" } }, "sha512-t3/EmEdJ02n8D5FcD8xknu9PfZ+A4nagvjdOlq2d6gdYy6qOMKrHBR3aj5dAZ+z6RKHzAF9Ve9maRZa7SWBu0g=="],
 
     "openid-client": ["openid-client@5.6.4", "", { "dependencies": { "jose": "^4.15.4", "lru-cache": "^6.0.0", "object-hash": "^2.2.0", "oidc-token-hash": "^5.0.3" } }, "sha512-T1h3B10BRPKfcObdBklX639tVz+xh34O7GjofqrqiAQdm7eHsQ00ih18x6wuJ/E6FxdtS2u3FmUGPDeEcMwzNA=="],
 
