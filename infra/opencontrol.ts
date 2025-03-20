@@ -10,6 +10,7 @@ const opencontrol = new sst.aws.OpenControl("OpenControl", {
       ? ["arn:aws:iam::aws:policy/AdministratorAccess"]
       : ["arn:aws:iam::aws:policy/ReadOnlyAccess"],
     link: [database, ...allSecrets, api],
+    timeout: "2 minutes",
     url: true,
   },
 });
