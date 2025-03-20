@@ -28,6 +28,7 @@ export default defineConfig({
     '/feud': 'https://jean-types-icq-calls.trycloudflare.com',
   },
   vite: {
+    server: { allowedHosts: true },
     plugins: [textjs('./src/cui')],
   },
 })
