@@ -23,7 +23,7 @@ try {
 }
 
 // Group endpoints by tag
-const endpointsByTag: Record<
+let endpointsByTag: Record<
   string,
   {
     id: string
@@ -54,6 +54,16 @@ if (schema) {
           operation,
         })
       })
+    })
+  })
+
+  // Sort each tag's endpoints by method priority: GET, PUT, POST, DELETE
+  const methodPriority = { get: 1, put: 2, post: 3, delete: 4 }
+  Object.keys(endpointsByTag).forEach((tag) => {
+    endpointsByTag[tag].sort((a, b) => {
+      const priorityA = methodPriority[a.method as keyof typeof methodPriority] || 999
+      const priorityB = methodPriority[b.method as keyof typeof methodPriority] || 999
+      return priorityA - priorityB
     })
   })
 }

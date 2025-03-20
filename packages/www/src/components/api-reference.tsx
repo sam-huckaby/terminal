@@ -316,7 +316,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               </For>
             </ul>
           </div>
-          <div class="pt-12 -mt-12" id="getting-started">
+          <div class="pt-12 -mt-12 lowercase" id="getting-started">
             <h3 class="font-bold lowercase leading-10">#getting started</h3>
             <div class="flex flex-col gap-3 text-gray-11">
               <p>
@@ -336,7 +336,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               </p>
             </div>
           </div>
-          <div class="pt-12 -mt-12" id="authentication">
+          <div class="pt-12 -mt-12 lowercase" id="authentication">
             <h3 class="font-bold lowercase leading-10">#authentication</h3>
             <div class="flex flex-col gap-3 text-gray-11">
               <p>
@@ -361,7 +361,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               </p>
             </div>
           </div>
-          <div class="pt-12 -mt-12" id="client-sdks">
+          <div class="pt-12 -mt-12 lowercase" id="client-sdks">
             <h3 class="font-bold lowercase leading-10">#client sdks</h3>
             <div class="flex flex-col gap-3 text-gray-11">
               <p>
@@ -370,49 +370,49 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               <ul>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-js">JavaScript</a>
-                  <RepoLink 
-                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-js" 
-                    packageUrl="https://www.npmjs.com/package/@terminaldotshop/sdk" 
+                  <RepoLink
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-js"
+                    packageUrl="https://www.npmjs.com/package/@terminaldotshop/sdk"
                     language="javascript"
                   />
                 </li>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-go">Go</a>
-                  <RepoLink 
+                  <RepoLink
                     githubUrl="https://github.com/terminaldotshop/terminal-sdk-go"
-                    packageUrl="https://pkg.go.dev/github.com/terminaldotshop/terminal-sdk-go" 
+                    packageUrl="https://pkg.go.dev/github.com/terminaldotshop/terminal-sdk-go"
                     language="go"
                   />
                 </li>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-python">Python</a>
-                  <RepoLink 
-                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-python" 
-                    packageUrl="https://pypi.org/project/terminal-shop/" 
+                  <RepoLink
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-python"
+                    packageUrl="https://pypi.org/project/terminal-shop/"
                     language="python"
                   />
                 </li>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-ruby">Ruby</a>
-                  <RepoLink 
-                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-ruby" 
-                    packageUrl="https://rubygems.org/gems/terminal-shop" 
+                  <RepoLink
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-ruby"
+                    packageUrl="https://rubygems.org/gems/terminal-shop"
                     language="ruby"
                   />
                 </li>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-java">Java</a>
-                  <RepoLink 
-                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-java" 
-                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-java" 
+                  <RepoLink
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-java"
+                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-java"
                     language="java"
                   />
                 </li>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-kotlin">Kotlin</a>
-                  <RepoLink 
-                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-kotlin" 
-                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-kotlin" 
+                  <RepoLink
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-kotlin"
+                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-kotlin"
                     language="kotlin"
                   />
                 </li>
