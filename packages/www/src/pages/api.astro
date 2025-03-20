@@ -15,7 +15,6 @@ try {
   const { filesystem } = await load(openapiUrl, {
     plugins: [fetchUrls()],
   })
-
   const api = await dereference(filesystem)
   schema = api.schema as OpenAPIV3_1.Document
   specification = api.specification as OpenAPIV3_1.Document
@@ -58,6 +57,11 @@ if (schema) {
     })
   })
 }
+
+Astro.response.headers.set(
+  'Cache-Control',
+  'public, s-maxage=600, stale-while-revalidate=86400, stale-if-error=86400',
+)
 ---
 
 <Layout>
