@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"math"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -45,6 +46,7 @@ const (
 
 type model struct {
 	ready         bool
+	command       []string
 	switched      bool
 	page          page
 	hasMenu       bool
@@ -110,6 +112,7 @@ func NewModel(
 	renderer *lipgloss.Renderer,
 	fingerprint string,
 	clientIP *string,
+	command []string,
 ) (tea.Model, error) {
 	api.Init()
 
@@ -117,6 +120,7 @@ func NewModel(
 	ctx = context.WithValue(ctx, "client_ip", clientIP)
 
 	result := model{
+		command:  command,
 		context:  ctx,
 		region:   nil,
 		page:     splashPage,
@@ -185,6 +189,67 @@ func (m model) SwitchPage(page page) model {
 	m.page = page
 	m.switched = true
 	return m
+}
+
+func (m model) InitialDataLoaded() (model, tea.Cmd) {
+	if len(m.command) == 0 {
+		return m.ShopSwitch()
+	}
+
+	// TODO: support multiple commands?
+	command := strings.ToLower(m.command[0])
+
+	for index, product := range m.products {
+		if strings.ToLower(product.Name) == command {
+			m.state.shop.selected = index
+			return m.ShopSwitch()
+		}
+	}
+
+	accountPageNames := []string{
+		"orders",
+		"subscriptions",
+		"tokens",
+		"apps",
+		"faq",
+		"about",
+	}
+	for _, name := range accountPageNames {
+		if strings.HasPrefix(name, command) {
+			m, cmd := m.AccountSwitch()
+
+			selected := 0
+			for index, page := range m.accountPages {
+				if name == "orders" && page == ordersPage {
+					selected = index
+					break
+				} else if name == "subscriptions" && page == subscriptionsPage {
+					selected = index
+					break
+				} else if name == "tokens" && page == tokensPage {
+					selected = index
+					break
+				} else if name == "apps" && page == appsPage {
+					selected = index
+					break
+				} else if name == "faq" && page == faqPage {
+					selected = index
+					break
+				} else if name == "about" && page == aboutPage {
+					selected = index
+					break
+				}
+			}
+
+			m.state.account.selected = selected
+			if m.state.account.selected > 0 {
+				m.state.account.focused = true
+			}
+			return m, cmd
+		}
+	}
+
+	return m.ShopSwitch()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

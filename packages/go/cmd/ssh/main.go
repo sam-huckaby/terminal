@@ -140,14 +140,16 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	}
 	renderer := bubbletea.MakeRenderer(sessionBridge)
 	fingerprint := s.Context().Value("fingerprint").(string)
+	command := s.Command()
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
+	slog.Info("got command", "command", command)
 
 	// Get client IP address from the SSH session
 	clientAddr := s.RemoteAddr().String()
 	host, _, _ := net.SplitHostPort(clientAddr)
 	slog.Info("client connected", "ip", host)
 
-	model, err := tui.NewModel(renderer, fingerprint, &host)
+	model, err := tui.NewModel(renderer, fingerprint, &host, command)
 	if err != nil {
 		return nil, []tea.ProgramOption{}
 	}

@@ -104,7 +104,7 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 	}
 
 	if m.IsLoadingComplete() {
-		return m.ShopSwitch()
+		return m.InitialDataLoaded()
 	}
 	return m, nil
 }
