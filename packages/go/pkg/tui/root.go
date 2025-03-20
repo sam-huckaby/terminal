@@ -206,6 +206,10 @@ func (m model) InitialDataLoaded() (model, tea.Cmd) {
 		}
 	}
 
+	if command == "cart" {
+		return m.CartSwitch()
+	}
+
 	accountPageNames := []string{
 		"orders",
 		"subscriptions",
