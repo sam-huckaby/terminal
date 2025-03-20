@@ -5,6 +5,7 @@ import { Accordion } from '@kobalte/core/accordion'
 import TabGroup from './tab-group'
 import LineComponent from './line'
 import Code from './code'
+import RepoLink from './repo-link'
 
 type EndpointType = {
   id: string
@@ -367,12 +368,54 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                 If you don't prefer making HTTP requests yourself, you can use one of our many client SDKs to interact with the Terminal API:
               </p>
               <ul>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-js">JavaScript</a></li>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-go">Go</a></li>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-python">Python</a></li>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-ruby">Ruby</a></li>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-java">Java</a></li>
-                <li><a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-kotlin">Kotlin</a></li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-js">JavaScript</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-js" 
+                    packageUrl="https://www.npmjs.com/package/@terminaldotshop/sdk" 
+                    language="javascript"
+                  />
+                </li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-go">Go</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-go"
+                    packageUrl="https://pkg.go.dev/github.com/terminaldotshop/terminal-sdk-go" 
+                    language="go"
+                  />
+                </li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-python">Python</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-python" 
+                    packageUrl="https://pypi.org/project/terminal-shop/" 
+                    language="python"
+                  />
+                </li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-ruby">Ruby</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-ruby" 
+                    packageUrl="https://rubygems.org/gems/terminal-shop" 
+                    language="ruby"
+                  />
+                </li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-java">Java</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-java" 
+                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-java" 
+                    language="java"
+                  />
+                </li>
+                <li class="flex items-center justify-between">
+                  <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-kotlin">Kotlin</a>
+                  <RepoLink 
+                    githubUrl="https://github.com/terminaldotshop/terminal-sdk-kotlin" 
+                    packageUrl="https://central.sonatype.com/artifact/shop.terminal.api/terminal-kotlin" 
+                    language="kotlin"
+                  />
+                </li>
               </ul>
             </div>
           </div>
