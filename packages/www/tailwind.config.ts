@@ -69,7 +69,7 @@ export default {
         },
         yellow: {
           5: '#FEBB0036',
-          11: '#FEE949F5',
+          11: '#FFB800', // '#FEE949F5',
         },
       },
       animation: {

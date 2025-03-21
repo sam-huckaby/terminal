@@ -25,9 +25,9 @@ const TabGroup: Component<TabGroupProps> = (props) => {
     <KTabs.Root
       value={activeTab()}
       onChange={setActiveTab}
-      class="overflow-hidden"
+      class=""
     >
-      <KTabs.List class="flex gap-4">
+      <KTabs.List class="flex gap-4 overflow-x-auto no-scrollbar">
         <For each={props.tabs}>
           {(tab) => (
             <KTabs.Trigger
@@ -47,7 +47,7 @@ const TabGroup: Component<TabGroupProps> = (props) => {
       </KTabs.List>
       <For each={props.tabs}>
         {(tab) => (
-          <KTabs.Content value={tab.value} class="">
+          <KTabs.Content value={tab.value} class="overflow-hidden">
             <Code code={tab.content} language={tab.value === 'schema' || tab.value === 'example' ? 'json' : tab.value.toLowerCase()} />
           </KTabs.Content>
         )}

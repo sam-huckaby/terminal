@@ -244,7 +244,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                             'text-blue-11': endpoint.method === 'get',
                             'text-green-11': endpoint.method === 'post',
                             'text-red-11': endpoint.method === 'delete',
-                            'text-orange': endpoint.method === 'put',
+                            'text-yellow-11': endpoint.method === 'put',
                           }}
                         >
                           {endpoint.method.toUpperCase().replace("DELETE", "DEL")}
@@ -434,7 +434,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                           'text-blue-11': endpoint.method === 'get',
                           'text-green-11': endpoint.method === 'post',
                           'text-red-11': endpoint.method === 'delete',
-                          'text-orange': endpoint.method === 'put',
+                          'text-yellow-11': endpoint.method === 'put',
                         }}
                       >
                         {endpoint.method.toUpperCase()}
@@ -457,7 +457,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                             'text-blue-11': endpoint.method === 'get',
                             'text-green-11': endpoint.method === 'post',
                             'text-red-11': endpoint.method === 'delete',
-                            'text-orange': endpoint.method === 'put',
+                            'text-yellow-11': endpoint.method === 'put',
                           }}
                         >
                           {endpoint.method}
@@ -482,7 +482,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                                         classList={{
                                           'text-green-11': statusCode.startsWith('2'),
                                           'text-blue-11': statusCode.startsWith('3'),
-                                          'text-orange': statusCode.startsWith('4'),
+                                          'text-yellow-11': statusCode.startsWith('4'),
                                           'text-red-11': statusCode.startsWith('5'),
                                         }}
                                       >

@@ -24,8 +24,8 @@ export const highlighter = await createHighlighterCore({
         'debugConsoleInputIcon.foreground': '#e6b450',
         'debugExceptionWidget.background': '#0f131a',
         'debugExceptionWidget.border': '#11151c',
-        'debugIcon.breakpointDisabledForeground': '#f2966880',
-        'debugIcon.breakpointForeground': '#f29668',
+        'debugIcon.breakpointDisabledForeground': '#ffb80080',
+        'debugIcon.breakpointForeground': '#ffb800',
         'debugToolBar.background': '#0f131a',
         descriptionForeground: '#565b66',
         'diffEditor.diagonalFill': '#11151c',
@@ -102,7 +102,7 @@ export const highlighter = await createHighlighterCore({
         'gitDecoration.deletedResourceForeground': '#f26d78b3',
         'gitDecoration.ignoredResourceForeground': '#565b6680',
         'gitDecoration.modifiedResourceForeground': '#73b8ffb3',
-        'gitDecoration.submoduleResourceForeground': '#d2a6ffb3',
+        'gitDecoration.submoduleResourceForeground': '#e335d2b3',
         'gitDecoration.untrackedResourceForeground': '#7fd962b3',
         'icon.foreground': '#565b66',
         'input.background': '#0d1017',
@@ -181,7 +181,7 @@ export const highlighter = await createHighlighterCore({
         'sideBarTitle.foreground': '#565b66',
         'statusBar.background': '#0b0e14',
         'statusBar.border': '#0b0e14',
-        'statusBar.debuggingBackground': '#f29668',
+        'statusBar.debuggingBackground': '#ffb800',
         'statusBar.debuggingForeground': '#0d1017',
         'statusBar.foreground': '#565b66',
         'statusBar.noFolderBackground': '#0f131a',
@@ -204,9 +204,9 @@ export const highlighter = await createHighlighterCore({
         'terminal.ansiBlue': '#53bdfa',
         'terminal.ansiBrightBlack': '#686868',
         'terminal.ansiBrightBlue': '#59c2ff',
-        'terminal.ansiBrightCyan': '#95e6cb',
+        'terminal.ansiBrightCyan': '#25d0ab',
         'terminal.ansiBrightGreen': '#aad94c',
-        'terminal.ansiBrightMagenta': '#d2a6ff',
+        'terminal.ansiBrightMagenta': '#e335d2',
         'terminal.ansiBrightRed': '#f07178',
         'terminal.ansiBrightWhite': '#ffffff',
         'terminal.ansiBrightYellow': '#FF5757',
@@ -264,19 +264,19 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['string.regexp', 'constant.character', 'constant.other'],
           settings: {
-            foreground: '#95e6cb',
+            foreground: '#25d0ab',
           },
         },
         {
           scope: ['constant.numeric'],
           settings: {
-            foreground: '#d2a6ff',
+            foreground: '#e335d2',
           },
         },
         {
           scope: ['constant.language'],
           settings: {
-            foreground: '#d2a6ff',
+            foreground: '#e335d2',
           },
         },
         {
@@ -313,7 +313,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['keyword.operator'],
           settings: {
-            foreground: '#f29668',
+            foreground: '#ffb800',
           },
         },
         {
@@ -331,7 +331,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['punctuation.accessor'],
           settings: {
-            foreground: '#f29668',
+            foreground: '#ffb800',
           },
         },
         {
@@ -389,7 +389,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['variable.parameter', 'meta.parameter'],
           settings: {
-            foreground: '#d2a6ff',
+            foreground: '#e335d2',
           },
         },
         {
@@ -453,7 +453,7 @@ export const highlighter = await createHighlighterCore({
           scope: ['support.constant'],
           settings: {
             fontStyle: 'italic',
-            foreground: '#f29668',
+            foreground: '#ffb800',
           },
         },
         {
@@ -602,7 +602,7 @@ export const highlighter = await createHighlighterCore({
           scope: ['markup.quote'],
           settings: {
             fontStyle: 'italic',
-            foreground: '#95e6cb',
+            foreground: '#25d0ab',
           },
         },
         {
@@ -645,7 +645,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['text.html.markdown markup.inline.raw'],
           settings: {
-            foreground: '#f29668',
+            foreground: '#ffb800',
           },
         },
         {
