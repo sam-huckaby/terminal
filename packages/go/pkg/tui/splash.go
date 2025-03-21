@@ -88,7 +88,11 @@ func (m model) SplashInit() tea.Cmd {
 		}
 	}
 
-	return tea.Batch(m.CursorInit(), cmd)
+	disableMouseCmd := func() tea.Msg {
+		return tea.DisableMouse()
+	}
+
+	return tea.Batch(m.CursorInit(), disableMouseCmd, cmd)
 }
 
 func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {

@@ -153,5 +153,5 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	if err != nil {
 		return nil, []tea.ProgramOption{}
 	}
-	return model, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseAllMotion()}
+	return model, []tea.ProgramOption{tea.WithAltScreen()}
 }
