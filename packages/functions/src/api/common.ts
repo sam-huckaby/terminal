@@ -134,8 +134,7 @@ export const ErrorResponses = {
         },
       },
     },
-    description:
-      "Bad Request - The request could not be understood or was missing required parameters.",
+    description: "Bad Request",
   },
   401: {
     content: {
@@ -152,8 +151,7 @@ export const ErrorResponses = {
         },
       },
     },
-    description:
-      "Unauthorized - Authentication is required and has failed or has not been provided.",
+    description: "Unauthorized",
   },
   403: {
     content: {
@@ -170,8 +168,7 @@ export const ErrorResponses = {
         },
       },
     },
-    description:
-      "Forbidden - You do not have permission to access this resource.",
+    description: "Forbidden",
   },
   404: {
     content: {
@@ -188,7 +185,7 @@ export const ErrorResponses = {
         },
       },
     },
-    description: "Not Found - The requested resource does not exist.",
+    description: "Not Found",
   },
   429: {
     content: {
@@ -205,8 +202,7 @@ export const ErrorResponses = {
         },
       },
     },
-    description:
-      "Too Many Requests - You have made too many requests in a short period of time.",
+    description: "Too Many Requests",
   },
   500: {
     content: {
@@ -223,6 +219,6 @@ export const ErrorResponses = {
         },
       },
     },
-    description: "Internal Server Error - Something went wrong on our end.",
+    description: "Internal Server Error",
   },
 };
