@@ -14,13 +14,16 @@ export namespace Email {
 
   export async function send(
     from: string,
-    to: string,
+    to: string | string[],
     subject: string,
     body: string,
     attachments?: Attachment[],
   ) {
     from = from + "@" + Resource.ShortDomainEmail.sender;
     log.info("sending email", { subject, from, to });
+    
+    // Convert to array if single string
+    const toAddresses = Array.isArray(to) ? to : [to];
 
     // For SESv2, we need to manually construct the MIME message for attachments
     if (attachments && attachments.length > 0) {
@@ -29,7 +32,7 @@ export namespace Email {
 
       let rawMessageContent = [
         `From: Terminal <${from}>`,
-        `To: ${to}`,
+        `To: ${toAddresses.join(", ")}`,
         `Subject: ${subject}`,
         "MIME-Version: 1.0",
         `Content-Type: multipart/mixed; boundary="${boundary}"`,
@@ -69,7 +72,7 @@ export namespace Email {
       await Client.send(
         new SendEmailCommand({
           Destination: {
-            ToAddresses: [to],
+            ToAddresses: toAddresses,
           },
           FromEmailAddress: `Terminal <${from}>`,
           Content: {
@@ -84,7 +87,7 @@ export namespace Email {
       await Client.send(
         new SendEmailCommand({
           Destination: {
-            ToAddresses: [to],
+            ToAddresses: toAddresses,
           },
           FromEmailAddress: `Terminal <${from}>`,
           Content: {

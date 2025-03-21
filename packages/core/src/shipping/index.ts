@@ -177,7 +177,11 @@ export namespace Shipping {
 
     await Email.send(
       "fulfillment",
-      "dax@terminal.shop",
+      [
+        "dax@terminal.shop",
+        "packing.darius@gmail.com",
+        "pierremarie@leperco.fr",
+      ],
       `Orders for Fulfillment - ${today}`,
       "Attached is the CSV of orders ready for fulfillment.",
       [
