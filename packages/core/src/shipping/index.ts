@@ -182,7 +182,7 @@ export namespace Shipping {
         "packing.darius@gmail.com",
         "pierremarie@leperco.fr",
       ],
-      `Orders for Fulfillment - ${today}`,
+      `Terminal Orders - ${today}`,
       "Attached is the CSV of orders ready for fulfillment.",
       [
         {
