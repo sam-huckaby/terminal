@@ -199,7 +199,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
       <For each={docs}>
         {(doc) => (
           <div class="mb-5">
-            <h3 class="px-6 text-gray-7 leading-10">
+            <h3 class="px-4 sm:px-6 text-gray-7 leading-10">
               #{doc.title}
             </h3>
             <ul>
@@ -224,7 +224,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
       <For each={Object.entries(props.endpointsByTag)}>
         {([tag, endpoints]) => (
           <div class="mb-5">
-            <h3 class="px-6 text-gray-7 leading-10">
+            <h3 class="px-4 sm:px-6 text-gray-7 leading-10">
               #{tag.toLowerCase()}
             </h3>
             <ul>
