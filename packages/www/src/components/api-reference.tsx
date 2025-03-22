@@ -15,8 +15,8 @@ type EndpointType = {
 }
 
 type ApiReferenceProps = {
-  schema: OpenAPIV3_1.Document
-  specification: OpenAPIV3_1.Document
+  schema?: OpenAPIV3_1.Document
+  specification?: OpenAPIV3_1.Document
   endpointsByTag: Record<string, EndpointType[]>
 }
 
@@ -299,17 +299,17 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
         <div class="flex flex-col gap-10 md:max-w-xl">
           <div>
             <div class="flex items-center gap-3 leading-10">
-              <h1 class="font-bold">#{props.specification.info?.title?.toLowerCase() || 'api reference'}</h1>
+              <h1 class="font-bold">#{props.specification?.info?.title?.toLowerCase() || 'api reference'}</h1>
               <span class="text-gray-7">
-                v{props.specification.info?.version}
+                v{props.specification?.info?.version}
               </span>
             </div>
-            <p class="text-gray-11">{props.specification.info?.description?.toLowerCase()}</p>
+            <p class="text-gray-11">{props.specification?.info?.description?.toLowerCase()}</p>
           </div>
           <div class="">
             <h3 class="font-bold lowercase leading-10">#servers</h3>
             <ul>
-              <For each={props.specification.servers || []}>
+              <For each={props.specification?.servers || []}>
                 {(server) => (
                   <li class="text-gray-11 lowercase">{server.url} <span class="text-gray-7">({server.description})</span></li>
                 )}

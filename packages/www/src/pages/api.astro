@@ -20,6 +20,7 @@ try {
   specification = api.specification as OpenAPIV3_1.Document
 } catch (error) {
   console.error('Error loading OpenAPI specification:', error)
+  throw error
 }
 
 // Group endpoints by tag
@@ -61,8 +62,10 @@ if (schema) {
   const methodPriority = { get: 1, put: 2, post: 3, delete: 4 }
   Object.keys(endpointsByTag).forEach((tag) => {
     endpointsByTag[tag].sort((a, b) => {
-      const priorityA = methodPriority[a.method as keyof typeof methodPriority] || 999
-      const priorityB = methodPriority[b.method as keyof typeof methodPriority] || 999
+      const priorityA =
+        methodPriority[a.method as keyof typeof methodPriority] || 999
+      const priorityB =
+        methodPriority[b.method as keyof typeof methodPriority] || 999
       return priorityA - priorityB
     })
   })
@@ -72,6 +75,10 @@ Astro.response.headers.set(
   'Cache-Control',
   'public, s-maxage=600, stale-while-revalidate=86400, stale-if-error=86400',
 )
+
+if (!schema?.info?.title) {
+  throw new Error('OpenAPI spec not found')
+}
 ---
 
 <Layout>
