@@ -258,7 +258,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['string', 'constant.other.symbol'],
           settings: {
-            foreground: '#2e98d6',
+            foreground: '#59c2ff',
           },
         },
         {
@@ -381,9 +381,18 @@ export const highlighter = await createHighlighterCore({
           },
         },
         {
+          scope: [
+            'source.java storage.modifier.import',
+            'source.java storage.modifier.package',
+          ],
+          settings: {
+            foreground: '#59C2FF',
+          },
+        },
+        {
           scope: ['entity.name.function'],
           settings: {
-            foreground: '#FF5757',
+            foreground: '#25d0ab',
           },
         },
         {
@@ -412,7 +421,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['entity.name.import', 'entity.name.package'],
           settings: {
-            foreground: '#2e98d6',
+            foreground: '#59c2ff',
           },
         },
         {
@@ -536,7 +545,7 @@ export const highlighter = await createHighlighterCore({
         {
           scope: ['entity.name.filename.find-in-files'],
           settings: {
-            foreground: '#2e98d6',
+            foreground: '#59c2ff',
           },
         },
         {
@@ -549,7 +558,7 @@ export const highlighter = await createHighlighterCore({
           scope: ['markup.heading', 'markup.heading entity.name'],
           settings: {
             fontStyle: 'bold',
-            foreground: '#2e98d6',
+            foreground: '#59c2ff',
           },
         },
         {
