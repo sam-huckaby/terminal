@@ -465,7 +465,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                         <h3>{endpoint.path}</h3>
                         {endpoint.operation.security && <p class="text-gray-7">public</p>}
                       </div>
-                      <p class="text-gray-11 lowercase">
+                      <p class="text-gray-11 lowercase max-w-xl">
                         {endpoint.operation.description}
                       </p>
                     </div>
