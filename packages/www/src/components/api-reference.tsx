@@ -470,66 +470,120 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                       </p>
                     </div>
                     <div class="flex flex-col gap-10 xl:grid xl:grid-cols-2 xl:gap-20 xl:items-start">
-                      <Show when={endpoint.operation.responses}>
-                        <div class="">
-                          <Accordion collapsible multiple >
-                            <For each={Object.entries(endpoint.operation.responses || {})}>
-                              {([statusCode, response]) => (
-                                <Accordion.Item value={`${endpoint.id}-${statusCode}`} class="">
-                                  <Accordion.Header class="">
-                                    <Accordion.Trigger class="relative flex items-start gap-2 text-left transition-colors hover:bg-gray-1/10 group/trigger">
-                                      <span
-                                        classList={{
-                                          'text-green-11': statusCode.startsWith('2'),
-                                          'text-blue-11': statusCode.startsWith('3'),
-                                          'text-yellow-11': statusCode.startsWith('4'),
-                                          'text-red-11': statusCode.startsWith('5'),
-                                        }}
-                                      >
-                                        {statusCode}
-                                      </span>
-                                      <span class="text-gray-11 lowercase">
-                                        {response.description}
-                                      </span>
-                                      <div class="absolute -left-5">
-                                        <div class="text-gray-7 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
-                                          {`>`}
+                      <div class="flex flex-col gap-10">
+                        <Show when={endpoint.operation.requestBody}>
+                          <div class="">
+                            <h3 class="font-bold lowercase leading-10 text-gray-11">#request</h3>
+                            <Accordion collapsible multiple >
+                              <For each={Object.entries(endpoint.operation.requestBody?.content || {})}>
+                                {([contentType, response]) => (
+                                  <Accordion.Item value={`${endpoint.id}-${contentType}`} class="">
+                                    <Accordion.Header class="">
+                                      <Accordion.Trigger class="relative flex items-start gap-2 text-left transition-colors hover:bg-gray-1/10 group/trigger">
+                                        <span
+                                          classList={{
+                                            'text-blue-11': true,
+                                          }}
+                                        >
+                                          {contentType}
+                                        </span>
+                                        <span class="text-gray-11 lowercase">
+                                          {response.schema.description}
+                                        </span>
+                                        <div class="absolute -left-5">
+                                          <div class="text-gray-7 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
+                                            {`>`}
+                                          </div>
                                         </div>
-                                      </div>
-                                    </Accordion.Trigger>
-                                  </Accordion.Header>
-                                  <Accordion.Content class="pt-1 pb-3 pl-4 border-l border-gray-7/20">
-                                    <Show when={response.content}>
-                                      <For each={Object.entries(response.content || {})}>
-                                        {([_contentType, content]) => (
-                                          <Show when={content.schema}>
-                                            <TabGroup
-                                              tabs={[
-                                                ...(content.example ? [{
-                                                  label: "example",
-                                                  value: "example",
-                                                  content: JSON.stringify(content.example, null, 2)
-                                                }] : []),
-                                                {
-                                                  label: "Schema",
-                                                  value: "schema",
-                                                  content: JSON.stringify(content.schema, null, 2)
-                                                },
-                                              ]}
-                                            />
-                                          </Show>
-                                        )}
-                                      </For>
-                                    </Show>
-                                  </Accordion.Content>
-                                </Accordion.Item>
-                              )}
-                            </For>
-                          </Accordion>
-                        </div>
-                      </Show>
+                                      </Accordion.Trigger>
+                                    </Accordion.Header>
+                                    <Accordion.Content class="pt-1 pb-3">
+                                      <Show when={response.schema}>
+                                        <TabGroup
+                                          tabs={[
+                                            ...(response.schema.example ? [{
+                                              label: "example",
+                                              value: "example",
+                                              content: JSON.stringify(response.schema.example, null, 2)
+                                            }] : []),
+                                            {
+                                              label: "Schema",
+                                              value: "schema",
+                                              content: JSON.stringify(response.schema, null, 2)
+                                            },
+                                          ]}
+                                        />
+                                      </Show>
+                                    </Accordion.Content>
+                                  </Accordion.Item>
+                                )}
+                              </For>
+                            </Accordion>
+                          </div>
+                        </Show>
+                        <Show when={endpoint.operation.responses}>
+                          <div class="">
+                            <h3 class="font-bold lowercase leading-10 text-gray-11">#responses</h3>
+                            <Accordion collapsible multiple >
+                              <For each={Object.entries(endpoint.operation.responses || {})}>
+                                {([statusCode, response]) => (
+                                  <Accordion.Item value={`${endpoint.id}-${statusCode}`} class="">
+                                    <Accordion.Header class="">
+                                      <Accordion.Trigger class="relative flex items-start gap-2 text-left transition-colors hover:bg-gray-1/10 group/trigger">
+                                        <span
+                                          classList={{
+                                            'text-green-11': statusCode.startsWith('2'),
+                                            'text-blue-11': statusCode.startsWith('3'),
+                                            'text-yellow-11': statusCode.startsWith('4'),
+                                            'text-red-11': statusCode.startsWith('5'),
+                                          }}
+                                        >
+                                          {statusCode}
+                                        </span>
+                                        <span class="text-gray-11 lowercase">
+                                          {response.description}
+                                        </span>
+                                        <div class="absolute -left-5">
+                                          <div class="text-gray-7 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
+                                            {`>`}
+                                          </div>
+                                        </div>
+                                      </Accordion.Trigger>
+                                    </Accordion.Header>
+                                    <Accordion.Content class="pt-1 pb-3">
+                                      <Show when={response.content}>
+                                        <For each={Object.entries(response.content || {})}>
+                                          {([_contentType, content]) => (
+                                            <Show when={content.schema}>
+                                              <TabGroup
+                                                tabs={[
+                                                  ...(content.example ? [{
+                                                    label: "example",
+                                                    value: "example",
+                                                    content: JSON.stringify(content.example, null, 2)
+                                                  }] : []),
+                                                  {
+                                                    label: "Schema",
+                                                    value: "schema",
+                                                    content: JSON.stringify(content.schema, null, 2)
+                                                  },
+                                                ]}
+                                              />
+                                            </Show>
+                                          )}
+                                        </For>
+                                      </Show>
+                                    </Accordion.Content>
+                                  </Accordion.Item>
+                                )}
+                              </For>
+                            </Accordion>
+                          </div>
+                        </Show>
+                      </div>
                       <Show when={endpoint.operation['x-codeSamples']?.length}>
                         <div class="">
+                          <h3 class="font-bold lowercase leading-10 text-gray-11">#examples</h3>
                           <TabGroup
                             tabs={endpoint.operation['x-codeSamples'].map((sample: any) => ({
                               label: sample.lang,
