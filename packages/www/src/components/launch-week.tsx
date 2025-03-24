@@ -43,6 +43,8 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
               <EventItem
                 date="24.03"
                 title="beyond the terminal"
+                keyword="api"
+                href="https://x.com/terminaldotshop/status/1904190987255107954"
               />
               <EventItem
                 date="25.03"
