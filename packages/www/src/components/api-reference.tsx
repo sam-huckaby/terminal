@@ -199,7 +199,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
       <For each={docs}>
         {(doc) => (
           <div class="mb-5">
-            <h3 class="px-4 sm:px-6 text-gray-7 leading-10">
+            <h3 class="px-4 sm:px-6 text-gray-8 leading-10">
               #{doc.title}
             </h3>
             <ul>
@@ -224,7 +224,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
       <For each={Object.entries(props.endpointsByTag)}>
         {([tag, endpoints]) => (
           <div class="mb-5">
-            <h3 class="px-4 sm:px-6 text-gray-7 leading-10">
+            <h3 class="px-4 sm:px-6 text-gray-8 leading-10">
               #{tag.toLowerCase()}
             </h3>
             <ul>
@@ -300,7 +300,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
           <div>
             <div class="flex items-center gap-3 leading-10">
               <h1 class="font-bold">#{props.specification?.info?.title?.toLowerCase() || 'api reference'}</h1>
-              <span class="text-gray-7">
+              <span class="text-gray-8">
                 v{props.specification?.info?.version}
               </span>
             </div>
@@ -311,7 +311,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
             <ul>
               <For each={props.specification?.servers || []}>
                 {(server) => (
-                  <li class="text-gray-11 lowercase">{server.url} <span class="text-gray-7">({server.description})</span></li>
+                  <li class="text-gray-11 lowercase">{server.url} <span class="text-gray-8">({server.description})</span></li>
                 )}
               </For>
             </ul>
@@ -441,7 +441,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                       </span>
                       <h3>{endpoint.path}</h3>
                       <p class="text-gray-11">{endpoint.operation.summary?.toLowerCase()}</p>
-                      {endpoint.operation.security && <p class="text-gray-7">public</p>}
+                      {endpoint.operation.security && <p class="text-gray-8">public</p>}
                     </div>
                   )}
                 </For>
@@ -463,7 +463,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                           {endpoint.method}
                         </span>
                         <h3>{endpoint.path}</h3>
-                        {endpoint.operation.security && <p class="text-gray-7">public</p>}
+                        {endpoint.operation.security && <p class="text-gray-8">public</p>}
                       </div>
                       <p class="text-gray-11 lowercase max-w-xl">
                         {endpoint.operation.description}
@@ -518,7 +518,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                                           {response.schema.description}
                                         </span>
                                         <div class="absolute -left-5">
-                                          <div class="text-gray-7 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
+                                          <div class="text-gray-8 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
                                             {`>`}
                                           </div>
                                         </div>
@@ -571,7 +571,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                                           {response.description}
                                         </span>
                                         <div class="absolute -left-5">
-                                          <div class="text-gray-7 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
+                                          <div class="text-gray-8 group-hover/trigger:text-white group-data-[expanded]/trigger:rotate-90 transition-all duration-100">
                                             {`>`}
                                           </div>
                                         </div>
