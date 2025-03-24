@@ -26,7 +26,7 @@ const Code: Component<CodeProps> = (props) => {
 
   return (
     <div
-      class="relative overflow-x-auto bg-gray-1 p-4 group/code"
+      class="relative bg-gray-1 p-4 group/code"
     >
       <button
         onMouseDown={copyToClipboard}
@@ -45,7 +45,7 @@ const Code: Component<CodeProps> = (props) => {
           </svg>
         )}
       </button>
-      <div innerHTML={html} />
+      <div class="overflow-x-auto" innerHTML={html} />
     </div>
   )
 }

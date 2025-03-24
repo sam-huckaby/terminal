@@ -35,7 +35,7 @@ const TabGroup: Component<TabGroupProps> = (props) => {
               class="px-3 pb-1 text-gray-11 hover:text-white lowercase transition-colors"
               classList={{
                 'border-b-2': true,
-                'text-white border-orange': activeTab() === tab.value,
+                'text-white border-white': activeTab() === tab.value,
                 'border-transparent': activeTab() !== tab.value,
               }}
               id={`${tabGroupId}-tab-${tab.value}`}
