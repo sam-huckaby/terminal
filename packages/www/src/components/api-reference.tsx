@@ -471,6 +471,33 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                     </div>
                     <div class="flex flex-col gap-10 xl:grid xl:grid-cols-2 xl:gap-20 xl:items-start">
                       <div class="flex flex-col gap-10">
+                        <Show when={endpoint.operation.parameters}>
+                          <div class="">
+                            <h3 class="font-bold lowercase leading-10 text-gray-11">#parameters</h3>
+                            <div class="flex flex-col gap-5">
+                              <For each={endpoint.operation.parameters}>
+                                {(parameter) => (
+                                  <div>
+                                    <div class="flex items-center gap-3">
+                                      <span class="text-white lowercase">
+                                        {parameter.name}
+                                      </span>
+                                      <span class="text-blue-11 lowercase">
+                                        {parameter.schema.type}
+                                      </span>
+                                      <span class="text-gray-11 lowercase">
+                                        {parameter.schema.description}
+                                      </span>
+                                    </div>
+                                    <span class="text-gray-11 lowercase">
+                                      example: <span class="text-yellow-11">`{parameter.schema.example}`</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </For>
+                            </div>
+                          </div>
+                        </Show>
                         <Show when={endpoint.operation.requestBody}>
                           <div class="">
                             <h3 class="font-bold lowercase leading-10 text-gray-11">#request</h3>

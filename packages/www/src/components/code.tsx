@@ -8,6 +8,7 @@ export type CodeProps = {
 
 const Code: Component<CodeProps> = (props) => {
   const [copied, setCopied] = createSignal(false);
+  const isOneLine = props.code.split("\n").length === 1
 
   const html = highlighter.codeToHtml(props.code, {
     lang: props.language,
@@ -30,7 +31,12 @@ const Code: Component<CodeProps> = (props) => {
     >
       <button
         onMouseDown={copyToClipboard}
-        class="absolute top-2 right-2 text-gray-10 hover:text-white hidden group-hover/code:block"
+        classList={{
+          "absolute text-gray-10 hover:text-white": true,
+          "hidden group-hover/code:block": true,
+          "top-2 right-2": !isOneLine,
+          "top-5 right-4": isOneLine
+        }}
         aria-label={copied() ? 'Copied' : 'Copy code'}
       >
         {copied() ? (

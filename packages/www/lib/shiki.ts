@@ -671,6 +671,12 @@ export const highlighter = await createHighlighterCore({
             foreground: '#acb6bf8c',
           },
         },
+        {
+          scope: ['source.json', 'string'],
+          settings: {
+            foreground: '#BFBDB6',
+          },
+        },
       ],
       type: 'dark',
     },
