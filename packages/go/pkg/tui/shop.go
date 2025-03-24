@@ -131,7 +131,7 @@ func (m model) reorderProducts() model {
 func (m model) ShopView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
-	bold := m.theme.TextHighlight().Bold(true).Render
+	boldStyle := m.theme.TextHighlight().Bold(true)
 	button := m.theme.Base().
 		PaddingLeft(1).
 		PaddingRight(1).
@@ -181,10 +181,10 @@ func (m model) ShopView() string {
 	if m.size < large {
 		menuWidth = m.widthContent
 		menuItem = m.theme.Base().
-			Width(menuWidth).
+			Width(m.widthContent - 1).
 			Align(lipgloss.Center)
 		highlightedMenuItem = m.theme.Base().
-			Width(menuWidth).
+			Width(m.widthContent - 1).
 			Align(lipgloss.Center).
 			Background(m.theme.Highlight()).
 			Foreground(m.theme.Accent())
@@ -206,6 +206,14 @@ func (m model) ShopView() string {
 			Padding(0, 1).
 			Foreground(m.theme.Accent())
 	}
+
+	if product.Name == "cron" {
+		highlightedMenuItem = highlightedMenuItem.Foreground(lipgloss.Color("#000000"))
+	} else if product.Tags.Color == "#000000" {
+		boldStyle = boldStyle.Foreground(lipgloss.Color("#FFFFFF"))
+	}
+
+	bold := boldStyle.Render
 
 	if product.Subscription == terminal.ProductSubscriptionRequired {
 		subscribed := false
