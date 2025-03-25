@@ -26,6 +26,7 @@ export default defineConfig({
   redirects: {
     '/report': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     '/feud': 'https://jean-types-icq-calls.trycloudflare.com',
+    '/flow': 'https://ray.so/coffee',
   },
   vite: {
     server: { allowedHosts: true },

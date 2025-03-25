@@ -44,11 +44,15 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
                 date="24.03"
                 title="beyond the terminal"
                 keyword="api"
-                href="https://x.com/terminaldotshop/status/1904190987255107954"
+                href="/api"
+                videoHref="https://x.com/terminaldotshop/status/1904190987255107954"
               />
               <EventItem
                 date="25.03"
                 title="shortcuts to happiness"
+                keyword="raycast extension"
+                href="https://ray.so/coffee"
+                videoHref="https://x.com/terminaldotshop/status/"
               />
               <EventItem
                 date="26.03"
@@ -100,7 +104,7 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
 const chars = 'abcdefghijklmnopqrstuvwxyz#';
 
 // Event item component
-const EventItem: Component<{ date: string; time?: string; keyword?: string; title: string; href?: string }> = (props) => {
+const EventItem: Component<{ date: string; time?: string; keyword?: string; title: string; videoHref?: string; href?: string }> = (props) => {
   const context = useContext(AnimationContext);
   const [animatedText, setAnimatedText] = createSignal(props.keyword ?? '###');
   const [isCompleted, setIsCompleted] = createSignal(false);
@@ -180,8 +184,8 @@ const EventItem: Component<{ date: string; time?: string; keyword?: string; titl
 
   const timeOrLink = () => (
     <Switch>
-      <Match when={props.href}>
-        <a href={props.href} target="_blank" class="flex items-center gap-2 hover:text-white transition-colors duration-300 group/launch-item">
+      <Match when={props.videoHref}>
+        <a href={props.videoHref} target="_blank" class="flex items-center gap-2 hover:text-white transition-colors duration-300 group/launch-item">
           <span class="tracking-[-0.36px]">watch</span>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"
             class="size-5 stroke-current transition-all duration-300 ease-out group-hover/launch-item:translate-x-0.5 group-hover/launch-item:-translate-y-0.5">
@@ -189,7 +193,7 @@ const EventItem: Component<{ date: string; time?: string; keyword?: string; titl
           </svg>
         </a>
       </Match>
-      <Match when={!props.href}>
+      <Match when={!props.videoHref}>
         <span class="md:hidden">{props.time ?? "1pm edt"}</span>
         <span class="hidden md:block">{props.time ?? "1.00pm edt"}</span>
       </Match>
@@ -208,13 +212,28 @@ const EventItem: Component<{ date: string; time?: string; keyword?: string; titl
         </div>
       </div>
       <div class="flex sm:flex-1 items-center gap-2 whitespace-nowrap">
-        <span classList={{
-          "tracking-[-0.36px]": true,
-          'text-orange': !!props.keyword,
-          'transition-all duration-300': true,
-        }}>
-          {animatedText()}
-        </span>
+        <Switch>
+          <Match when={props.href}>
+            <a href={props.href} target="_blank" class="hover:text-white transition-colors duration-300 group/href-item">
+              <span classList={{
+                "tracking-[-0.36px]": true,
+                'text-orange': !!props.keyword,
+                'transition-all duration-300': true,
+              }}>
+                {animatedText()}
+              </span>
+            </a>
+          </Match>
+          <Match when={!props.href}>
+            <span classList={{
+              "tracking-[-0.36px]": true,
+              'text-orange': !!props.keyword,
+              'transition-all duration-300': true,
+            }}>
+              {animatedText()}
+            </span>
+          </Match>
+        </Switch>
         <span class="text-white tracking-[-0.36px]">
           {props.title}
         </span>
