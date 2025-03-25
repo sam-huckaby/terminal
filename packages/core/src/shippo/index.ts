@@ -265,6 +265,9 @@ export namespace Shippo {
         zip: input.zip,
         validate: true,
       });
+      log.info("result data", {
+        result: JSON.stringify(result, null, 2),
+      });
       if (result.test || result.validation_results?.is_valid) {
         return {
           ...input,
@@ -277,7 +280,6 @@ export namespace Shippo {
           phone: result.phone || input.phone,
         };
       }
-      log.info("result data", { result });
       throw new AddressInvalidError();
     },
   );
