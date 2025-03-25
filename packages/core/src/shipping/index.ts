@@ -89,6 +89,7 @@ export namespace Shipping {
           id: orderTable.id,
           shippingAddress: orderTable.shippingAddress,
           fulfiller: orderTable.fulfiller,
+          email: orderTable.email,
         })
         .from(orderTable)
         .where(
@@ -101,13 +102,28 @@ export namespace Shipping {
 
     const csvRows = [];
 
-    csvRows.push(["Order ID", "Name", "Address", "Product", "Quantity"]);
+    csvRows.push([
+      "Name",
+      "Surname",
+      "Street",
+      "Postal Code",
+      "City",
+      "Country",
+      "Phone",
+      "Email",
+      "Product",
+      "Quantity",
+      "Account",
+      "Value",
+      "Number",
+    ]);
 
     for (const order of orders) {
       const orderItems = await useTransaction((tx) =>
         tx
           .select({
             quantity: orderItemTable.quantity,
+            amount: orderItemTable.amount,
             productName: productTable.name,
             variantName: productVariantTable.name,
           })
@@ -123,28 +139,26 @@ export namespace Shipping {
           )
           .execute(),
       );
-
       const address = order.shippingAddress;
-
-      const addressParts = [
-        address.street1,
-        address.street2,
-        address.city,
-        address.province,
-        address.zip,
-        address.country,
-      ].filter(Boolean);
-
-      const addressStr = addressParts.join(", ");
-
       for (const item of orderItems) {
         const productFullName = `${item.productName} - ${item.variantName}`;
+        const [first, ...rest] = (address.name || "Terminal Products").split(
+          " ",
+        );
         csvRows.push([
-          order.id,
-          address.name,
-          addressStr,
+          first,
+          rest.join(" "),
+          [address.street1, address.street2].filter(Boolean).join(" "),
+          address.zip,
+          address.city,
+          address.country,
+          address.phone,
+          order.email,
           productFullName,
           item.quantity.toString(),
+          "65087903",
+          (item.amount / 100).toString(),
+          "1",
         ]);
       }
     }
@@ -158,8 +172,8 @@ export namespace Shipping {
       "fulfillment",
       [
         "dax@terminal.shop",
-        "packing.darius@gmail.com",
-        "pierremarie@leperco.fr",
+        //         "packing.darius@gmail.com",
+        //         "pierremarie@leperco.fr",
       ],
       `Terminal Orders - ${today}`,
       "Attached is the CSV of orders ready for fulfillment.",

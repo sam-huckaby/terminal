@@ -274,7 +274,7 @@ export namespace Shippo {
           province: result.province ?? result.state,
           country: result.country,
           zip: result.zip,
-          phone: result.phone,
+          phone: result.phone || input.phone,
         };
       }
       log.info("result data", { result });
