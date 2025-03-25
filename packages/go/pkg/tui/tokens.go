@@ -4,7 +4,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal/go/pkg/api"
 )
 
 type TokenAddedMsg struct {
@@ -67,13 +66,17 @@ func (m model) TokensUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.tokens.deleting != nil {
 				m.state.tokens.deleting = nil
-				m.client.Token.Delete(m.context, m.tokens[m.state.tokens.selected].ID)
+				_, err := m.client.Token.Delete(m.context, m.tokens[m.state.tokens.selected].ID)
+				if err != nil {
+					return m, func() tea.Msg { return err }
+				}
 				if len(m.tokens)-1 == 0 {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
 					tokens, err := m.client.Token.List(m.context)
 					if err != nil {
+						return err
 					}
 					return tokens.Data
 				}
@@ -87,9 +90,12 @@ func (m model) TokensUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m, func() tea.Msg {
 					response, err := m.client.Token.New(m.context)
 					if err != nil {
-						return VisibleError{message: api.GetErrorMessage(err)}
+						return err
 					}
-					tokens, _ := m.client.Token.List(m.context)
+					tokens, err := m.client.Token.List(m.context)
+					if err != nil {
+						return err
+					}
 					// if m.output != nil {
 					// 	m.output.Copy(m.state.tokens.newToken.Token)
 					// }

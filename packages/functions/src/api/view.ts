@@ -14,6 +14,7 @@ import { Address } from "@terminal/core/address/index";
 import { ProfileApi } from "./profile";
 import { Api } from "@terminal/core/api/api";
 import { ProductFilter } from "@terminal/core/product/filter";
+import { VisibleError } from "@terminal/core/error";
 
 export module ViewApi {
   export const route = new Hono().get(

@@ -85,6 +85,10 @@ type model struct {
 	error           *VisibleError
 }
 
+type VisibleError struct {
+	message string
+}
+
 type state struct {
 	splash        SplashState
 	cursor        cursorState
@@ -257,12 +261,24 @@ func (m model) InitialDataLoaded() (model, tea.Cmd) {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
+	case VisibleError:
+		m.error = &msg
 	case error:
 		m.error = &VisibleError{
 			message: api.GetErrorMessage(msg),
 		}
-		return m, nil
+		if m.page == shopPage || m.page == cartPage {
+			cmds = append(cmds, func() tea.Msg {
+				response, err := m.client.Cart.Get(m.context)
+				if err != nil {
+					return err
+				}
+				return response.Data
+			})
+		}
 	case tea.WindowSizeMsg:
 		m.viewportWidth = msg.Width
 		m.viewportHeight = msg.Height
@@ -292,6 +308,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			if m.error != nil {
+				if m.page == splashPage {
+					return m, tea.Quit
+				}
 				m.error = nil
 				return m, nil
 			}
@@ -370,8 +389,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var headerCmd tea.Cmd
 	m, headerCmd = m.HeaderUpdate(msg)
-
-	cmds := []tea.Cmd{headerCmd}
+	cmds = append(cmds, headerCmd)
 
 	if cmd != nil {
 		cmds = append(cmds, cmd)
@@ -402,10 +420,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.size == undersized {
 		return m.ResizeView()
-	}
-
-	if m.error != nil {
-		return m.ErrorView()
 	}
 
 	switch m.page {

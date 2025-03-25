@@ -6,14 +6,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal/go/pkg/api"
 )
 
 type finalSubState struct {
 	weeks      int
 	submitting bool
 	complete   bool
-	error      *string
 }
 
 type SubscriptionCompleteMsg struct{}
@@ -31,7 +29,6 @@ func (m model) FinalSubSwitch() (model, tea.Cmd) {
 	m.state.finalSub.weeks = 3
 	m.state.finalSub.submitting = false
 	m.state.finalSub.complete = false
-	m.state.finalSub.error = nil
 
 	return m, nil
 }
@@ -46,9 +43,8 @@ func (m model) FinalSubUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 		return m, nil
 
-	case VisibleError:
+	case error:
 		m.state.finalSub.submitting = false
-		m.state.finalSub.error = &msg.message
 		return m, nil
 
 	case tea.KeyMsg:
@@ -78,7 +74,7 @@ func (m model) FinalSubUpdate(msg tea.Msg) (model, tea.Cmd) {
 					params := terminal.SubscriptionNewParams{Subscription: subscription}
 					_, err := m.client.Subscription.New(m.context, params)
 					if err != nil {
-						return VisibleError{message: api.GetErrorMessage(err)}
+						return err
 					}
 				}
 
@@ -136,12 +132,6 @@ func (m model) FinalSubView() string {
 	view.WriteString(weeks)
 	view.WriteString("\n\n")
 	view.WriteString(m.theme.TextHighlight().Render("press enter to subscribe, esc to skip") + "\n")
-
-	if m.state.finalSub.error != nil {
-		view.WriteString(
-			m.theme.TextError().Render(*m.state.finalSub.error) + "\n",
-		)
-	}
 
 	return m.theme.Base().Padding(0, 1).Render(view.String())
 }

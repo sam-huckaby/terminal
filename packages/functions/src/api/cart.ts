@@ -7,8 +7,9 @@ import { Card } from "@terminal/core/card/index";
 import { Examples } from "@terminal/core/examples";
 import { Address } from "@terminal/core/address/index";
 import { Order } from "@terminal/core/order/order";
+import { VisibleError } from "@terminal/core/error";
 
-export module CartApi {
+export namespace CartApi {
   export const route = new Hono()
     .get(
       "/",

@@ -122,7 +122,7 @@ func (m model) UpdateCart(productVariantID string, offset int64) (model, tea.Cmd
 		}
 		response, err := m.client.Cart.SetItem(m.context, params)
 		if err != nil {
-			// log.Error(err)
+			return err
 		}
 		return CartUpdatedMsg{
 			updateID: updateID,

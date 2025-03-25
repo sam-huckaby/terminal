@@ -108,6 +108,10 @@ func (b Theme) TextError() lipgloss.Style {
 	return b.Base().Foreground(b.error)
 }
 
+func (b Theme) PanelError() lipgloss.Style {
+	return b.Base().Background(b.error).Foreground(b.accent)
+}
+
 func (b Theme) Form() *huh.Theme {
 	return b.form
 }

@@ -5,19 +5,15 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 	"github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal/go/pkg/api"
 )
 
 type confirmState struct {
 	submitting bool
-	error      string
 }
 
 func (m model) ConfirmSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(confirmPage)
-	m.state.confirm.error = ""
 	m.state.confirm.submitting = false
 	m.state.footer.commands = []footerCommand{
 		{key: "esc", value: "back"},
@@ -40,27 +36,21 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 					params := terminal.SubscriptionNewParams{Subscription: m.subscription}
 					subscription, err := m.client.Subscription.New(m.context, params)
 					if err != nil {
-						return VisibleError{
-							message: api.GetErrorMessage(err),
-						}
+						return err
 					}
 					return subscription
 				} else {
 					order, err := m.client.Cart.Convert(m.context)
 					if err != nil {
-						return VisibleError{
-							message: api.GetErrorMessage(err),
-						}
+						return err
 					}
 					return order.Data
 				}
 			}
 		}
-	case VisibleError:
+	case error:
 		m.state.confirm.submitting = false
-		m.state.payment.error = msg.message
-		log.Error(msg.message)
-		return m.ShippingSwitch()
+		return m, nil
 	case terminal.Order:
 		m.order = &msg
 		return m.FinalSubSwitch()
@@ -125,7 +115,6 @@ func (m model) ConfirmView() string {
 	view.WriteString("\n")
 	view.WriteString(m.theme.TextHighlight().Render("press enter to confirm") + "\n")
 	view.WriteString("\n")
-	view.WriteString(m.theme.TextError().Render(m.state.confirm.error))
 
 	return m.theme.Base().Padding(0, 1).Render(view.String())
 }

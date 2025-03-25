@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/validate"
 )
 
@@ -26,7 +25,6 @@ type appsState struct {
 	input      appInput
 	form       *huh.Form
 	submitting bool
-	error      string
 	newApp     *terminal.AppNewResponseData
 }
 
@@ -94,10 +92,9 @@ func (m model) AppsFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.apps = msg.apps
 		return m, m.state.apps.form.Init()
 
-	case VisibleError:
+	case error:
 		m.state.apps.submitting = false
 		m.state.apps.editing = false
-		m.state.apps.error = msg.message
 		return m, nil
 	}
 
@@ -106,7 +103,6 @@ func (m model) AppsFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	cmds = append(cmds, cmd)
 	if !m.state.apps.submitting && m.state.apps.form.State == huh.StateCompleted {
-		m.state.apps.error = ""
 		m.state.apps.submitting = true
 
 		form := m.state.apps.form
@@ -117,11 +113,11 @@ func (m model) AppsFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 			response, err := m.client.App.New(m.context, params)
 			if err != nil {
-				return VisibleError{message: api.GetErrorMessage(err)}
+				return err
 			}
 			apps, err := m.client.App.List(m.context)
 			if err != nil {
-				return VisibleError{message: api.GetErrorMessage(err)}
+				return err
 			}
 			// if m.output != nil {
 			// 	m.output.Copy(m.state.tokens.newToken.Token)
@@ -168,13 +164,17 @@ func (m model) AppsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.apps.deleting != nil {
 				m.state.apps.deleting = nil
-				m.client.App.Delete(m.context, m.apps[m.state.apps.selected].ID)
+				_, err := m.client.App.Delete(m.context, m.apps[m.state.apps.selected].ID)
+				if err != nil {
+					return m, func() tea.Msg { return err }
+				}
 				if len(m.apps)-1 == 0 {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
 					apps, err := m.client.App.List(m.context)
 					if err != nil {
+						return err
 					}
 					return apps.Data
 				}

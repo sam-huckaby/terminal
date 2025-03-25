@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"log/slog"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -56,7 +55,7 @@ func (m model) LoadCmds() []tea.Cmd {
 	cmds = append(cmds, func() tea.Msg {
 		response, err := m.client.View.Init(m.context)
 		if err != nil {
-			slog.Error(err.Error())
+			return err
 		}
 		return response.Data
 	})
@@ -71,10 +70,9 @@ func (m model) IsLoadingComplete() bool {
 
 func (m model) SplashInit() tea.Cmd {
 	cmd := func() tea.Msg {
-		// TODO: error handling
 		token, err := api.FetchUserToken(m.fingerprint)
 		if err != nil {
-			return tea.Quit
+			return err
 		}
 
 		m.accessToken = token.AccessToken
@@ -114,11 +112,54 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) SplashView() string {
+	var msg string
+	if m.error != nil {
+		msg = m.error.message
+	} else {
+		msg = ""
+	}
+
+	var hint string
+	if m.error != nil {
+		hint = lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			m.theme.TextAccent().Bold(true).Render("esc"),
+			" ",
+			"quit",
+		)
+	} else {
+		hint = ""
+	}
+
+	if m.error == nil {
+		return lipgloss.Place(
+			m.viewportWidth,
+			m.viewportHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			m.LogoView(),
+		)
+	}
+
 	return lipgloss.Place(
 		m.viewportWidth,
 		m.viewportHeight,
 		lipgloss.Center,
 		lipgloss.Center,
-		m.LogoView(),
+		lipgloss.JoinVertical(
+			lipgloss.Center,
+			"",
+			"",
+			"",
+			"",
+			m.LogoView(),
+			"",
+			"",
+			lipgloss.JoinHorizontal(
+				lipgloss.Center,
+				m.theme.TextError().Render(msg),
+			),
+			hint,
+		),
 	)
 }

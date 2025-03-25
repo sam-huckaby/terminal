@@ -4,9 +4,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/validate"
 )
 
@@ -35,7 +33,6 @@ type shippingState struct {
 	input      shippingInput
 	form       *huh.Form
 	submitting bool
-	error      string
 }
 
 type SelectedShippingUpdatedMsg struct {
@@ -185,7 +182,7 @@ func (m model) chooseAddress() (model, tea.Cmd) {
 		return m, func() tea.Msg {
 			err := m.SetShipping(shippingID)
 			if err != nil {
-				return VisibleError{message: api.GetErrorMessage(err)}
+				return err
 			}
 			return SelectedShippingUpdatedMsg{shippingID: shippingID}
 		}
@@ -201,12 +198,6 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
-	case VisibleError:
-		m, cmd := m.ShippingSwitch()
-		m.state.shipping.view = shippingListView
-		m.state.shipping.error = msg.message
-		m.state.shipping.submitting = false
-		return m, cmd
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
@@ -227,8 +218,7 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.shipping.deleting = nil
 				_, err := m.client.Address.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
 				if err != nil {
-					m.state.shipping.error = api.GetErrorMessage(err)
-					return m, nil
+					return m, func() tea.Msg { return err }
 				}
 				if len(m.addresses)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
@@ -236,6 +226,7 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m, func() tea.Msg {
 					shipping, err := m.client.Address.List(m.context)
 					if err != nil {
+						return err
 					}
 					return shipping.Data
 				}
@@ -282,18 +273,11 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m, func() tea.Msg {
 			err := m.SetShipping(msg.shippingID)
 			if err != nil {
-				return VisibleError{message: api.GetErrorMessage(err)}
+				return err
 			}
 
 			return SelectedShippingUpdatedMsg{shippingID: msg.shippingID}
 		}
-
-	case VisibleError:
-		m, cmd := m.ShippingSwitch()
-		m.state.shipping.view = shippingFormView
-		m.state.shipping.error = msg.message
-		m.state.shipping.submitting = false
-		return m, cmd
 	}
 
 	m = m.updateShippingForm()
@@ -302,7 +286,6 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	cmds = append(cmds, cmd)
 	if !m.state.shipping.submitting && m.state.shipping.form.State == huh.StateCompleted {
-		m.state.shipping.error = ""
 		m.state.shipping.submitting = true
 
 		form := m.state.shipping.form
@@ -318,10 +301,6 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 
 		return m, func() tea.Msg {
-			// if m.state.shipping.input.country != "US" {
-			// 	return VisibleError{message: "we're only shipping to the US, for now"}
-			// }
-
 			if m.state.shipping.input.country != "US" && m.state.shipping.input.phone == "" {
 				return VisibleError{message: "phone is required for international orders"}
 			}
@@ -338,10 +317,12 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 			response, err := m.client.Address.New(m.context, params)
 			if err != nil {
-				log.Error(err)
-				return VisibleError{message: api.GetErrorMessage(err)}
+				return err
 			}
-			addresses, _ := m.client.Address.List(m.context)
+			addresses, err := m.client.Address.List(m.context)
+			if err != nil {
+				return err
+			}
 			return ShippingAddressAddedMsg{
 				shippingID: response.Data,
 				addresses:  addresses.Data,
@@ -354,12 +335,20 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case error:
+		current := m.state.shipping.view
+		m, cmd := m.ShippingSwitch()
+		m.state.shipping.view = current
+		return m, cmd
 	case SelectedShippingUpdatedMsg:
 		if m.IsSubscribing() {
 			m.subscription.AddressID = terminal.String(msg.shippingID)
 		} else {
 			m.cart.AddressID = msg.shippingID
-			cart, _ := m.client.Cart.Get(m.context)
+			cart, err := m.client.Cart.Get(m.context)
+			if err != nil {
+				return m, func() tea.Msg { return err }
+			}
 			m.cart = cart.Data
 		}
 		return m.PaymentSwitch()
@@ -451,29 +440,18 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 		totalWidth,
 	)
 	addresses = append(addresses, newAddress)
-
 	addressList := lipgloss.JoinVertical(lipgloss.Left, addresses...)
 
-	if m.state.shipping.error != "" {
-		return m.theme.Base().Render(lipgloss.JoinVertical(
-			lipgloss.Left,
-			"\n select shipping address",
-			addressList,
-			m.theme.TextError().Padding(0, 1).Render(m.state.shipping.error),
-		))
-	} else {
-		return m.theme.Base().Render(lipgloss.JoinVertical(
-			lipgloss.Left,
-			"\n select shipping address",
-			addressList,
-		))
-	}
+	return m.theme.Base().Render(lipgloss.JoinVertical(
+		lipgloss.Left,
+		" select shipping address",
+		addressList,
+	))
 }
 
 func (m model) shippingFormView() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.state.shipping.form.View(),
-		m.theme.TextError().Render(m.state.shipping.error),
 	)
 }

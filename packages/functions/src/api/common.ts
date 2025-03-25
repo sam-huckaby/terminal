@@ -63,12 +63,14 @@ export const validator = function (
         : undefined;
 
       // Map Zod error codes to our standard error codes
+      let message = firstIssue.message;
       let errorCode = ErrorCodes.Validation.INVALID_PARAMETER;
       if (
         firstIssue.code === "invalid_type" &&
         firstIssue.received === "undefined"
       ) {
         errorCode = ErrorCodes.Validation.MISSING_REQUIRED_FIELD;
+        message = `The \`${firstIssue.path}\` field is required.`;
       } else if (
         ["invalid_string", "invalid_date", "invalid_regex"].includes(
           firstIssue.code,
@@ -81,7 +83,7 @@ export const validator = function (
       const response = {
         type: "validation",
         code: errorCode,
-        message: firstIssue.message,
+        message,
         param: fieldPath,
         details: undefined as any,
       };

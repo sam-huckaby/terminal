@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
@@ -39,7 +38,6 @@ type paymentState struct {
 	form       *huh.Form
 	submitting bool
 	generating bool
-	error      string
 	url        *string
 }
 
@@ -168,10 +166,6 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 	return m, m.state.payment.form.Init()
 }
 
-type VisibleError struct {
-	message string
-}
-
 func getCleanCardNumber(cardNumber string) string {
 	var cleanNumber strings.Builder
 	for _, char := range cardNumber {
@@ -226,20 +220,25 @@ func (m model) previousPaymentMethod() (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) SetCard(cardID string) {
+func (m model) SetCard(cardID string) error {
 	if m.IsSubscribing() {
-		return
+		return nil
 	}
 
 	params := terminal.CartSetCardParams{CardID: terminal.F(cardID)}
-	m.client.Cart.SetCard(m.context, params)
+	_, err := m.client.Cart.SetCard(m.context, params)
+	return err
 }
 
 func (m model) choosePaymentMethod() (model, tea.Cmd) {
 	if m.state.payment.selected < len(m.cards) { // existing method
 		cardID := m.cards[m.state.payment.selected].ID
+		m.state.payment.submitting = true
 		return m, func() tea.Msg {
-			m.SetCard(cardID)
+			err := m.SetCard(cardID)
+			if err != nil {
+				return err
+			}
 			return SelectedCardUpdatedMsg{cardID: cardID}
 		}
 	} else if m.state.payment.selected == len(m.cards) { // new ssh
@@ -249,7 +248,10 @@ func (m model) choosePaymentMethod() (model, tea.Cmd) {
 		m.state.payment.generating = true
 		m.state.payment.view = paymentHttpsView
 		return m, func() tea.Msg {
-			resp, _ := m.client.Card.Collect(m.context)
+			resp, err := m.client.Card.Collect(m.context)
+			if err != nil {
+				return err
+			}
 			return PollPaymentInitMsg{paymentUrl: resp.Data.URL}
 		}
 	}
@@ -288,14 +290,16 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 				m.state.payment.deleting = nil
 				_, err := m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
 				if err != nil {
-					m.state.payment.error = api.GetErrorMessage(err)
-					return m, nil
+					return m, func() tea.Msg { return err }
 				}
 				if len(m.cards)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					cards, _ := m.client.Card.List(m.context)
+					cards, err := m.client.Card.List(m.context)
+					if err != nil {
+						return err
+					}
 					return cards.Data
 				}
 			}
@@ -341,26 +345,22 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case *stripe.Token:
 		params := terminal.CardNewParams{Token: terminal.F(msg.ID)}
 		response, err := m.client.Card.New(m.context, params)
-
 		if err != nil {
-			m, cmd := m.PaymentSwitch()
-			m.state.payment.view = paymentFormView
-			m.state.payment.error = api.GetErrorMessage(err)
-			return m, cmd
+			return m, func() tea.Msg { return err }
 		}
-
-		cards, _ := m.client.Card.List(m.context)
+		cards, err := m.client.Card.List(m.context)
+		if err != nil {
+			return m, func() tea.Msg { return err }
+		}
 		m.cards = cards.Data
 		return m, func() tea.Msg {
-			m.SetCard(response.Data)
+			err := m.SetCard(response.Data)
+			if err != nil {
+				return err
+			}
 			return SelectedCardUpdatedMsg{cardID: response.Data}
 		}
 
-	case VisibleError:
-		m, cmd := m.PaymentSwitch()
-		m.state.payment.view = paymentFormView
-		m.state.payment.error = msg.message
-		return m, cmd
 	}
 
 	m = m.updatePaymentForm()
@@ -369,7 +369,6 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 	m.state.payment.form = next.(*huh.Form)
 	cmds = append(cmds, cmd)
 	if !m.state.payment.submitting && m.state.payment.form.State == huh.StateCompleted {
-		m.state.payment.error = ""
 		m.state.payment.submitting = true
 
 		form := m.state.payment.form
@@ -392,8 +391,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				AddressZip: stripe.String(m.state.payment.input.zip),
 			})
 			if err != nil {
-				log.Error(*err)
-				return VisibleError{message: *err}
+				return err
 			}
 			return result
 		}, func() tea.Msg {
@@ -403,6 +401,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 			response, err := m.client.Profile.Update(m.context, params)
 			if err != nil {
+				return err
 			}
 			return response.Data
 		})
@@ -427,7 +426,10 @@ func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	case PollPaymentStatusMsg:
 		return m, tea.Tick(time.Second, func(t time.Time) tea.Msg {
-			cards, _ := m.client.Card.List(m.context)
+			cards, err := m.client.Card.List(m.context)
+			if err != nil {
+				return err
+			}
 			if len(cards.Data) > msg.cardCount {
 				return PollPaymentCompleteMsg{cards: cards.Data}
 			}
@@ -438,7 +440,10 @@ func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.payment.selected = len(m.cards) - 1
 		cardID := m.cards[m.state.payment.selected].ID
 		return m, func() tea.Msg {
-			m.SetCard(cardID)
+			err := m.SetCard(cardID)
+			if err != nil {
+				return err
+			}
 			return SelectedCardUpdatedMsg{cardID: cardID}
 		}
 
@@ -455,7 +460,15 @@ func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case error:
+		current := m.state.payment.view
+		m, cmd := m.PaymentSwitch()
+		m.state.payment.view = current
+		m.state.payment.submitting = false
+		m.state.payment.generating = false
+		return m, cmd
 	case SelectedCardUpdatedMsg:
+		m.state.payment.submitting = false
 		if m.IsSubscribing() {
 			m.subscription.CardID = terminal.String(msg.cardID)
 		} else {
@@ -531,9 +544,8 @@ func (m model) paymentListView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
-		"\n select payment method",
+		" select payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
-		m.theme.TextError().Padding(0, 1).Render(m.state.payment.error),
 	))
 }
 
@@ -541,10 +553,8 @@ func (m model) paymentFormView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
-		"\n",
 		// "\ncreate new payment method:\n",
 		m.state.payment.form.View(),
-		m.theme.TextError().Padding(0, 1).Render(m.state.payment.error),
 	))
 }
 
@@ -552,8 +562,13 @@ func (m model) paymentHttpsView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
 
+	if m.state.payment.url == nil {
+		return m.theme.TextError().Render(" failed to generate payment url")
+	}
+
 	qr, _, err := qrfefe.Generate(0, *m.state.payment.url)
 	if err != nil {
+		return m.theme.TextError().Render(" failed to generate qr code: " + err.Error())
 	}
 
 	return m.theme.Base().Render(
@@ -561,7 +576,7 @@ func (m model) paymentHttpsView() string {
 			lipgloss.Center,
 			m.theme.Base().Width(m.widthContent).Render(),
 			qr,
-			base("\nscan or copy to enter payment information"),
+			base("scan or copy to enter payment information"),
 			accent(*m.state.payment.url),
 		),
 	)
