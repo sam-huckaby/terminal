@@ -348,20 +348,12 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                 All API actions will be performed on behalf of the user associated with the token (you!).
                 You can manage your personal access tokens in the Account page of the SSH shop:
               </p>
-              <Code language='bash' code={`ssh terminal.shop -t tokens`} />
-              <div class="bg-blue-5 p-4">
-                <p class="">
-                  <span class="text-white font-bold">note</span>: for the dev sandbox, create your personal access token in the dev ssh shop:
-                </p>
-                <p class="mt-2">
-                  ssh dev.terminal.shop -t tokens
-                </p>
-              </div>
+              <Code language='bash' code={`ssh dev.terminal.shop -t tokens  # dev sandbox\nssh terminal.shop -t tokens      # production`} />
               <p>
                 The OAuth 2.0 client ID and secret are used to authenticate with the API on behalf of another user.
                 Like personal access tokens, you can create and manage OAuth 2.0 apps in the Account page of the SSH shop:
               </p>
-              <Code language='bash' code={`ssh terminal.shop -t apps`} />
+              <Code language='bash' code={`ssh dev.terminal.shop -t apps  # dev sandbox\nssh terminal.shop -t apps      # production`} />
               <p>
                 You can find OAuth 2.0 configuration info <a class="text-white/85" target="_blank" href="https://auth.dev.terminal.shop/.well-known/oauth-authorization-server">here</a> for
                 the dev sandbox, and <a class="text-white/85" target="_blank" href="https://auth.terminal.shop/.well-known/oauth-authorization-server">here</a> for production. Note: we don't
@@ -375,6 +367,11 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               <p>
                 If you don't prefer making HTTP requests yourself, you can use one of our many client SDKs to interact with the Terminal API.
               </p>
+              <div class="bg-green-5 p-4">
+                <p class="text-pretty">
+                  <span class="font-bold">note:</span> Our SDKs are created by the talented team at <a class="text-white font-bold" href="https://www.stainless.com/" target="_blank">Stainless</a>, they're awesome and you should check them out.
+                </p>
+              </div>
               <ul>
                 <li class="flex items-center justify-between">
                   <a class="text-white/85" target="_blank" href="https://github.com/terminaldotshop/terminal-sdk-js">JavaScript</a>
@@ -457,11 +454,6 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                   <span class="text-gray-8">coming soon</span>
                 </li>
               </ul>
-              <div class="bg-green-5 p-4">
-                <p class="">
-                  Our SDKs are created by the incredibly talented team at <a class="text-white font-bold" href="https://www.stainless.com/" target="_blank">Stainless</a>, they're awesome and you should check them out.
-                </p>
-              </div>
             </div>
           </div>
         </div>
