@@ -89,6 +89,9 @@ const auth: MiddlewareHandler = async (c, next) => {
 };
 
 const filter: MiddlewareHandler = async (c, next) => {
+  log.info("headers", {
+    ...c.req.raw.headers,
+  });
   // Get IP address from headers
   const ip =
     c.req.header("x-terminal-ip") ??
