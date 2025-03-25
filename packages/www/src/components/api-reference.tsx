@@ -350,7 +350,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
               </p>
               <Code language='bash' code={`ssh terminal.shop -t tokens`} />
               <div class="bg-blue-5 p-4">
-                <p class="italic">
+                <p class="">
                   <span class="text-white font-bold">note</span>: for the dev sandbox, create your personal access token in the dev ssh shop:
                 </p>
                 <p class="mt-2">
@@ -373,7 +373,7 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
             <h3 class="font-bold lowercase leading-10">#client sdks</h3>
             <div class="flex flex-col gap-3 text-gray-11">
               <p>
-                If you don't prefer making HTTP requests yourself, you can use one of our many client SDKs to interact with the Terminal API:
+                If you don't prefer making HTTP requests yourself, you can use one of our many client SDKs to interact with the Terminal API.
               </p>
               <ul>
                 <li class="flex items-center justify-between">
@@ -424,7 +424,44 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                     language="kotlin"
                   />
                 </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">C</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">C++</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">C#</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">Dart</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">Elixir</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">PHP</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">Rust</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <span class="text-gray-11">Swift</span>
+                  <span class="text-gray-8">coming soon</span>
+                </li>
               </ul>
+              <div class="bg-green-5 p-4">
+                <p class="">
+                  Our SDKs are created by the incredibly talented team at <a class="text-white font-bold" href="https://www.stainless.com/" target="_blank">Stainless</a>, they're awesome and you should check them out.
+                </p>
+              </div>
             </div>
           </div>
         </div>
