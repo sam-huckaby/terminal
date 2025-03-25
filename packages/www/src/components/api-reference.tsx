@@ -349,6 +349,14 @@ const ApiReference: Component<ApiReferenceProps> = (props) => {
                 You can manage your personal access tokens in the Account page of the SSH shop:
               </p>
               <Code language='bash' code={`ssh terminal.shop -t tokens`} />
+              <div class="bg-blue-5 p-4">
+                <p class="italic">
+                  <span class="text-white font-bold">note</span>: for the dev sandbox, create your personal access token in the dev ssh shop:
+                </p>
+                <p class="mt-2">
+                  ssh dev.terminal.shop -t tokens
+                </p>
+              </div>
               <p>
                 The OAuth 2.0 client ID and secret are used to authenticate with the API on behalf of another user.
                 Like personal access tokens, you can create and manage OAuth 2.0 apps in the Account page of the SSH shop:
