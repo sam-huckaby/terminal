@@ -89,9 +89,11 @@ const auth: MiddlewareHandler = async (c, next) => {
 };
 
 const filter: MiddlewareHandler = async (c, next) => {
-  log.info("headers", {
-    ...c.req.raw.headers,
-  });
+  for (const [key, value] of c.req.raw.headers) {
+    log.info("header", {
+      [key]: value,
+    });
+  }
   // Get IP address from headers
   const ip =
     c.req.header("x-terminal-ip") ??
@@ -114,7 +116,7 @@ const filter: MiddlewareHandler = async (c, next) => {
       region,
     },
     () => {
-      console.log("filter", ProductFilter.use());
+      log.info("filter", ProductFilter.use());
       return next();
     },
   );

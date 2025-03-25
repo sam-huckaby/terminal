@@ -1,3 +1,4 @@
+import { Log } from "@terminal/core/util/log";
 import { IPinfoWrapper } from "node-ipinfo";
 import { Resource } from "sst";
 
@@ -7,11 +8,14 @@ export const ipinfo = new IPinfoWrapper(Resource.IpinfoToken.value);
 // Cache for IP to region lookups (to reduce API calls)
 const ipRegionCache = new Map<string, string | undefined>();
 
+const log = Log.create({ namespace: "ipinfo" });
+
 /**
  * Get region from IP address using IPinfo
  * Returns "eu" or "na" based on country code, or undefined if not available
  */
 export async function getRegionFromIP(ip: string): Promise<string | undefined> {
+  log.info("geoip lookup", { ip });
   // Check cache first
   if (ipRegionCache.has(ip)) {
     return ipRegionCache.get(ip);
@@ -19,7 +23,7 @@ export async function getRegionFromIP(ip: string): Promise<string | undefined> {
 
   try {
     const response = await ipinfo.lookupIp(ip);
-    const countryCode = response.country?.toLowerCase();
+    const countryCode = response.countryCode?.toLowerCase();
 
     // Logic from core/product/filter.ts countryToRegion function
     let region: string | undefined;
@@ -70,8 +74,7 @@ export async function getRegionFromIP(ip: string): Promise<string | undefined> {
     ipRegionCache.set(ip, region);
     return region;
   } catch (error) {
-    console.error("Error looking up IP:", error);
+    log.error(error as any);
     return undefined;
   }
 }
-

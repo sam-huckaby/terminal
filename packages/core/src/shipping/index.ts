@@ -66,9 +66,6 @@ export namespace Shipping {
   }
 
   export async function fulfillOrder(orderID: string) {
-    // Import Order module to update fulfiller
-    const { Order } = await import("../order/order");
-
     const order = await useTransaction((tx) =>
       tx
         .select({
@@ -80,20 +77,8 @@ export namespace Shipping {
         .execute()
         .then((results) => results[0]),
     );
-
     if (!order) throw new Error("Order not found");
-
-    if (order.shippingAddress.country === "US") {
-      // Set the fulfiller to QuickCommerce ("qc") if not already set
-      if (!order.fulfiller) {
-        await Order.setFulfiller({
-          orderId: orderID,
-          fulfiller: "qc",
-        });
-      }
-
-      await Shippo.createShipment(orderID);
-    }
+    if (order.fulfiller === "qc") await Shippo.createShipment(orderID);
   }
 
   export async function fulfill(fulfiller: Fulfiller) {
@@ -114,10 +99,8 @@ export namespace Shipping {
     log.info("fulfilling", { count: orders.length });
     if (!orders.length) return;
 
-    // Prepare data for CSV
     const csvRows = [];
 
-    // Add header row
     csvRows.push(["Order ID", "Name", "Address", "Product", "Quantity"]);
 
     for (const order of orders) {
@@ -143,7 +126,6 @@ export namespace Shipping {
 
       const address = order.shippingAddress;
 
-      // Format address by filtering out undefined parts and joining with commas
       const addressParts = [
         address.street1,
         address.street2,
@@ -157,8 +139,6 @@ export namespace Shipping {
 
       for (const item of orderItems) {
         const productFullName = `${item.productName} - ${item.variantName}`;
-
-        // Add a row to CSV data
         csvRows.push([
           order.id,
           address.name,
@@ -169,7 +149,6 @@ export namespace Shipping {
       }
     }
 
-    // Generate CSV content with proper escaping
     const csvContent = stringify(csvRows);
     console.log(csvContent);
 
