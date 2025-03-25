@@ -87,12 +87,12 @@ export namespace Address {
 
   export const create = fn(Inner, (input) =>
     useTransaction(async (tx) => {
-      const validated = await Shippo.assertValidAddress(input);
+      // await Shippo.assertValidAddress(input);
       const id = createID("userShipping");
       await tx.insert(addressTable).values({
         id,
         userID: Actor.userID(),
-        address: validated,
+        address: input,
       });
       return id;
     }),
