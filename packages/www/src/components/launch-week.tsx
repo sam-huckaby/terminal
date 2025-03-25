@@ -52,7 +52,7 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
                 title="shortcuts to happiness"
                 keyword="raycast extension"
                 href="https://ray.so/coffee"
-                videoHref="https://x.com/terminaldotshop/status/"
+                videoHref="https://x.com/terminaldotshop/status/1904611437583942126"
               />
               <EventItem
                 date="26.03"
