@@ -59,7 +59,7 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
                 title="thinking inside the box"
                 keyword="cron membership"
                 href="/cron"
-                videoHref="https://x.com/terminaldotshop/status/1904883124338651300"
+                videoHref="https://x.com/terminaldotshop/status/1904888978911772812"
               />
               <EventItem
                 date="27.03"
