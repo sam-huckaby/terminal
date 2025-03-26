@@ -57,6 +57,9 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
               <EventItem
                 date="26.03"
                 title="thinking inside the box"
+                keyword="cron membership"
+                href="/cron"
+                videoHref="https://x.com/terminaldotshop/status/1904883124338651300"
               />
               <EventItem
                 date="27.03"
