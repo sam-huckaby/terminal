@@ -278,6 +278,13 @@ export namespace Order {
     async (input) => {
       log.info("creating order");
       const userID = Actor.userID();
+      if (Object.keys(input.variants).length === 0) {
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "No items in order",
+        );
+      }
       const match = await useTransaction(async (tx) =>
         tx
           .select({
