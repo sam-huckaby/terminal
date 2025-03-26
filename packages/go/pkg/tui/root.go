@@ -274,7 +274,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, func() tea.Msg {
 				response, err := m.client.Cart.Get(m.context)
 				if err != nil {
-					return err
+					return VisibleError{message: "something went wrong, restart the ssh session"}
 				}
 				return response.Data
 			})
