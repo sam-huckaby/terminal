@@ -20,7 +20,7 @@ import { logger } from "hono/logger";
 const app = issuer({
   subjects,
   ttl: {
-    access: 60 * 8,
+    access: 60 * 30,
   },
   theme: THEME_TERMINAL,
   select: Select({
