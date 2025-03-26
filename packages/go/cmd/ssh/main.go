@@ -23,7 +23,6 @@ import (
 	"github.com/terminaldotshop/terminal/go/pkg/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
