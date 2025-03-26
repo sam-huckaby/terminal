@@ -38,7 +38,6 @@ export namespace Shipping {
     "SI",
     "ES",
     "SE",
-    "GB",
   ];
   export const countries = ["US", ...eu];
 

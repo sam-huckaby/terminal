@@ -97,7 +97,6 @@ function countryToRegion(country: string | undefined) {
     "li", // Liechtenstein
     "no", // Norway
     "ch", // Switzerland
-    "uk", // United Kingdom
   ];
   if (euCountries.includes(countryCode)) return "eu";
 

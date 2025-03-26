@@ -64,7 +64,6 @@ export async function getRegionFromIP(ip: string): Promise<string | undefined> {
         "li",
         "no",
         "ch",
-        "uk",
       ].includes(countryCode)
     ) {
       region = "eu";
