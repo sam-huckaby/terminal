@@ -18,10 +18,12 @@ import (
 	"syscall"
 
 	"github.com/google/uuid"
+	"github.com/muesli/termenv"
 	"github.com/terminaldotshop/terminal/go/pkg/resource"
 	"github.com/terminaldotshop/terminal/go/pkg/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -148,6 +150,10 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	clientAddr := s.RemoteAddr().String()
 	host, _, _ := net.SplitHostPort(clientAddr)
 	slog.Info("client connected", "ip", host)
+
+	if pty.Term == "xterm-ghostty" {
+		lipgloss.SetColorProfile(termenv.TrueColor)
+	}
 
 	model, err := tui.NewModel(renderer, fingerprint, &host, command)
 	if err != nil {
