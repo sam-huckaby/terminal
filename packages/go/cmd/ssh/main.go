@@ -152,7 +152,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	slog.Info("client connected", "ip", host)
 
 	if pty.Term == "xterm-ghostty" {
-		lipgloss.SetColorProfile(termenv.TrueColor)
+		renderer.SetColorProfile(termenv.TrueColor)
 	}
 
 	model, err := tui.NewModel(renderer, fingerprint, &host, command)
