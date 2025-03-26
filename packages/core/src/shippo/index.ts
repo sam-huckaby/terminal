@@ -211,7 +211,7 @@ export namespace Shippo {
       }),
       order: order.object_id,
     });
-    log.info("shipment data", { shipment });
+    log.info("shipment data", { shipment: JSON.stringify(shipment) });
     if (shipment.object_state !== "VALID") {
       throw new Error("Shipment invalid");
     }
