@@ -87,7 +87,7 @@ export namespace Address {
 
   export const create = fn(Inner, (input) =>
     useTransaction(async (tx) => {
-      // await Shippo.assertValidAddress(input);
+      await Shippo.assertValidAddress(input);
       const id = createID("userShipping");
       await tx.insert(addressTable).values({
         id,
