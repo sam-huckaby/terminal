@@ -27,6 +27,7 @@ const PayComponent: Component<PayProps> = (props) => {
   const [form, { Form, Field }] = createForm({
     validate: zodForm(
       z.object({
+        email: z.string().email().nonempty('# required'),
         name: z.string().nonempty('# required'),
         cardNumber: z.string().nonempty('# required'),
         expMonth: z
@@ -59,6 +60,10 @@ const PayComponent: Component<PayProps> = (props) => {
           headers: {
             Authorization: `Bearer ${window.location.hash.slice(1)}`,
           },
+        })
+
+        await client.profile.$put({
+          json: { email: data.email, name: data.name },
         })
 
         const response = await client.card.$post({
@@ -97,6 +102,18 @@ const PayComponent: Component<PayProps> = (props) => {
             <Line state="warning">confirm payment in your terminal</Line>
           </Match>
           <Match when={!form.submitting || form.response.status === 'error'}>
+            <Field name="email">
+              {(field, props) => (
+                <InputLine
+                  {...props}
+                  autofocus
+                  autocomplete="email"
+                  placeholder="email address"
+                  state={field.error ? 'error' : 'normal'}
+                  message={field.error}
+                />
+              )}
+            </Field>
             <Field name="name">
               {(field, props) => (
                 <InputLine
