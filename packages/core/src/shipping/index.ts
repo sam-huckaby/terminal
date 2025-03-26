@@ -46,6 +46,10 @@ export namespace Shipping {
   const FREE_SHIPPING_THRESHOLD = 40 * 100;
   const FLAT_SHIPPING_COST = 800;
   export async function calculate(subtotal: number, address: Address.Inner) {
+    log.info("calculating shipping", {
+      subtotal,
+      address: JSON.stringify(address),
+    });
     if (address.country === "US") {
       return {
         fulfiller: "qc" as const,
