@@ -13,4 +13,4 @@ RUN apk add --no-cache ncurses
 COPY xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
 RUN tic -x /tmp/xterm-ghostty.terminfo && rm /tmp/xterm-ghostty.terminfo
 COPY --from=builder /app/ssh .
-CMD ./ssh
+CMD TERM=xterm-256color ./ssh
