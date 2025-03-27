@@ -64,6 +64,9 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
               <EventItem
                 date="27.03"
                 title="scaling productivity"
+                keyword="enterprise"
+                href="/trust"
+                videoHref="https://x.com/terminaldotshop/status/1905257122889122184"
               />
               <EventItem
                 date="28.03"
