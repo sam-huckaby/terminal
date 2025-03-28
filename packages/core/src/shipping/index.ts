@@ -151,7 +151,7 @@ export namespace Shipping {
           address.city,
           address.country,
           address.phone,
-          order.email,
+          order.email || "order@terminal.shop",
           productFullName,
           item.quantity.toString(),
           (item.amount / 100).toString(),
