@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isNull, lt } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
-import { useTransaction } from "../drizzle/transaction";
+import { useTransaction, afterTx } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
 import { Actor } from "../actor";
 import { createID } from "../util/id";
@@ -14,6 +14,9 @@ import { Order } from "../order/order";
 import { filter, groupBy, pipe, values } from "remeda";
 import { ErrorCodes, VisibleError } from "../error";
 import { Log } from "../util/log";
+import { defineEvent } from "../event";
+import { bus } from "sst/aws/bus";
+import { Resource } from "sst";
 
 export namespace Subscription {
   const log = Log.create({ namespace: "subscription" });
@@ -55,6 +58,15 @@ export namespace Subscription {
     });
 
   export type Info = z.infer<typeof Info>;
+
+  export const Event = {
+    Created: defineEvent(
+      "subscription.created",
+      z.object({
+        subscriptionID: Info.shape.id,
+      }),
+    ),
+  };
 
   export const list = () =>
     useTransaction(async (tx) =>
@@ -127,6 +139,11 @@ export namespace Subscription {
         )
         .limit(1)
         .then((rows) => rows[0]!);
+      
+      await afterTx(() =>
+        bus.publish(Resource.Bus, Event.Created, { subscriptionID: subscription.id }),
+      );
+      
       return subscription.id;
     }),
   );

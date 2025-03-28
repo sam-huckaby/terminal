@@ -9,10 +9,11 @@ import { EmailOctopus } from "@terminal/core/email-octopus";
 import { Log } from "@terminal/core/util/log";
 import { Actor } from "@terminal/core/actor";
 import { Shipping } from "@terminal/core/shipping/index";
+import { Subscription } from "@terminal/core/subscription/subscription";
 
 const log = Log.create({ namespace: "event" });
 export const handler = bus.subscriber(
-  [Order.Event.Created, User.Events.Updated],
+  [Order.Event.Created, User.Events.Updated, Subscription.Event.Created],
   async (event) =>
     Actor.provide(
       event.metadata.actor.type,
@@ -33,6 +34,12 @@ export const handler = bus.subscriber(
           case "user.updated": {
             await Stripe.syncUser(event.properties.userID);
             await EmailOctopus.addToMarketingList(event.properties.userID);
+            break;
+          }
+          case "subscription.created": {
+            await Template.sendSubscriptionConfirmation(event.properties.subscriptionID);
+            // Optionally add to a subscribers list if needed
+            // await EmailOctopus.addToSubscribersList(event.properties.subscriptionID);
             break;
           }
         }
