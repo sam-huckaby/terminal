@@ -107,8 +107,8 @@ export namespace Shipping {
 
     csvRows.push([
       "Name",
-      "Surname",
-      "Street",
+      "Street1",
+      "Street2",
       "Postal Code",
       "City",
       "Country",
@@ -116,9 +116,7 @@ export namespace Shipping {
       "Email",
       "Product",
       "Quantity",
-      "Account",
       "Value",
-      "Number",
     ]);
 
     for (const order of orders) {
@@ -145,13 +143,10 @@ export namespace Shipping {
       const address = order.shippingAddress;
       for (const item of orderItems) {
         const productFullName = `${item.productName} - ${item.variantName}`;
-        const [first, ...rest] = (address.name || "Terminal Products").split(
-          " ",
-        );
         csvRows.push([
-          first,
-          rest.join(" "),
-          [address.street1, address.street2].filter(Boolean).join(" "),
+          address.name,
+          address.street1,
+          address.street2 ?? "",
           address.zip,
           address.city,
           address.country,
@@ -159,14 +154,14 @@ export namespace Shipping {
           order.email,
           productFullName,
           item.quantity.toString(),
-          "65087903",
           (item.amount / 100).toString(),
-          "1",
         ]);
       }
     }
 
-    const csvContent = stringify(csvRows);
+    const csvContent = stringify(csvRows, {
+      delimiter: ";",
+    });
     console.log(csvContent);
 
     const today = new Date().toISOString().split("T")[0];
@@ -176,7 +171,7 @@ export namespace Shipping {
       [
         "dax@terminal.shop",
         //         "packing.darius@gmail.com",
-        //         "pierremarie@leperco.fr",
+        "pierremarie@leperco.fr",
       ],
       `Terminal Orders - ${today}`,
       "Attached is the CSV of orders ready for fulfillment.",
