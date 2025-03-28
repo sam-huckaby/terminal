@@ -71,6 +71,8 @@ const LaunchWeek: Component<LaunchWeekProps> = ({ children }) => {
               <EventItem
                 date="28.03"
                 title="a brighter future"
+                keyword="rebrand"
+                videoHref="https://x.com/terminaldotshop/status/1905626850555994193"
               />
             </div>
           </div>
