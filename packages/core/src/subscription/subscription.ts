@@ -139,11 +139,13 @@ export namespace Subscription {
         )
         .limit(1)
         .then((rows) => rows[0]!);
-      
+
       await afterTx(() =>
-        bus.publish(Resource.Bus, Event.Created, { subscriptionID: subscription.id }),
+        bus.publish(Resource.Bus, Event.Created, {
+          subscriptionID: subscription.id,
+        }),
       );
-      
+
       return subscription.id;
     }),
   );
@@ -230,7 +232,7 @@ export namespace Subscription {
     const grouped = pipe(
       subs,
       filter((s) => s.schedule?.type === "weekly"),
-      groupBy((s) => s.productVariantID),
+      groupBy((s) => s.addressID),
       values(),
     );
     for (const group of grouped) {
@@ -245,7 +247,9 @@ export namespace Subscription {
             addressID: group[0].addressID,
             cardID: group[0].cardID,
             variants: Object.fromEntries(
-              group.map((s) => [s.productVariantID, s.quantity] as const),
+              group.map(
+                (item) => [item.productVariantID, item.quantity] as const,
+              ),
             ),
           }).catch((ex) => {
             log.error(ex);
