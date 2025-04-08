@@ -1,24 +1,24 @@
 ---
 import Layout from '@layouts/base.astro'
-import LaunchWeek from '@components/launch-week'
-import { Image } from 'astro:assets'
-import team from '../assets/team.png'
-// import Shop from '@components/shop'
-// import { Resource } from 'sst'
+// import LaunchWeek from '@components/launch-week'
+// import { Image } from 'astro:assets'
+// import team from '../assets/team.png'
+import Shop from '@components/shop'
+import { Resource } from 'sst'
 ---
 
 <Layout>
-  {/* <Shop apiUrl={Resource.Api.url} client:load /> */}
-  <LaunchWeek slot="docs" client:load>
-    <Image
-      src={team}
-      alt="Team"
-      class="object-cover opacity-[44%] mix-blend-screen"
-      style={{
-        'mask-image': `radial-gradient(ellipse 42% 50% at 50% 60%, black 75%, transparent 100%), 
-      linear-gradient(to bottom, transparent 0%, black 50%, black 50%, black 50%, transparent 100%);`,
-        'mask-composite': 'intersect',
-      }}
-    />
-  </LaunchWeek>
+  <Shop apiUrl={Resource.Api.url} client:load />
+  <!-- <LaunchWeek slot="docs" client:load> -->
+  <!--   <Image -->
+  <!--     src={team} -->
+  <!--     alt="Team" -->
+  <!--     class="object-cover opacity-[44%] mix-blend-screen" -->
+  <!--     style={{ -->
+  <!--       'mask-image': `radial-gradient(ellipse 42% 50% at 50% 60%, black 75%, transparent 100%),  -->
+  <!--     linear-gradient(to bottom, transparent 0%, black 50%, black 50%, black 50%, transparent 100%);`, -->
+  <!--       'mask-composite': 'intersect', -->
+  <!--     }} -->
+  <!--   /> -->
+  <!-- </LaunchWeek> -->
 </Layout>
