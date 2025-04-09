@@ -99,6 +99,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "ShippoWebhookSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "ShortDomainEmail": {
       "configSet": string
       "sender": string

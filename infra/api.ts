@@ -1,7 +1,7 @@
 import { secret } from "./secret";
 import { domain, shortDomain } from "./dns";
 import { database } from "./database";
-import { webhook } from "./stripe";
+import { webhook as stripeWebhook } from "./stripe";
 import { bus } from "./bus";
 import { email, shortDomainEmail } from "./email";
 
@@ -64,11 +64,12 @@ const apiFn = new sst.aws.Function("ApiFn", {
     bus,
     secret.StripeSecret,
     secret.ShippoSecret,
+    secret.ShippoWebhookSecret,
     secret.EmailOctopusSecret,
     secret.IpinfoToken,
     auth,
     database,
-    webhook,
+    stripeWebhook,
     urls,
   ],
   url: true,

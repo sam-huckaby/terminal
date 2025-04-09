@@ -20,6 +20,17 @@ export namespace Log {
         console.log(prefix, msg);
         return result;
       },
+      warn(msg: string, extra?: Record<string, any>) {
+        const prefix = Object.entries({
+          ...use().tags,
+          ...tags,
+          ...extra,
+        })
+          .map(([key, value]) => `${key}=${value}`)
+          .join(" ");
+        console.warn(prefix, msg);
+        return result;
+      },
       error(error: Error) {
         const prefix = Object.entries({
           ...use().tags,

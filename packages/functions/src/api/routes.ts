@@ -98,7 +98,8 @@ const filter: MiddlewareHandler = async (c, next) => {
   let region = c.req.header("x-terminal-region") as any;
 
   // If no region header but we have an IP, look up the region
-  if (!region && ip) {
+  const isWebhook = c.req.path.startsWith("/hook");
+  if (!region && ip && !isWebhook) {
     try {
       region = await getRegionFromIP(ip);
     } catch (error: any) {

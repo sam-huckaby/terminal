@@ -113,6 +113,18 @@ export namespace Order {
             description: "Tracking URL of the order.",
             example: Examples.Order.tracking.url,
           }),
+          status: z.string().optional().openapi({
+            description: "Current tracking status of the shipment.",
+            example: Examples.Order.tracking.status,
+          }),
+          statusDetails: z.string().optional().openapi({
+            description: "Additional details about the tracking status.",
+            example: Examples.Order.tracking.statusDetails,
+          }),
+          statusUpdatedAt: z.coerce.date().optional().openapi({
+            description: "When the tracking status was last updated.",
+            example: Examples.Order.tracking.statusUpdatedAt,
+          }),
         })
         .openapi({
           description: "Tracking information of the order.",
@@ -173,6 +185,10 @@ export namespace Order {
               service: group[0].cart.shippingService || undefined,
               number: group[0].order.trackingNumber || undefined,
               url: group[0].order.trackingURL || undefined,
+              status: group[0].order.trackingStatus || undefined,
+              statusDetails: group[0].order.trackingStatusDetails || undefined,
+              statusUpdatedAt:
+                group[0].order.trackingStatusUpdatedAt || undefined,
             },
             items: group.map((row) => ({
               id: row.order_item!.id,
@@ -213,6 +229,11 @@ export namespace Order {
                 tracking: {
                   number: rows[0]!.order.trackingNumber || undefined,
                   url: rows[0]!.order.trackingURL || undefined,
+                  status: rows[0]!.order.trackingStatus || undefined,
+                  statusDetails:
+                    rows[0]!.order.trackingStatusDetails || undefined,
+                  statusUpdatedAt:
+                    rows[0]!.order.trackingStatusUpdatedAt || undefined,
                 },
                 items: rows.map((row) => ({
                   id: row.order_item.id,

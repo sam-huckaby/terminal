@@ -44,6 +44,18 @@ const CUSTOMS_DECLARATION_ITEM = {
 
 export namespace Shippo {
   const log = Log.create({ namespace: "shippo" });
+
+  export const TrackingStatus = z.object({
+    trackingNumber: z.string(),
+    carrier: z.string(),
+    status: z.string(),
+    statusDetails: z.string().optional(),
+    statusDate: z.string(),
+    metadata: z.string().optional(),
+  });
+
+  export type TrackingStatus = z.infer<typeof TrackingStatus>;
+
   const Address = z.object({
     name: z.string(),
     street1: z.string(),
@@ -293,6 +305,46 @@ export namespace Shippo {
       );
     }
   }
+
+  export const updateTrackingStatus = fn(TrackingStatus, async (data) => {
+    const order = await useTransaction((tx) =>
+      tx
+        .select({
+          id: orderTable.id,
+        })
+        .from(orderTable)
+        .where(eq(orderTable.trackingNumber, data.trackingNumber))
+        .execute()
+        .then((results) => results[0]),
+    );
+
+    if (!order) {
+      log.warn("tracking update for unknown order", {
+        trackingNumber: data.trackingNumber,
+      });
+      return;
+    }
+
+    // Update the order's tracking status
+    await useTransaction((tx) =>
+      tx
+        .update(orderTable)
+        .set({
+          trackingStatus: data.status,
+          trackingStatusDetails: data.statusDetails || null,
+          trackingStatusUpdatedAt: new Date(data.statusDate),
+        })
+        .where(eq(orderTable.id, order.id))
+        .execute(),
+    );
+
+    log.info("updated order tracking status", {
+      orderID: order.id,
+      status: data.status,
+    });
+
+    return order.id;
+  });
 
   const ROOT = "https://api.goshippo.com";
   async function api(method: string, path: string, body?: any) {
