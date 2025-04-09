@@ -1,0 +1,48 @@
+---
+import Layout from '@layouts/base.astro'
+import FeudQuiz from '@components/feud-quiz'
+import { Image } from 'astro:assets'
+import header from '../../assets/feud-header.png'
+import headerSmall from '../../assets/feud-header-small.png'
+import { Resource } from 'sst'
+
+// Mock questions data
+const questions = [
+  {
+    id: '1',
+    question: 'Name something that you do by yourself in your free time?',
+  },
+  { id: '2', question: 'Name something you would find in a bathroom.' },
+  { id: '3', question: 'Name a type of transportation that can fly.' },
+  { id: '4', question: 'Name an animal that lives in the ocean.' },
+  { id: '5', question: 'Name a popular social media platform.' },
+  { id: '6', question: 'Name something you wear on your feet.' },
+  { id: '7', question: 'Name a breakfast food.' },
+  { id: '8', question: 'Name something you do before going to bed.' },
+  { id: '9', question: 'Name a musical instrument.' },
+  { id: '10', question: 'Name something that makes you happy.' },
+]
+
+// Handle POST requests
+if (Astro.request.method === 'POST') {
+  try {
+    const data = await Astro.request.json()
+    console.log('Received answer:', data)
+    // In a real application, you would save this data or process it further
+  } catch (error) {
+    console.error('Error processing form submission:', error)
+  }
+}
+---
+
+<Layout>
+  <div class="bg-black text-white h-screen flex flex-col">
+    <div
+      class="static top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto"
+    >
+      <Image src={header} alt="terminal feud" class="hidden sm:block" />
+      <Image src={headerSmall} alt="terminal feud" class="sm:hidden" />
+    </div>
+    <FeudQuiz {questions} authUrl={Resource.Auth.url} client:load />
+  </div>
+</Layout>

@@ -1,9 +1,7 @@
 ---
 import '@styles/global.css'
 // import Banner from '@components/banner.astro'
-import Button from '@components/button.astro'
 import { Resource } from 'sst'
-import TextJS from '../cui/components/textjs'
 
 const title = 'wip: terminal (initial commit)'
 const description =
@@ -11,25 +9,6 @@ const description =
 const keywords = 'terminal, terminal shop'
 const url = 'https://www.terminal.shop'
 // const producthuntLink = undefined // TODO: add link
-
-interface Props {
-  light?: boolean
-}
-
-const links = [
-  { href: '/cron', text: 'cron', active: false },
-  { href: '/api', text: 'api', active: false },
-  { href: '/about', text: 'readme', active: false },
-  { href: '/faq', text: 'faq', active: false },
-]
-
-let current = links.find(
-  ({ href }) =>
-    Astro.url.pathname === href || Astro.url.pathname === href + '/',
-)
-if (!current)
-  current = links.find(({ href }) => Astro.url.pathname.startsWith(href))
-if (current) current.active = true
 ---
 
 <html lang="en" class="group">
@@ -140,145 +119,7 @@ if (current) current.active = true
       })
     </script>
   </head>
-  <body
-    class:list={{
-      'font-mono min-h-screen leading-normal tracking-normal text-pretty': true,
-      'bg-black text-white selection:bg-gray-7': Astro.props.light !== true,
-      'bg-cron-bg text-cron-text selection:bg-orange/80 selection:text-white':
-        Astro.props.light === true,
-      'flex flex-1 flex-col': true,
-    }}
-  >
-    <!-- <Banner -->
-    <!--   id="producthunt" -->
-    <!--   class:list={{ -->
-    <!--     'group-data-[producthunt=closed]:hidden': true, -->
-    <!--     hidden: !producthuntLink, -->
-    <!--   }} -->
-    <!-- > -->
-    <!--   we're live on -->
-    <!--   <span class="flex gap-1 items-center"> -->
-    <!--     <svg -->
-    <!--       role="img" -->
-    <!--       viewBox="0 0 24 24" -->
-    <!--       xmlns="http://www.w3.org/2000/svg" -->
-    <!--       class="w-4 h-4" -->
-    <!--     > -->
-    <!--       <title>Product Hunt</title> -->
-    <!--       <path -->
-    <!--         class="fill-current" -->
-    <!--         d="M13.604 8.4h-3.405V12h3.405c.995 0 1.801-.806 1.801-1.801 0-.993-.805-1.799-1.801-1.799zM12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm1.604 14.4h-3.405V18H7.801V6h5.804c2.319 0 4.2 1.88 4.2 4.199 0 2.321-1.881 4.201-4.201 4.201z" -->
-    <!--       > -->
-    <!--       </path> -->
-    <!--     </svg> -->
-    <!--     <a href={producthuntLink} target="_blank" class="underline"> -->
-    <!--       Product Hunt -->
-    <!--     </a> -->
-    <!--   </span> -->
-    <!-- </Banner> -->
-    <!-- <Banner -->
-    <!--   id="terminalhq" -->
-    <!--   class:list={{ 'group-data-[terminalhq=closed]:hidden': true }} -->
-    <!-- > -->
-    <!--   follow us -->
-    <!--   <a -->
-    <!--     href="https://x.com/terminaldotshop" -->
-    <!--     target="_blank" -->
-    <!--     class="focus:underline focus:outline-none" -->
-    <!--   > -->
-    <!--     @terminaldotshop -->
-    <!--   </a> -->
-    <!-- </Banner> -->
-    <header
-      class:list={{
-        'h-10 border-y sm:border-t-0 flex items-stretch sticky top-0 z-50': true,
-        'bg-gray-1': Astro.props.light !== true,
-        'bg-cron-header border-cron-border': Astro.props.light === true,
-      }}
-    >
-      <a
-        href="/"
-        id="logo"
-        class:list={{
-          'relative px-6 border-r flex items-center text-[17px] tracking-[-0.15px] font-medium': true,
-          'border-cron-border': Astro.props.light === true,
-          '!text-white': !current && Astro.props.light !== true,
-          '!text-gray-11': !!current && Astro.props.light !== true,
-          'bg-cron-text bg-opacity-80': Astro.props.light === true,
-          '[text-shadow:_2px_2px_3px_rgb(255_255_255_/_50%)] bg-clip-text !text-transparent':
-            Astro.props.light === true,
-        }}
-      >
-        {
-          Astro.props.light && (
-            <span class="absolute inset-0 flex items-center justify-center -z-10 [text-shadow:_0px_1px_0px_rgb(255_255_255_/_100%)]">
-              terminal
-            </span>
-          )
-        }
-        terminal
-      </a>
-      <nav
-        class:list={{
-          'flex divide-x w-full overflow-x-auto overflow-y-hidden no-scrollbar': true,
-          'divide-cron-border': Astro.props.light === true,
-        }}
-      >
-        {
-          links.map(({ href, text, active }) => (
-            <Button
-              disabled={active}
-              href={active ? undefined : href}
-              class:list={{
-                'relative group/nav-item last:!border-r': true,
-                '!text-white': active && Astro.props.light !== true,
-                '!text-gray-11': !active && Astro.props.light !== true,
-                '!bg-cron-text': Astro.props.light === true,
-                '!bg-opacity-70': !active && Astro.props.light === true,
-                '[text-shadow:_2px_2px_3px_rgb(255_255_255_/_50%)] bg-clip-text !text-transparent':
-                  Astro.props.light === true,
-              }}
-            >
-              <div
-                class:list={{
-                  'absolute inset-0 bg-cron-bgDark -z-50 hidden': true,
-                  'group-hover/nav-item:block group-active/nav-item:brightness-[0.95]':
-                    Astro.props.light,
-                  '!block': Astro.props.light && active,
-                }}
-              />
-              {Astro.props.light && (
-                <div class="absolute left-0 inset-y-0 bg-white w-px" />
-              )}
-              {Astro.props.light && (
-                <span class="absolute inset-0 flex items-center justify-center -z-10 [text-shadow:_0px_1px_0px_rgb(255_255_255_/_100%)]">
-                  {text}
-                </span>
-              )}
-              {text}
-              {Astro.props.light && (
-                <div class="hidden group-last/nav-item:last:block absolute -right-0.5 inset-y-0 bg-white w-px" />
-              )}
-            </Button>
-          ))
-        }
-      </nav>
-      {
-        Astro.props.light && (
-          <div class="absolute -bottom-0.5 inset-x-0 h-px bg-white" />
-        )
-      }
-    </header>
-    <slot name="docs" />
-    {
-      Astro.slots.has('docs') ? null : (
-        <main class="relative my-20 grow max-w-xl">
-          <slot />
-        </main>
-      )
-    }
-    <TextJS client:only="react" />
+  <body>
+    <slot />
   </body>
 </html>
-
-<!-- <script src="@textjs/core/main"></script> -->
