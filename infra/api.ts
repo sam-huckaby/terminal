@@ -173,6 +173,7 @@ new sst.aws.Cron("SubscriptionProcessor", {
   job: {
     link: [database, bus, ...Object.values(secret)],
     handler: "./packages/functions/src/cron/subscription.handler",
+    timeout: "15 minutes",
   },
 });
 
