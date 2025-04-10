@@ -109,8 +109,10 @@ const randomQuestion =
 
     <div class="grow w-full max-w-md mx-auto relative p-6 font-mono">
       <div class="flex flex-col h-full">
-        <h2 class="text-gray-8">{currentQuestionNumber}/{MAX_QUESTIONS}</h2>
-        <p class="lowercase">{randomQuestion.fields.text}</p>
+        <h2 class="text-gray-8 px-4">
+          {currentQuestionNumber}/{MAX_QUESTIONS}
+        </h2>
+        <p class="lowercase px-4">{randomQuestion.fields.text}</p>
 
         <form method="POST" class="mt-6 h-full flex flex-col justify-between">
           <input type="hidden" name="questionId" value={randomQuestion.id} />
@@ -129,7 +131,7 @@ const randomQuestion =
             type="submit"
             class="!h-[52px] bg-orange hover:enabled:bg-orange/80 text-white w-full lowercase flex items-center justify-center font-semibold text-xl mt-6"
           >
-            Submit
+            next
           </button>
         </form>
       </div>

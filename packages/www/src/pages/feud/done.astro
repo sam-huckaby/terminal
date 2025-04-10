@@ -53,10 +53,7 @@ const lines = [
   { text: 'Releasing allocated memory...' },
   { text: 'Closing database connection...' },
   { text: 'System resources successfully released.' },
-  {
-    text: 'Job completed at 16:45:12 Total execution time: 2m 34s',
-    highlight: true,
-  },
+  { text: 'Job completed at 16:45:12 Total execution time: 2m 34s' },
   {
     text: 'INFO  | Thank you for playing terminal.shop feud! Special thanks to our sponsors: Supabase and Boot.Dev',
     highlight: true,
@@ -74,27 +71,26 @@ const lines = [
       display: none;
     }
   </style>
-  <div class="bg-black text-white h-screen flex flex-col">
+  <div class="bg-black text-white min-h-screen flex flex-col">
     <div
-      class="static top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto"
+      class="sticky top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto z-50 bg-transparent"
     >
       <Image src={header} alt="terminal feud" class="hidden sm:block" />
       <Image src={headerSmall} alt="terminal feud" class="sm:hidden" />
     </div>
 
-    <div class="grow w-full max-w-md mx-auto relative p-6 font-mono">
+    <div class="grow w-full max-w-md mx-auto relative px-6 pb-8 font-mono">
       <div class="flex flex-col">
-        <h2 class="text-gray-8 sticky top-0 bg-black py-2 z-10 m-0 p-0">
-          Processing Results
-        </h2>
         <div id="loading-container" class="flex-grow m-0 p-0">
           {
             lines.map((line, index) => (
               <div
-                class={`whitespace-pre-wrap ${line.highlight ? 'text-blue-11' : ''} hidden-line m-0 p-0 break-words max-w-full overflow-x-hidden`}
+                class={`whitespace-pre-wrap ${line.highlight ? 'text-green-11' : ''} hidden-line m-0 p-0 break-words max-w-full overflow-x-hidden`}
                 data-index={index}
                 data-highlight={line.highlight ? 'true' : 'false'}
-              >{line.text}</div>
+              >
+                {line.text}
+              </div>
             ))
           }
         </div>
@@ -118,7 +114,7 @@ const lines = [
           // Auto-scroll to the bottom of the page
           window.scrollTo({
             top: document.body.scrollHeight,
-            behavior: 'smooth'
+            behavior: 'smooth',
           })
 
           currentIndex++
