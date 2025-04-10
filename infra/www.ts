@@ -10,7 +10,7 @@ export const www = new sst.aws.Astro("Site", {
   },
   path: "./packages/www",
   buildCommand: "bun run build",
-  link: [api, auth, vhs, secret.StripePublic],
+  link: [api, auth, vhs, secret.StripePublic, secret.AirtableSecret],
 });
 
 export const outputs = {

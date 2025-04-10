@@ -6,6 +6,10 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    "AirtableSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "AnthropicApiKey": {
       "type": "sst.sst.Secret"
       "value": string

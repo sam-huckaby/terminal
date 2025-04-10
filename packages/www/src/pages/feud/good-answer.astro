@@ -4,16 +4,15 @@ import { Image } from 'astro:assets'
 import header from '../../assets/feud-header.png'
 import headerSmall from '../../assets/feud-header-small.png'
 import Airtable from 'airtable'
+import { Resource } from 'sst'
 
 if (!Astro.locals.subject)
   return Astro.redirect('/auth/authorize?redirect=/feud/good-answer')
 
-// Initialize Airtable
-const AIRTABLE_API_KEY =
-  'patirAe1A1NFBGCni.0682ac1376ab0251f16f44899a9c968ef3e59ebb670ced5bc281c046871fb242'
 const AIRTABLE_BASE_ID = 'appb4HeMJeoeAGrQR'
-
-const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID)
+const base = new Airtable({ apiKey: Resource.AirtableSecret.value }).base(
+  AIRTABLE_BASE_ID,
+)
 const questions = base<{
   id: string
   text: string
@@ -43,6 +42,9 @@ if (Astro.request.method === 'POST') {
       },
     },
   ])
+
+  // Post/Redirect/Get pattern to prevent resubmission on refresh
+  return Astro.redirect('/feud/good-answer')
 }
 
 // Get user's previously answered questions
@@ -62,9 +64,9 @@ const allQuestions = await questions
   .firstPage()
 
 // Get all the questions they've answered
-const answeredQuestionIds = userAnswers.map(answer => 
-  answer.fields.question ? answer.fields.question[0] : ''
-).filter(Boolean)
+const answeredQuestionIds = userAnswers
+  .map((answer) => (answer.fields.question ? answer.fields.question[0] : ''))
+  .filter(Boolean)
 
 // Set maximum questions - either 10 or the total number of questions available
 const MAX_QUESTIONS = Math.min(10, allQuestions.length)
@@ -79,13 +81,16 @@ if (userAnswers.length >= MAX_QUESTIONS) {
 
 // Filter out questions they've already answered
 const unansweredQuestions = allQuestions.filter(
-  question => !answeredQuestionIds.includes(question.id)
+  (question) => !answeredQuestionIds.includes(question.id),
 )
 
 // Pick a random unanswered question or a random question if all have been answered
-const randomQuestion = unansweredQuestions.length > 0
-  ? unansweredQuestions[Math.floor(Math.random() * unansweredQuestions.length)]
-  : allQuestions[Math.floor(Math.random() * allQuestions.length)]
+const randomQuestion =
+  unansweredQuestions.length > 0
+    ? unansweredQuestions[
+        Math.floor(Math.random() * unansweredQuestions.length)
+      ]
+    : allQuestions[Math.floor(Math.random() * allQuestions.length)]
 ---
 
 <Layout>
