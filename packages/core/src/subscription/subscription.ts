@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isNull, lt } from "drizzle-orm";
+import { isNotNull, isNull, lt } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
 import { useTransaction, afterTx } from "../drizzle/transaction";
 import { and, eq, sql } from "drizzle-orm";
@@ -206,7 +206,7 @@ export namespace Subscription {
       last: z.date(),
     }),
     (input) => {
-      if (input.schedule.type === "fixed") return undefined;
+      if (input.schedule.type === "fixed") return null;
       return DateTime.fromJSDate(input.last)
         .toUTC()
         .startOf("week")
@@ -222,6 +222,7 @@ export namespace Subscription {
         .from(subscriptionTable)
         .where(
           and(
+            isNotNull(subscriptionTable.timeNext),
             lt(subscriptionTable.timeNext, DateTime.now().toUTC().toJSDate()),
             isNull(subscriptionTable.timeDeleted),
           ),
@@ -231,7 +232,6 @@ export namespace Subscription {
     log.info("processing", { subscriptions: subs.length });
     const grouped = pipe(
       subs,
-      filter((s) => s.schedule?.type === "weekly"),
       groupBy((s) => s.addressID),
       values(),
     );
