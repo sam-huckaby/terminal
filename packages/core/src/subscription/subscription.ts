@@ -97,9 +97,17 @@ export namespace Subscription {
           ErrorCodes.Validation.INVALID_PARAMETER,
           "Product variant not found",
         );
-      // if (!product?.subscription) {
-      //   throw new Error("Product variant does not allow subscriptions");
-      // }
+
+      input.schedule =
+        product.subscription === "required"
+          ? { type: "fixed" }
+          : input.schedule;
+      if (!input.schedule)
+        throw new VisibleError(
+          "validation",
+          ErrorCodes.Validation.INVALID_PARAMETER,
+          "Schedule for subscription required",
+        );
       await tx
         .insert(subscriptionTable)
         .values({
