@@ -18,7 +18,7 @@ func main() {
 	defer log.Close()
 	slog.SetDefault(slog.New(slog.NewTextHandler(log, &slog.HandlerOptions{})))
 
-	model, err := tui.NewModel(lipgloss.DefaultRenderer(), "fingerprint", nil, []string{})
+	model, err := tui.NewModel(lipgloss.DefaultRenderer(), "fingerprint", false, nil, []string{})
 	if err != nil {
 		panic(err)
 	}

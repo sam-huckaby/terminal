@@ -71,6 +71,7 @@ type model struct {
 	// output          *termenv.Output
 	theme           theme.Theme
 	fingerprint     string
+	anonymous       bool
 	viewportWidth   int
 	viewportHeight  int
 	widthContainer  int
@@ -115,6 +116,7 @@ type children struct {
 func NewModel(
 	renderer *lipgloss.Renderer,
 	fingerprint string,
+	anonymous bool,
 	clientIP *string,
 	command []string,
 ) (tea.Model, error) {
@@ -131,6 +133,7 @@ func NewModel(
 		renderer: renderer,
 		// output:      renderer.Output(),
 		fingerprint: fingerprint,
+		anonymous:   anonymous,
 		theme:       theme.BasicTheme(renderer, nil),
 		faqs:        LoadFaqs(),
 		accountPages: []page{

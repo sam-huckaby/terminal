@@ -73,11 +73,13 @@ func main() {
 			hash := md5.Sum(key.Marshal())
 			fingerprint := hex.EncodeToString(hash[:])
 			ctx.SetValue("fingerprint", fingerprint)
+			ctx.SetValue("anonymous", false)
 			return true
 		}),
 		wish.WithKeyboardInteractiveAuth(
 			func(ctx ssh.Context, challenger gossh.KeyboardInteractiveChallenge) bool {
 				ctx.SetValue("fingerprint", uuid.NewString())
+				ctx.SetValue("anonymous", true)
 				return true
 			},
 		),
@@ -141,6 +143,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	}
 	renderer := bubbletea.MakeRenderer(sessionBridge)
 	fingerprint := s.Context().Value("fingerprint").(string)
+	anonymous := s.Context().Value("anonymous").(bool)
 	command := s.Command()
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
 	slog.Info("got command", "command", command)
@@ -154,7 +157,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		renderer.SetColorProfile(termenv.TrueColor)
 	}
 
-	model, err := tui.NewModel(renderer, fingerprint, &host, command)
+	model, err := tui.NewModel(renderer, fingerprint, anonymous, &host, command)
 	if err != nil {
 		return nil, []tea.ProgramOption{}
 	}

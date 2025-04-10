@@ -73,6 +73,12 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 				if subscribed {
 					return m.SubscriptionManageSwitch(subscriptionId)
 				} else {
+					if m.anonymous {
+						m.error = &VisibleError{
+							message: "ssh public key required to subscribe, see trm.sh/faq",
+						}
+						return m, nil
+					}
 					m.state.subscribe.product = &product
 					return m.SubscribeSwitch()
 				}
