@@ -460,6 +460,7 @@ export namespace Order {
             "cardID",
           );
         }
+        log.error(ex as Error);
         throw new VisibleError(
           "internal",
           ErrorCodes.Server.INTERNAL_ERROR,
