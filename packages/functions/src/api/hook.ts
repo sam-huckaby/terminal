@@ -63,7 +63,7 @@ export namespace Hook {
           status: body.data.tracking_status.status,
           statusDetails: body.data.tracking_status.status_details,
           statusDate: body.data.tracking_status.status_date,
-          metadata: body.data.metadata,
+          metadata: body.data.metadata || undefined,
         };
 
         await Shippo.updateTrackingStatus(trackingData);
