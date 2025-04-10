@@ -1,0 +1,138 @@
+---
+import Layout from '@layouts/base.astro'
+import { Image } from 'astro:assets'
+import header from '../../assets/feud-header.png'
+import headerSmall from '../../assets/feud-header-small.png'
+
+const lines = [
+  { text: '$ ./run_data_analysis.sh  Starting data analysis job...' },
+  { text: 'Initializing parameters...' },
+  { text: 'Setting up AI modules and configurations...' },
+  { text: 'Allocating memory and preparing runtime environment...' },
+  { text: 'System check complete. No issues detected.' },
+  { text: 'Loading data from source...', highlight: true },
+  {
+    text: 'Data connection established to database: feud_answers_2025-04-18.csv',
+  },
+  { text: 'Fetching records...' },
+  { text: 'Data successfully loaded. Total records: 12,398', highlight: true },
+  { text: 'Performing data integrity checks...' },
+  { text: 'Data integrity verified. No discrepancies found.' },
+  { text: 'Running pre-processing tasks...' },
+  { text: 'Tokenizing text entries...' },
+  { text: 'Removing duplicates and invalid records...' },
+  { text: 'Converting data to a structured format...' },
+  { text: 'Normalizing and cleaning data fields...', highlight: true },
+  { text: 'Pre-processing complete. Ready for main analysis.' },
+  { text: 'Executing main analysis...' },
+  { text: 'Loading model: Advanced Feud Answer Analyzer', highlight: true },
+  { text: 'Allocating resources to GPU...' },
+  { text: 'Model successfully loaded. Starting analysis...' },
+  { text: 'Analyzing answer patterns...' },
+  { text: 'Identifying top-scoring answers...', highlight: true },
+  { text: 'Calculating sentiment scores...' },
+  { text: 'Detecting anomalies in response distribution...' },
+  { text: 'Progress: [========          ] 45% (Ongoing)' },
+  {
+    text: 'INFO  | Memory optimization in progress to handle large data efficiently...',
+  },
+  { text: 'Progress: [===============   ] 85% (Almost Done)' },
+  {
+    text: 'Progress: [====================] 100% (Completed)',
+    highlight: true,
+  },
+  { text: 'Analysis successful' },
+  { text: 'Extracting key insights...' },
+  { text: 'Generating summary report...' },
+  { text: 'Finalizing output files...' },
+  { text: 'Output generated successfully.' },
+  {
+    text: 'Output: - Results saved to: /home/feud/analysis/output/answers_summary.txt - Summary insights saved to: /home/feud/analysis/output/summary_insights.txt - Detailed metrics saved to: /home/feud/analysis/output/detailed_metrics.csv - Logs saved to: /home/feud/answers/logs/2025-04-18_feud.log',
+  },
+  { text: 'Cleaning up temporary files...' },
+  { text: 'Releasing allocated memory...' },
+  { text: 'Closing database connection...' },
+  { text: 'System resources successfully released.' },
+  {
+    text: 'Job completed at 16:45:12 Total execution time: 2m 34s',
+    highlight: true,
+  },
+  {
+    text: 'INFO  | Thank you for playing terminal.shop feud! Special thanks to our sponsors: Supabase and Boot.Dev',
+    highlight: true,
+  },
+  { text: '$ Process completed successfully.' },
+]
+---
+
+<Layout>
+  <style>
+    :global(body) {
+      background-color: black;
+    }
+    .hidden-line {
+      display: none;
+    }
+  </style>
+  <div class="bg-black text-white h-screen flex flex-col">
+    <div
+      class="static top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto"
+    >
+      <Image src={header} alt="terminal feud" class="hidden sm:block" />
+      <Image src={headerSmall} alt="terminal feud" class="sm:hidden" />
+    </div>
+
+    <div class="grow w-full max-w-md mx-auto relative p-6 font-mono">
+      <div class="flex flex-col">
+        <h2 class="text-gray-8 sticky top-0 bg-black py-2 z-10 m-0 p-0">
+          Processing Results
+        </h2>
+        <div id="loading-container" class="flex-grow m-0 p-0">
+          {
+            lines.map((line, index) => (
+              <div
+                class={`whitespace-pre-wrap ${line.highlight ? 'text-blue-11' : ''} hidden-line m-0 p-0 break-words max-w-full overflow-x-hidden`}
+                data-index={index}
+                data-highlight={line.highlight ? 'true' : 'false'}
+              >{line.text}</div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('loading-container')
+      if (!container) return
+
+      const lines = container.querySelectorAll('[data-index]')
+      let currentIndex = 0
+
+      function showNextLine() {
+        if (currentIndex < lines.length) {
+          const line = lines[currentIndex]
+          line.classList.remove('hidden-line')
+
+          // Auto-scroll to the bottom of the page
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+          })
+
+          currentIndex++
+
+          // Delay based on highlight status (2x faster)
+          const isHighlighted = line.getAttribute('data-highlight') === 'true'
+          const delay = isHighlighted ? 1000 : 75
+
+          setTimeout(showNextLine, delay)
+        }
+      }
+
+      // Start the animation
+      showNextLine()
+    })
+  </script>
+</Layout>

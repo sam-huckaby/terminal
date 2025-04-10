@@ -1,41 +1,99 @@
 ---
 import Layout from '@layouts/base.astro'
-import FeudQuiz from '@components/feud-quiz'
 import { Image } from 'astro:assets'
 import header from '../../assets/feud-header.png'
 import headerSmall from '../../assets/feud-header-small.png'
-import { Resource } from 'sst'
+import Airtable from 'airtable'
 
-// Mock questions data
-const questions = [
-  {
-    id: '1',
-    question: 'Name something that you do by yourself in your free time?',
-  },
-  { id: '2', question: 'Name something you would find in a bathroom.' },
-  { id: '3', question: 'Name a type of transportation that can fly.' },
-  { id: '4', question: 'Name an animal that lives in the ocean.' },
-  { id: '5', question: 'Name a popular social media platform.' },
-  { id: '6', question: 'Name something you wear on your feet.' },
-  { id: '7', question: 'Name a breakfast food.' },
-  { id: '8', question: 'Name something you do before going to bed.' },
-  { id: '9', question: 'Name a musical instrument.' },
-  { id: '10', question: 'Name something that makes you happy.' },
-]
+if (!Astro.locals.subject)
+  return Astro.redirect('/auth/authorize?redirect=/feud/good-answer')
 
-// Handle POST requests
+// Initialize Airtable
+const AIRTABLE_API_KEY =
+  'patirAe1A1NFBGCni.0682ac1376ab0251f16f44899a9c968ef3e59ebb670ced5bc281c046871fb242'
+const AIRTABLE_BASE_ID = 'appb4HeMJeoeAGrQR'
+
+const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID)
+const questions = base<{
+  id: string
+  text: string
+}>('questions')
+const answers = base<{
+  id: string
+  answer: string
+  question: string[]
+  userID: string
+}>('answers')
+
+// Handle form submission
 if (Astro.request.method === 'POST') {
-  try {
-    const data = await Astro.request.json()
-    console.log('Received answer:', data)
-    // In a real application, you would save this data or process it further
-  } catch (error) {
-    console.error('Error processing form submission:', error)
-  }
+  const formData = await Astro.request.formData()
+  const answer = formData.get('answer') as string
+  const questionId = formData.get('questionId') as string
+  await base<{
+    userID: string
+    question: string[]
+    answer: string
+  }>('answers').create([
+    {
+      fields: {
+        answer,
+        question: [questionId],
+        userID: Astro.locals.subject?.properties?.userID || 'anonymous',
+      },
+    },
+  ])
 }
+
+// Get user's previously answered questions
+const userID = Astro.locals.subject?.properties?.userID || 'anonymous'
+const userAnswers = await answers
+  .select({
+    filterByFormula: `{userID} = '${userID}'`,
+  })
+  .firstPage()
+
+// Get all available questions
+const allQuestions = await questions
+  .select({
+    maxRecords: 100,
+    view: 'Grid view',
+  })
+  .firstPage()
+
+// Get all the questions they've answered
+const answeredQuestionIds = userAnswers.map(answer => 
+  answer.fields.question ? answer.fields.question[0] : ''
+).filter(Boolean)
+
+// Set maximum questions - either 10 or the total number of questions available
+const MAX_QUESTIONS = Math.min(10, allQuestions.length)
+
+// Current question number (1-based)
+const currentQuestionNumber = userAnswers.length + 1
+
+// Check if they've answered the maximum number of questions
+if (userAnswers.length >= MAX_QUESTIONS) {
+  return Astro.redirect('/feud/done')
+}
+
+// Filter out questions they've already answered
+const unansweredQuestions = allQuestions.filter(
+  question => !answeredQuestionIds.includes(question.id)
+)
+
+// Pick a random unanswered question or a random question if all have been answered
+const randomQuestion = unansweredQuestions.length > 0
+  ? unansweredQuestions[Math.floor(Math.random() * unansweredQuestions.length)]
+  : allQuestions[Math.floor(Math.random() * allQuestions.length)]
 ---
 
 <Layout>
+  <style>
+    :global(body) {
+      background-color: black;
+    }
+  </style>
   <div class="bg-black text-white h-screen flex flex-col">
     <div
       class="static top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto"
@@ -43,6 +101,33 @@ if (Astro.request.method === 'POST') {
       <Image src={header} alt="terminal feud" class="hidden sm:block" />
       <Image src={headerSmall} alt="terminal feud" class="sm:hidden" />
     </div>
-    <FeudQuiz {questions} authUrl={Resource.Auth.url} client:load />
+
+    <div class="grow w-full max-w-md mx-auto relative p-6 font-mono">
+      <div class="flex flex-col h-full">
+        <h2 class="text-gray-8">{currentQuestionNumber}/{MAX_QUESTIONS}</h2>
+        <p class="lowercase">{randomQuestion.fields.text}</p>
+
+        <form method="POST" class="mt-6 h-full flex flex-col justify-between">
+          <input type="hidden" name="questionId" value={randomQuestion.id} />
+
+          <input
+            required
+            autocomplete="off"
+            type="text"
+            name="answer"
+            placeholder="answer"
+            autofocus
+            class="bg-white bg-opacity-[12%] py-2 px-4 text-[#B7B7B7] focus:bg-[#220B00] focus:ring-1 focus:ring-inset focus:ring-[#FF5C00] outline-none focus:outline-none"
+          />
+
+          <button
+            type="submit"
+            class="!h-[52px] bg-orange hover:enabled:bg-orange/80 text-white w-full lowercase flex items-center justify-center font-semibold text-xl mt-6"
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </Layout>

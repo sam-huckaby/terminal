@@ -27,7 +27,7 @@ export async function getToken() {
   const next = await client.refresh(refresh, {
     access: accessToken,
   })
-  if (next.err) return
+  if (next.err !== false) return
   if (!next.tokens) return accessToken
 
   localStorage.setItem('refresh', next.tokens.refresh)

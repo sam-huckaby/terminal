@@ -4,7 +4,7 @@ import Button from './button'
 
 type Question = {
   id: string;
-  question: string;
+  text: string;
 };
 
 type FeudQuizProps = {
@@ -86,8 +86,9 @@ const FeudQuiz: Component<FeudQuizProps> = (props) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = createSignal(0);
   const [loadingText, setLoadingText] = createSignal<LoadingLine[]>([]);
 
-  const currentQuestion = () => props.questions[currentQuestionIndex()];
-  const isLastQuestion = () => currentQuestionIndex() === props.questions.length - 1;
+  const hasQuestions = () => props.questions && props.questions.length > 0;
+  const currentQuestion = () => hasQuestions() ? props.questions[currentQuestionIndex()] : { id: '0', question: 'No questions available' };
+  const isLastQuestion = () => !hasQuestions() || currentQuestionIndex() === props.questions.length - 1;
 
   onMount(async () => {
     const hash = new URLSearchParams(location.search.slice(1))
@@ -127,7 +128,7 @@ const FeudQuiz: Component<FeudQuizProps> = (props) => {
       },
       body: JSON.stringify({
         questionId: currentQuestion().id,
-        question: currentQuestion().question,
+        question: currentQuestion().text,
         answer,
       }),
     });
@@ -229,7 +230,7 @@ const FeudQuiz: Component<FeudQuizProps> = (props) => {
         <Match when={gameState() === 'playing'}>
           <div class="flex flex-col h-full">
             <h2 class="text-gray-8 px-4">{currentQuestionIndex() + 1}/{props.questions.length}</h2>
-            <p class="lowercase px-4">{currentQuestion().question}</p>
+            <p class="lowercase px-4">{currentQuestion().text}</p>
             <form onSubmit={handleSubmit} class="mt-6 h-full flex flex-col justify-between">
               <input
                 required

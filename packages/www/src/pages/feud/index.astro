@@ -1,0 +1,40 @@
+---
+import Layout from '@layouts/base.astro'
+import { Image } from 'astro:assets'
+import header from '../../assets/feud-header.png'
+import headerSmall from '../../assets/feud-header-small.png'
+---
+
+<Layout>
+  <style>
+    :global(body) {
+      background-color: black;
+    }
+  </style>
+  <div class="bg-black text-white h-screen flex flex-col">
+    <div
+      class="static top-0 flex justify-center items-center shrink-0 max-w-3xl mx-auto"
+    >
+      <Image src={header} alt="terminal feud" class="hidden sm:block" />
+      <Image src={headerSmall} alt="terminal feud" class="sm:hidden" />
+    </div>
+
+    <div class="grow w-full max-w-md mx-auto relative p-6 font-mono">
+      <div class="flex flex-col h-full justify-between">
+        <div>
+          <h2 class="text-gray-8">Terminal Feud</h2>
+          <p class="lowercase text-[#969696] mt-3">// 10 questions</p>
+          <p class="lowercase text-[#969696]">// give quick short answers...</p>
+        </div>
+
+        <a
+          href="/feud/good-answer"
+          class="!h-[52px] bg-orange hover:bg-orange/80 text-white w-full lowercase flex items-center justify-center font-semibold text-xl mt-6"
+        >
+          Let's go!
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
