@@ -140,11 +140,11 @@ const app = issuer({
       const access = value.tokenset.access;
       const response = await fetch("https://api.twitch.tv/helix/users", {
         headers: {
-          "Authorization": `Bearer ${access}`,
+          Authorization: `Bearer ${access}`,
           "Client-Id": Resource.TwitchClientID.value,
         },
       });
-      
+
       type TwitchResponse = {
         data?: Array<{
           id: string;
@@ -153,17 +153,17 @@ const app = issuer({
           email?: string;
         }>;
       };
-      
-      const data = await response.json() as TwitchResponse;
-      
-      if (data.data && data.data.length > 0) {
-        const user = data.data[0];
-        email = user.email;
-        if (!email) {
-          throw new Error("Email not available from Twitch");
-        }
-      } else {
+
+      const data = (await response.json()) as TwitchResponse;
+      const user = data.data?.[0];
+
+      if (!user) {
         throw new Error("Failed to retrieve user data from Twitch");
+      }
+
+      email = user.email;
+      if (!email) {
+        throw new Error("Email not available from Twitch");
       }
     }
 
