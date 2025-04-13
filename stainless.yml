@@ -122,6 +122,10 @@ targets:
     publish:
       npm: true
     skip: false
+    options:
+      mcp_server:
+        package_name: "@terminaldotshop/mcp"
+        enable_all_resources: true
   go:
     package_name: terminal
     production_repo: terminaldotshop/terminal-sdk-go
