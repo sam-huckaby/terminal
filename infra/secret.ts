@@ -13,6 +13,9 @@ export const secret = {
   SlackWebhook: new sst.Secret("SlackWebhook"),
   IpinfoToken: new sst.Secret("IpinfoToken"),
   AnthropicApiKey: new sst.Secret("AnthropicApiKey"),
+  SlackWebhooks: {
+    Operations: new sst.Secret("SlackOperationsWebhook"),
+  },
 };
 
 export const allSecrets = Object.values(secret);

@@ -116,6 +116,10 @@ declare module "sst" {
       "type": "sst.aws.Astro"
       "url": string
     }
+    "SlackOperationsWebhook": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "SlackWebhook": {
       "type": "sst.sst.Secret"
       "value": string

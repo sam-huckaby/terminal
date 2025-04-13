@@ -185,6 +185,14 @@ new sst.aws.Cron("EUFulfillment", {
   },
 });
 
+new sst.aws.Cron("UnshippedOrdersAlert", {
+  schedule: "rate(12 hours)",
+  job: {
+    link: [database, secret.SlackWebhooks.Operations],
+    handler: "./packages/functions/src/cron/unshipped.handler",
+  },
+});
+
 export const outputs = {
   auth: auth.url,
   api: api.url,
