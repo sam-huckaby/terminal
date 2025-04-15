@@ -6,7 +6,7 @@ import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
-export module SubscriptionApi {
+export namespace SubscriptionApi {
   export const route = new Hono()
     .get(
       "/",
@@ -119,10 +119,16 @@ export module SubscriptionApi {
       authRequired,
       validator(
         "json",
-        Subscription.Info.omit({ id: true }).openapi({
+        Subscription.Info.omit({ id: true, created: true }).openapi({
           description: "Subscription information.",
-          // @ts-ignore
-          example: { ...Examples.Subscription, id: undefined, next: undefined },
+          example: {
+            ...Examples.Subscription,
+            // @ts-ignore
+            id: undefined,
+            next: undefined,
+            // @ts-ignore
+            created: undefined,
+          },
         }),
       ),
       async (c) => {

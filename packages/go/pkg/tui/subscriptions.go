@@ -128,6 +128,10 @@ func (m model) formatSubscription(subscription terminal.Subscription, totalWidth
 		}
 	}
 
+	if product == nil {
+		return base("unknown product")
+	}
+
 	title := accent(fmt.Sprintf("%dx %s", subscription.Quantity, product.Name))
 	if product.Name == "cron" {
 		title = accent(product.Name)

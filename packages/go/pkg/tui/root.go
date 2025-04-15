@@ -81,8 +81,6 @@ type model struct {
 	size            size
 	accessToken     string
 	faqs            []FAQ
-	viewport        viewport.Model
-	hasScroll       bool
 	error           *VisibleError
 }
 
@@ -105,7 +103,6 @@ type state struct {
 	subscribe     subscribeState
 	payment       paymentState
 	confirm       confirmState
-	faq           faqState
 	menu          menuState
 	finalSub      finalSubState
 }
@@ -183,8 +180,6 @@ func NewModel(
 			},
 		},
 	}
-
-	result, _ = result.FaqInit()
 	return result, nil
 }
 
@@ -306,7 +301,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.widthContent = m.widthContainer - 4
-		m = m.updateViewport()
+		m.heightContent = m.heightContainer - lipgloss.Height(m.HeaderView()) - lipgloss.Height(m.FooterView()) - lipgloss.Height(m.BreadcrumbsView())
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
@@ -322,8 +317,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case CursorTickMsg:
 		m, cmd := m.CursorUpdate(msg)
-		// TODO: this is bad, but otherwise the cursor doesn't blink
-		m.viewport.SetContent(m.getContent())
 		return m, cmd
 	case CartUpdatedMsg:
 		if m.state.cart.lastUpdateID == msg.updateID {
@@ -409,13 +402,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page == shippingPage ||
 		m.page == confirmPage
 
-	m.viewport.SetContent(m.getContent())
-	m.viewport, cmd = m.viewport.Update(msg)
 	if m.switched {
-		m = m.updateViewport()
 		m.switched = false
 	}
-	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -434,35 +423,34 @@ func (m model) View() string {
 		header := m.HeaderView()
 		footer := m.FooterView()
 		breadcrumbs := m.BreadcrumbsView()
-		content := m.viewport.View()
 
-		var view string
-		if m.hasScroll {
-			view = lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				content,
-				m.theme.Base().Width(1).Render(), // space between content and scrollbar
-				m.getScrollbar(),
-			)
-		} else {
-			view = m.getContent()
-		}
+		// Get content based on current page
+		content := m.getContent()
 
 		height := m.heightContainer
 		height -= lipgloss.Height(header)
+		// if breadcrumbs != "" {
 		height -= lipgloss.Height(breadcrumbs)
+		// }
 		height -= lipgloss.Height(footer)
+
+		body := m.theme.Base().Width(m.widthContainer).Height(height).Render(content)
+		// bodyHeight := lipgloss.Height(body)
+		// if bodyHeight < height {
+		// 	body += lipgloss.NewStyle().Height(height - bodyHeight).Render(" ")
+		// }
+
+		items := []string{}
+		items = append(items, header)
+		// if breadcrumbs != "" {
+		items = append(items, breadcrumbs)
+		// }
+		items = append(items, body)
+		items = append(items, footer)
 
 		child := lipgloss.JoinVertical(
 			lipgloss.Left,
-			header,
-			breadcrumbs,
-			m.theme.Base().
-				Width(m.widthContainer).
-				Height(height).
-				Padding(0, 0).
-				Render(view),
-			footer,
+			items...,
 		)
 
 		return m.renderer.Place(
@@ -476,7 +464,6 @@ func (m model) View() string {
 				Render(child),
 		)
 	}
-
 }
 
 func (m model) getContent() string {
@@ -504,34 +491,6 @@ func (m model) getContent() string {
 	return page
 }
 
-func (m model) getScrollbar() string {
-	y := m.viewport.YOffset
-	vh := m.viewport.Height
-	ch := lipgloss.Height(m.getContent())
-	if vh >= ch {
-		return ""
-	}
-
-	height := (vh * vh) / ch
-	maxScroll := ch - vh
-	nYP := 1.0 - (float64(y) / float64(maxScroll))
-	if nYP <= 0 {
-		nYP = 1
-	} else if nYP >= 1 {
-		nYP = 0
-	}
-
-	bar := m.theme.Base().
-		Height(height).
-		Width(1).
-		Background(m.theme.Accent()).
-		Render()
-
-	style := m.theme.Base().Width(1).Height(vh)
-
-	return style.Render(lipgloss.PlaceVertical(vh, lipgloss.Position(nYP), bar))
-}
-
 var modifiedKeyMap = viewport.KeyMap{
 	PageDown: key.NewBinding(
 		key.WithKeys("pgdown"),
@@ -557,43 +516,4 @@ var modifiedKeyMap = viewport.KeyMap{
 		key.WithKeys("down"),
 		key.WithHelp("↓", "down"),
 	),
-}
-
-func (m model) updateViewport() model {
-	headerHeight := lipgloss.Height(m.HeaderView())
-	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
-	footerHeight := lipgloss.Height(m.FooterView())
-	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight + 2
-
-	width := m.widthContainer - 4
-	m.heightContent = m.heightContainer - verticalMarginHeight
-
-	if !m.ready {
-		m.viewport = viewport.New(width, m.heightContent)
-		m.viewport.YPosition = headerHeight
-		m.viewport.HighPerformanceRendering = false
-		m.ready = true
-	} else {
-		m.viewport.Width = width
-		m.viewport.Height = m.heightContent
-		m.viewport.GotoTop()
-	}
-
-	if m.page == faqPage ||
-		m.page == aboutPage ||
-		m.page == finalPage {
-		m.viewport.KeyMap = viewport.DefaultKeyMap()
-	} else {
-		m.viewport.KeyMap = modifiedKeyMap
-	}
-
-	m.hasScroll = m.viewport.VisibleLineCount() < m.viewport.TotalLineCount()
-
-	if m.hasScroll {
-		m.widthContent = m.widthContainer - 4
-	} else {
-		m.widthContent = m.widthContainer - 0
-	}
-
-	return m
 }

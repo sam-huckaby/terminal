@@ -84,6 +84,10 @@ export namespace Order {
         description: "Shipping address of the order.",
         example: Examples.Order.shipping,
       }),
+      created: z.coerce.date().openapi({
+        description: "Date the order was created.",
+        example: Examples.Order.created,
+      }),
       amount: z
         .object({
           shipping: z.number().int().openapi({
@@ -174,6 +178,7 @@ export namespace Order {
             id: group[0].order.id,
             // index: group[0].order.index,
             shipping: group[0].order.shippingAddress,
+            created: group[0].order.timeCreated,
             amount: {
               shipping: group[0].order.shippingAmount,
               subtotal: group.reduce(
@@ -219,6 +224,7 @@ export namespace Order {
             : {
                 id: rows[0]!.order.id,
                 shipping: rows[0]!.order.shippingAddress,
+                created: rows[0]!.order.timeCreated,
                 amount: {
                   shipping: rows[0]!.order.shippingAmount,
                   subtotal: rows.reduce(

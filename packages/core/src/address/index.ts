@@ -65,6 +65,10 @@ export namespace Address {
         example: Examples.Shipping.id,
       }),
       ...Inner.shape,
+      created: z.coerce.date().openapi({
+        description: "Date the address was created.",
+        example: Examples.Shipping.created,
+      }),
     })
     .openapi({
       ref: "Address",
@@ -161,6 +165,7 @@ export namespace Address {
       country: input.address.country,
       zip: input.address.zip,
       phone: input.address.phone,
+      created: input.timeCreated,
     };
   }
 }

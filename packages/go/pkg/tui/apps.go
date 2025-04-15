@@ -203,7 +203,7 @@ func (m model) formatApp(app terminal.App) string {
 	if m.state.apps.newApp != nil && app.ID == m.state.apps.newApp.ID {
 		lines = append(
 			lines,
-			"secret: "+m.theme.TextHighlight().Bold(true).Render(m.state.apps.newApp.Secret),
+			"secret: "+m.theme.TextBrand().Bold(true).Render(m.state.apps.newApp.Secret),
 		)
 		lines = append(lines, "(will not be shown again)")
 	} else {

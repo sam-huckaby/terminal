@@ -132,7 +132,7 @@ func (m model) formatToken(token terminal.Token, totalWidth int) string {
 	if m.state.tokens.newToken != nil && token.ID == m.state.tokens.newToken.ID {
 		lines = append(
 			lines,
-			m.theme.TextHighlight().Bold(true).Render(m.state.tokens.newToken.Token),
+			m.theme.TextBrand().Bold(true).Render(m.state.tokens.newToken.Token),
 		)
 		lines = append(lines, "(will not be shown again)")
 	} else {
@@ -161,8 +161,8 @@ func (m model) TokensView(totalWidth int, focused bool) string {
 	}
 
 	newTokenIndex := len(m.tokens)
-	newToken := m.CreateCenteredBoxCustom(
-		"add access token",
+	newToken := m.CreateBoxCustom(
+		m.formatListItemCustom("add access token", m.state.tokens.selected == newTokenIndex, totalWidth, false),
 		focused && m.state.tokens.selected == newTokenIndex,
 		totalWidth,
 	)

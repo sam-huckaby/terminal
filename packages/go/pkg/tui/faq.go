@@ -9,10 +9,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type faqState struct {
-	faqs []string
-}
-
 //go:embed faq.json
 var jsonData embed.FS
 
@@ -33,23 +29,6 @@ func LoadFaqs() []FAQ {
 	return faqs
 }
 
-func (m model) FaqInit() (model, tea.Cmd) {
-	m.state.faq.faqs = []string{}
-	for _, faq := range m.faqs {
-		m.state.faq.faqs = append(
-			m.state.faq.faqs,
-			m.theme.TextAccent().Width(m.widthContent).Render(faq.Question),
-		)
-		m.state.faq.faqs = append(
-			m.state.faq.faqs,
-			m.theme.Base().Width(m.widthContent).Render(faq.Answer),
-		)
-		m.state.faq.faqs = append(m.state.faq.faqs, "")
-	}
-
-	return m, nil
-}
-
 func (m model) FaqSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(faqPage)
 	m.state.footer.commands = []footerCommand{
@@ -59,9 +38,21 @@ func (m model) FaqSwitch() (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) FaqView() string {
+func (m model) FaqView(totalWidth int) string {
+	var faqs []string
+	for _, faq := range m.faqs {
+		faqs = append(
+			faqs,
+			m.theme.TextAccent().Render(wordWrap(faq.Question, totalWidth)),
+		)
+		faqs = append(
+			faqs,
+			m.theme.Base().Render(wordWrap(faq.Answer, totalWidth)),
+		)
+		faqs = append(faqs, "")
+	}
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		m.state.faq.faqs...,
+		faqs...,
 	)
 }

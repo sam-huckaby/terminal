@@ -15,7 +15,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { ProductFilter } from "./filter";
 
-export module Product {
+export namespace Product {
   export const Variant = z
     .object({
       id: z.string().openapi({

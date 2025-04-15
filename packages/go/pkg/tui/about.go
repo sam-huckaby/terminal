@@ -17,13 +17,13 @@ func (m model) AboutUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) AboutView() string {
+func (m model) AboutView(totalWidth int) string {
 	base := m.theme.Base().Width(m.widthContent).Render
 	accent := m.theme.TextAccent().Render
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		base("1. # Amazingly awesome products for developers brought to you by a group of talented, good looking, and humble heroes..."),
+		base(wordWrap("1. # Amazingly awesome products for developers brought to you by a group of talented, good looking, and humble heroes...", totalWidth)),
 		"",
 		base("2. # @thdxr"),
 		"",

@@ -113,7 +113,7 @@ func (m model) ConfirmView() string {
 			Render(fmt.Sprintf("total:    %s", formatUSD(total)) + "\n"),
 	)
 	view.WriteString("\n")
-	view.WriteString(m.theme.TextHighlight().Render("press enter to confirm") + "\n")
+	view.WriteString(m.theme.TextBrand().Render("press enter to confirm") + "\n")
 	view.WriteString("\n")
 
 	return m.theme.Base().Padding(0, 1).Render(view.String())

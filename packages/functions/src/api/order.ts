@@ -6,7 +6,7 @@ import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
-export module OrderApi {
+export namespace OrderApi {
   export const route = new Hono()
     .get(
       "/",

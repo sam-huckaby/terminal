@@ -32,7 +32,8 @@ export namespace ProductFilter {
         if (!region) return false;
         return regions.includes(region);
       }
-      return true;
+      // default to NA
+      return regions.includes("na");
     },
   ];
 

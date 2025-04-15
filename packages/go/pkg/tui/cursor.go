@@ -31,7 +31,7 @@ func (m model) CursorUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) CursorView() string {
 	if m.state.cursor.visible {
-		return m.theme.Base().Background(m.theme.Highlight()).Render(" ")
+		return m.theme.Base().Background(m.theme.Brand()).Render(" ")
 	} else {
 		return m.theme.Base().Render(" ")
 	}

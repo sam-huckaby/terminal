@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
@@ -396,8 +398,14 @@ func (m model) formatListItemCustom(text string, focused bool, totalWidth int, s
 		padding = 2
 	}
 
-	hintSpace := totalWidth - lipgloss.Width(hint) - lipgloss.Width(content) - padding
-	return content + m.theme.Base().Width(hintSpace).Render() + hint
+	var lines = strings.Split(content, "\n")
+	var firstLine = lines[0]
+	hintSpace := totalWidth - lipgloss.Width(hint) - lipgloss.Width(firstLine) - padding
+	lines[0] = firstLine + m.theme.Base().Width(hintSpace).Render() + hint
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		lines...,
+	)
 }
 
 func (m model) formatAddress(address terminal.Address, focused bool) string {

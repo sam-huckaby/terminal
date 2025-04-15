@@ -14,7 +14,7 @@ import { cartTable } from "../cart/cart.sql";
 import { subscriptionTable } from "../subscription/subscription.sql";
 import { Log } from "../util/log";
 
-export module Card {
+export namespace Card {
   const log = Log.create({ namespace: "card" });
   export const Info = z
     .object({
@@ -44,6 +44,10 @@ export module Card {
       last4: z.string().openapi({
         description: "Last four digits of the card.",
         example: Examples.Card.last4,
+      }),
+      created: z.coerce.date().openapi({
+        description: "Date the card was created.",
+        example: Examples.Card.created,
       }),
     })
     .openapi({
@@ -187,7 +191,9 @@ export module Card {
         .where(eq(cartTable.cardID, input));
       await tx
         .delete(cardTable)
-        .where(and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())));
+        .where(
+          and(eq(cardTable.id, input), eq(cardTable.userID, Actor.userID())),
+        );
     }),
   );
 
@@ -257,6 +263,7 @@ export module Card {
         year: input.expirationYear,
         month: input.expirationMonth,
       },
+      created: input.timeCreated,
     };
   }
 }

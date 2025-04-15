@@ -131,7 +131,7 @@ func (m model) FinalSubView() string {
 	)
 	view.WriteString(weeks)
 	view.WriteString("\n\n")
-	view.WriteString(m.theme.TextHighlight().Render("press enter to subscribe, esc to skip") + "\n")
+	view.WriteString(m.theme.TextBrand().Render("press enter to subscribe, esc to skip") + "\n")
 
 	return m.theme.Base().Padding(0, 1).Render(view.String())
 }

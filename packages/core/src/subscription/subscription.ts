@@ -11,7 +11,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { DateTime } from "luxon";
 import { Order } from "../order/order";
-import { filter, groupBy, pipe, values } from "remeda";
+import { groupBy, pipe, values } from "remeda";
 import { ErrorCodes, VisibleError } from "../error";
 import { Log } from "../util/log";
 import { defineEvent } from "../event";
@@ -50,6 +50,10 @@ export namespace Subscription {
         description: "Next shipment and billing date for the subscription.",
         example: Examples.Subscription.next,
       }),
+      created: z.coerce.date().openapi({
+        description: "Date the subscription was created.",
+        example: Examples.Subscription.created,
+      }),
     })
     .openapi({
       ref: "Subscription",
@@ -77,85 +81,87 @@ export namespace Subscription {
         .then((rows) => rows.map(serialize)),
     );
 
-  export const create = fn(Info.omit({ id: true }), async (input) =>
-    useTransaction(async (tx) => {
-      const id = createID("subscription");
-      const product = await tx
-        .select({
-          subscription: productTable.subscription,
-        })
-        .from(productVariantTable)
-        .innerJoin(
-          productTable,
-          eq(productVariantTable.productID, productTable.id),
-        )
-        .where(eq(productVariantTable.id, input.productVariantID))
-        .then((rows) => rows[0]);
-      if (!product)
-        throw new VisibleError(
-          "validation",
-          ErrorCodes.Validation.INVALID_PARAMETER,
-          "Product variant not found",
+  export const create = fn(
+    Info.omit({ id: true, created: true }),
+    async (input) =>
+      useTransaction(async (tx) => {
+        const id = createID("subscription");
+        const product = await tx
+          .select({
+            subscription: productTable.subscription,
+          })
+          .from(productVariantTable)
+          .innerJoin(
+            productTable,
+            eq(productVariantTable.productID, productTable.id),
+          )
+          .where(eq(productVariantTable.id, input.productVariantID))
+          .then((rows) => rows[0]);
+        if (!product)
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.INVALID_PARAMETER,
+            "Product variant not found",
+          );
+
+        input.schedule =
+          product.subscription === "required"
+            ? { type: "fixed" }
+            : input.schedule;
+        if (!input.schedule)
+          throw new VisibleError(
+            "validation",
+            ErrorCodes.Validation.INVALID_PARAMETER,
+            "Schedule for subscription required",
+          );
+        await tx
+          .insert(subscriptionTable)
+          .values({
+            id,
+            timeNext: input.schedule
+              ? next({
+                  schedule: input.schedule,
+                  last: new Date(),
+                })
+              : undefined,
+            userID: Actor.userID(),
+            productVariantID: input.productVariantID,
+            quantity: input.quantity,
+            addressID: input.addressID,
+            cardID: input.cardID,
+            schedule: input.schedule,
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              quantity: sql`VALUES(quantity)`,
+              addressID: sql`VALUES(shipping_id)`,
+              cardID: sql`VALUES(card_id)`,
+              schedule: sql`VALUES(schedule)`,
+              timeDeleted: null,
+            },
+          });
+        const subscription = await tx
+          .select({
+            id: subscriptionTable.id,
+          })
+          .from(subscriptionTable)
+          .where(
+            and(
+              eq(subscriptionTable.userID, Actor.userID()),
+              eq(subscriptionTable.productVariantID, input.productVariantID),
+            ),
+          )
+          .limit(1)
+          .then((rows) => rows[0]!);
+
+        await afterTx(() =>
+          bus.publish(Resource.Bus, Event.Created, {
+            subscriptionID: subscription.id,
+          }),
         );
 
-      input.schedule =
-        product.subscription === "required"
-          ? { type: "fixed" }
-          : input.schedule;
-      if (!input.schedule)
-        throw new VisibleError(
-          "validation",
-          ErrorCodes.Validation.INVALID_PARAMETER,
-          "Schedule for subscription required",
-        );
-      await tx
-        .insert(subscriptionTable)
-        .values({
-          id,
-          timeNext: input.schedule
-            ? next({
-                schedule: input.schedule,
-                last: new Date(),
-              })
-            : undefined,
-          userID: Actor.userID(),
-          productVariantID: input.productVariantID,
-          quantity: input.quantity,
-          addressID: input.addressID,
-          cardID: input.cardID,
-          schedule: input.schedule,
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            quantity: sql`VALUES(quantity)`,
-            addressID: sql`VALUES(shipping_id)`,
-            cardID: sql`VALUES(card_id)`,
-            schedule: sql`VALUES(schedule)`,
-            timeDeleted: null,
-          },
-        });
-      const subscription = await tx
-        .select({
-          id: subscriptionTable.id,
-        })
-        .from(subscriptionTable)
-        .where(
-          and(
-            eq(subscriptionTable.userID, Actor.userID()),
-            eq(subscriptionTable.productVariantID, input.productVariantID),
-          ),
-        )
-        .limit(1)
-        .then((rows) => rows[0]!);
-
-      await afterTx(() =>
-        bus.publish(Resource.Bus, Event.Created, {
-          subscriptionID: subscription.id,
-        }),
-      );
-
-      return subscription.id;
-    }),
+        return subscription.id;
+      }),
   );
 
   export const remove = fn(z.string(), (input) =>
@@ -205,6 +211,7 @@ export namespace Subscription {
       productVariantID: input.productVariantID,
       next: input.timeNext || undefined,
       schedule: input.schedule || undefined,
+      created: input.timeCreated,
     };
   }
 

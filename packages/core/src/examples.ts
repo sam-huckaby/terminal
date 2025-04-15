@@ -1,6 +1,6 @@
 import { prefixes } from "./util/id";
 
-export module Examples {
+export namespace Examples {
   export const Id = (prefix: keyof typeof prefixes) =>
     `${prefixes[prefix]}_XXXXXXXXXXXXXXXXXXXXXXXXX`;
 
@@ -18,6 +18,7 @@ export module Examples {
   export const Shipping = {
     id: Id("userShipping"),
     ...Address,
+    created: new Date("2024-06-29 19:36:19.000"),
   };
 
   export const Card = {
@@ -25,6 +26,7 @@ export module Examples {
     brand: "Visa",
     expiration: { month: 12, year: 2023 },
     last4: "1234",
+    created: new Date("2024-06-29 19:36:19.000"),
   };
 
   export const ProductVariant = {
@@ -79,6 +81,7 @@ export module Examples {
     index: 0,
     shipping: { ...Address, id: undefined },
     amount: Cart.amount,
+    created: new Date("2024-06-29 19:36:19.000"),
     tracking: {
       service: Cart.shipping.service,
       number: "92346903470167000000000019",
@@ -110,6 +113,7 @@ export module Examples {
     cardID: Card.id,
     schedule: { type: "weekly" as const, interval: 3 },
     next: new Date("2025-02-01 19:36:19.000"),
+    created: new Date("2024-06-29 19:36:19.000"),
   };
 
   export const Token = {

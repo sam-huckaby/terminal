@@ -12,6 +12,7 @@ type Theme struct {
 	border     lipgloss.TerminalColor
 	background lipgloss.TerminalColor
 	highlight  lipgloss.TerminalColor
+	brand      lipgloss.TerminalColor
 	error      lipgloss.TerminalColor
 	body       lipgloss.TerminalColor
 	accent     lipgloss.TerminalColor
@@ -29,10 +30,11 @@ func BasicTheme(renderer *lipgloss.Renderer, highlight *string) Theme {
 	base.border = lipgloss.AdaptiveColor{Dark: "#3A3F42", Light: "#D7DBDF"}
 	base.body = lipgloss.AdaptiveColor{Dark: "#889096", Light: "#889096"}
 	base.accent = lipgloss.AdaptiveColor{Dark: "#FFFFFF", Light: "#11181C"}
+	base.brand = lipgloss.Color("#FF5C00")
 	if highlight != nil {
 		base.highlight = lipgloss.Color(*highlight)
 	} else {
-		base.highlight = lipgloss.Color("#FF5C00")
+		base.highlight = base.brand
 	}
 	base.error = lipgloss.Color("203")
 
@@ -80,6 +82,10 @@ func (b Theme) Highlight() lipgloss.TerminalColor {
 	return b.highlight
 }
 
+func (b Theme) Brand() lipgloss.TerminalColor {
+	return b.brand
+}
+
 func (b Theme) Background() lipgloss.TerminalColor {
 	return b.background
 }
@@ -102,6 +108,10 @@ func (b Theme) TextAccent() lipgloss.Style {
 
 func (b Theme) TextHighlight() lipgloss.Style {
 	return b.Base().Foreground(b.highlight)
+}
+
+func (b Theme) TextBrand() lipgloss.Style {
+	return b.Base().Foreground(b.brand)
 }
 
 func (b Theme) TextError() lipgloss.Style {
