@@ -4,12 +4,38 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/terminaldotshop/terminal-sdk-go"
 )
 
 type confirmState struct {
-	submitting bool
+	submitting    bool
+	viewport      viewport.Model
+	viewportReady bool
+}
+
+func (m model) updateConfirmViewport() model {
+	headerHeight := lipgloss.Height(m.HeaderView())
+	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
+	footerHeight := lipgloss.Height(m.FooterView())
+	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
+
+	availableHeight := m.heightContainer - verticalMarginHeight
+
+	if !m.state.confirm.viewportReady {
+		// Initialize viewport for the first time
+		m.state.confirm.viewport = viewport.New(m.widthContent, availableHeight)
+		m.state.confirm.viewport.KeyMap = viewport.DefaultKeyMap()
+		m.state.confirm.viewportReady = true
+	} else {
+		// Update existing viewport
+		m.state.confirm.viewport.Width = m.widthContent
+		m.state.confirm.viewport.Height = availableHeight
+	}
+
+	return m
 }
 
 func (m model) ConfirmSwitch() (model, tea.Cmd) {
@@ -19,10 +45,34 @@ func (m model) ConfirmSwitch() (model, tea.Cmd) {
 		{key: "esc", value: "back"},
 		{key: "enter", value: "next"},
 	}
+	m = m.updateConfirmViewport()
+
+	// Update viewport content
+	if m.state.confirm.viewportReady {
+		content := m.generateConfirmContent()
+		m.state.confirm.viewport.SetContent(content)
+	}
 	return m, nil
 }
 
 func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
+	// Update viewport dimensions if window size changed
+	if _, ok := msg.(tea.WindowSizeMsg); ok {
+		m = m.updateConfirmViewport()
+
+		// Update viewport content
+		if m.state.confirm.viewportReady {
+			content := m.generateConfirmContent()
+			m.state.confirm.viewport.SetContent(content)
+		}
+	}
+
+	// Handle viewport scrolling
+	var cmd tea.Cmd
+	if m.state.confirm.viewportReady {
+		m.state.confirm.viewport, cmd = m.state.confirm.viewport.Update(msg)
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -50,21 +100,17 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	case error:
 		m.state.confirm.submitting = false
-		return m, nil
+		return m, cmd
 	case terminal.Order:
 		m.order = &msg
 		return m.FinalSubSwitch()
 	case *terminal.SubscriptionNewResponse:
 		return m.FinalSwitch()
 	}
-	return m, nil
+	return m, cmd
 }
 
-func (m model) ConfirmView() string {
-	if m.state.confirm.submitting {
-		return m.theme.Base().Width(m.widthContent).Render(" submitting order...")
-	}
-
+func (m model) generateConfirmContent() string {
 	card := m.GetSelectedCard()
 	address := m.GetSelectedAddress()
 
@@ -86,7 +132,7 @@ func (m model) ConfirmView() string {
 	view.WriteString(
 		address.City + ", " + address.Province + ", " + address.Country + " " + address.Zip + "\n",
 	)
-	if !m.IsSubscribing() {
+	if !m.IsSubscribing() && m.cart.Shipping.Service != "" {
 		view.WriteString("\n")
 		view.WriteString(m.cart.Shipping.Service + "\n")
 		if m.cart.Shipping.Timeframe != "" {
@@ -117,6 +163,28 @@ func (m model) ConfirmView() string {
 	view.WriteString("\n")
 
 	return m.theme.Base().Padding(0, 1).Render(view.String())
+}
+
+func (m model) ConfirmView() string {
+	if m.state.confirm.submitting {
+		return m.theme.Base().Width(m.widthContent).Render("  submitting order...")
+	}
+
+	if !m.state.confirm.viewportReady {
+		m = m.updateConfirmViewport()
+	}
+
+	// Update viewport content
+	content := m.generateConfirmContent()
+	m.state.confirm.viewport.SetContent(content)
+
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(m.state.confirm.viewport.View()),
+		lipgloss.Center,
+		lipgloss.Center,
+		m.state.confirm.viewport.View(),
+	)
 }
 
 func formatUSD(cents int) string {

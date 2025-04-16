@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
@@ -31,14 +32,16 @@ type paymentInput struct {
 }
 
 type paymentState struct {
-	selected   int
-	deleting   *int
-	view       paymentView
-	input      paymentInput
-	form       *huh.Form
-	submitting bool
-	generating bool
-	url        *string
+	selected      int
+	deleting      *int
+	view          paymentView
+	input         paymentInput
+	form          *huh.Form
+	submitting    bool
+	generating    bool
+	url           *string
+	viewport      viewport.Model
+	viewportReady bool
 }
 
 type SelectedCardUpdatedMsg struct {
@@ -75,6 +78,28 @@ func (m model) GetSelectedCard() *terminal.Card {
 	return nil
 }
 
+func (m model) updatePaymentViewport() model {
+	headerHeight := lipgloss.Height(m.HeaderView())
+	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
+	footerHeight := lipgloss.Height(m.FooterView())
+	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
+
+	availableHeight := m.heightContainer - verticalMarginHeight
+
+	if !m.state.payment.viewportReady {
+		// Initialize viewport for the first time
+		m.state.payment.viewport = viewport.New(m.widthContent, availableHeight)
+		m.state.payment.viewport.KeyMap = viewport.KeyMap{}
+		m.state.payment.viewportReady = true
+	} else {
+		// Update existing viewport
+		m.state.payment.viewport.Width = m.widthContent
+		m.state.payment.viewport.Height = availableHeight
+	}
+
+	return m
+}
+
 func (m model) PaymentSwitch() (model, tea.Cmd) {
 	if m.IsCartEmpty() && !m.IsSubscribing() {
 		return m, nil
@@ -87,6 +112,7 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 		{key: "enter", value: "select"},
 	}
 	m.state.payment.submitting = false
+	m = m.updatePaymentViewport()
 	m.state.payment.form = huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -211,11 +237,7 @@ func (m model) nextPaymentMethod() (model, tea.Cmd) {
 }
 
 func (m model) previousPaymentMethod() (model, tea.Cmd) {
-	next := m.state.payment.selected - 1
-	if next < 0 {
-		next = 0
-	}
-
+	next := max(m.state.payment.selected-1, 0)
 	m.state.payment.selected = next
 	return m, nil
 }
@@ -459,6 +481,11 @@ func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
+	// Update viewport dimensions if window size changed
+	if _, ok := msg.(tea.WindowSizeMsg); ok {
+		m = m.updatePaymentViewport()
+	}
+
 	switch msg := msg.(type) {
 	case error:
 		current := m.state.payment.view
@@ -477,30 +504,79 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m.ConfirmSwitch()
 	}
 
+	// Process message and update viewport content
+	var content string
+	var m2 model
+	var cmd tea.Cmd
+
 	if m.state.payment.view == paymentFormView {
-		return m.paymentFormUpdate(msg)
+		m2, cmd = m.paymentFormUpdate(msg)
+		if m2.state.payment.viewportReady {
+			content = m2.paymentFormView()
+			m2.state.payment.viewport.SetContent(content)
+		}
 	} else if m.state.payment.view == paymentHttpsView {
-		return m.paymentHttpsUpdate(msg)
+		m2, cmd = m.paymentHttpsUpdate(msg)
+		if m2.state.payment.viewportReady {
+			content = m2.paymentHttpsView()
+			m2.state.payment.viewport.SetContent(content)
+		}
 	} else {
-		return m.paymentListUpdate(msg)
+		m2, cmd = m.paymentListUpdate(msg)
+		if m2.state.payment.viewportReady {
+			content = m2.paymentListView()
+			m2.state.payment.viewport.SetContent(content)
+
+			// Scroll to keep selected item in view
+			itemHeight := 5 // Approximate height of a payment method box
+			targetY := m2.state.payment.selected * itemHeight
+
+			// If item is above viewport, scroll up
+			if targetY < m2.state.payment.viewport.YOffset {
+				m2.state.payment.viewport.SetYOffset(targetY)
+			}
+
+			// If item is below viewport, scroll down
+			if targetY+itemHeight > m2.state.payment.viewport.YOffset+m2.state.payment.viewport.Height {
+				m2.state.payment.viewport.SetYOffset(targetY - m2.state.payment.viewport.Height + itemHeight)
+			}
+		}
 	}
+
+	return m2, cmd
 }
 
 func (m model) PaymentView() string {
 	if m.state.payment.submitting {
-		return m.theme.Base().Width(m.widthContent).Render(" verifying payment details...")
+		return m.theme.Base().Width(m.widthContent).Render("  verifying payment details...")
 	}
 	if m.state.payment.generating {
-		return m.theme.Base().Width(m.widthContent).Render(" generating payment link...")
+		return m.theme.Base().Width(m.widthContent).Render("  generating payment link...")
 	}
 
-	if m.state.payment.view == paymentFormView {
-		return m.paymentFormView()
-	} else if m.state.payment.view == paymentHttpsView {
-		return m.paymentHttpsView()
-	} else {
-		return m.paymentListView()
+	if !m.state.payment.viewportReady {
+		m = m.updatePaymentViewport()
 	}
+
+	// Update viewport content
+	var content string
+	if m.state.payment.view == paymentFormView {
+		content = m.paymentFormView()
+	} else if m.state.payment.view == paymentHttpsView {
+		content = m.paymentHttpsView()
+	} else {
+		content = m.paymentListView()
+	}
+
+	m.state.payment.viewport.SetContent(content)
+
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(m.state.payment.viewport.View()),
+		lipgloss.Center,
+		lipgloss.Center,
+		m.state.payment.viewport.View(),
+	)
 }
 
 func (m model) paymentListView() string {
@@ -541,21 +617,22 @@ func (m model) paymentListView() string {
 	methods = append(methods, newInSsh)
 	methods = append(methods, newInHttps)
 
-	return m.theme.Base().Render(lipgloss.JoinVertical(
+	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
 		" select payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
-	))
+	)
+
 }
 
 func (m model) paymentFormView() string {
-	return m.theme.Base().Render(lipgloss.JoinVertical(
+	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.paymentCostsView(),
 		// "\ncreate new payment method:\n",
 		m.state.payment.form.View(),
-	))
+	)
 }
 
 func (m model) paymentHttpsView() string {
@@ -571,14 +648,12 @@ func (m model) paymentHttpsView() string {
 		return m.theme.TextError().Render(" failed to generate qr code: " + err.Error())
 	}
 
-	return m.theme.Base().Render(
-		lipgloss.JoinVertical(
-			lipgloss.Center,
-			m.theme.Base().Width(m.widthContent).Render(),
-			qr,
-			base("scan or copy to enter payment information"),
-			accent(*m.state.payment.url),
-		),
+	return lipgloss.JoinVertical(
+		lipgloss.Center,
+		m.theme.Base().Width(m.widthContent).Render(),
+		qr,
+		base("scan or copy to enter payment information"),
+		accent(*m.state.payment.url),
 	)
 }
 

@@ -334,7 +334,7 @@ func (m model) getAccountDetailContent() string {
 		menuWidth += 4 // padding
 	}
 
-	detailWidth := m.widthContent - menuWidth - 2
+	detailWidth := m.widthContent - menuWidth - 3
 	if m.size < large {
 		detailWidth = m.widthContent
 	}
@@ -353,8 +353,6 @@ func (m model) GetAccountPageContent(accountPage page, totalWidth int) string {
 		return m.TokensView(totalWidth, m.state.account.focused)
 	case appsPage:
 		return m.AppsView(totalWidth, m.state.account.focused)
-	case shippingPage:
-		return m.ShippingView(totalWidth, m.state.account.focused)
 	case faqPage:
 		return m.FaqView(totalWidth)
 	case aboutPage:

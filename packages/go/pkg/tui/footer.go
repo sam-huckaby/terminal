@@ -81,7 +81,7 @@ func (m model) FooterView() string {
 	base := m.theme.Base().Render
 
 	table := m.theme.Base().
-		Width(m.widthContainer).
+		Width(m.widthContent).
 		BorderTop(true).
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(m.theme.Border()).
@@ -122,7 +122,7 @@ func (m model) FooterView() string {
 		hint := "esc"
 
 		// Calculate maximum width for error message to ensure it fits
-		maxErrorWidth := m.widthContainer - lipgloss.Width(hint) - 6
+		maxErrorWidth := m.widthContent - lipgloss.Width(hint) - 6
 
 		// Handle wrapping for long error messages
 		errorMsg := m.error.message
@@ -134,7 +134,7 @@ func (m model) FooterView() string {
 		msg := m.theme.PanelError().Padding(0, 1).Render(errorMsg)
 
 		// Calculate remaining space after rendering the message
-		space := max(m.widthContainer-lipgloss.Width(msg)-lipgloss.Width(hint)-2, 0)
+		space := max(m.widthContent-lipgloss.Width(msg)-lipgloss.Width(hint)-2, 0)
 
 		height := lipgloss.Height(msg)
 
@@ -148,8 +148,7 @@ func (m model) FooterView() string {
 		content = "free shipping on US orders over $40"
 	}
 
-	// Add the region selector and the rest of the commands
-	return lipgloss.JoinVertical(
+	footer := lipgloss.JoinVertical(
 		lipgloss.Center,
 		"",
 		content,
@@ -159,4 +158,13 @@ func (m model) FooterView() string {
 				lines...,
 			),
 		))
+
+	// Add the region selector and the rest of the commands
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(footer),
+		lipgloss.Center,
+		lipgloss.Center,
+		footer,
+	)
 }

@@ -107,15 +107,23 @@ func (m model) HeaderView() string {
 		}
 	}
 
-	return table.New().
+	var table = table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(m.renderer.NewStyle().Foreground(m.theme.Border())).
 		Row(tabs...).
-		Width(m.widthContainer).
+		Width(m.widthContent).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			return m.theme.Base().
 				Padding(0, 1).
 				AlignHorizontal(lipgloss.Center)
 		}).
 		Render()
+
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(table),
+		lipgloss.Center,
+		lipgloss.Center,
+		table,
+	)
 }

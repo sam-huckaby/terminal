@@ -103,6 +103,7 @@ type state struct {
 	confirm       confirmState
 	menu          menuState
 	finalSub      finalSubState
+	final         finalState
 }
 
 type children struct {
@@ -465,7 +466,7 @@ func (m model) getContent() string {
 	case paymentPage:
 		page = m.PaymentView()
 	case shippingPage:
-		page = m.ShippingView(m.widthContent, false)
+		page = m.ShippingView()
 	case confirmPage:
 		page = m.ConfirmView()
 	case finalSubPage:

@@ -3,6 +3,7 @@ package tui
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
@@ -29,12 +30,14 @@ type shippingInput struct {
 }
 
 type shippingState struct {
-	view       shippingView
-	selected   int
-	deleting   *int
-	input      shippingInput
-	form       *huh.Form
-	submitting bool
+	view          shippingView
+	selected      int
+	deleting      *int
+	input         shippingInput
+	form          *huh.Form
+	submitting    bool
+	viewport      viewport.Model
+	viewportReady bool
 }
 
 type SelectedShippingUpdatedMsg struct {
@@ -46,6 +49,28 @@ type ShippingAddressAddedMsg struct {
 	addresses  []terminal.Address
 }
 
+func (m model) updateShippingViewport() model {
+	headerHeight := lipgloss.Height(m.HeaderView())
+	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
+	footerHeight := lipgloss.Height(m.FooterView())
+	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
+
+	availableHeight := m.heightContainer - verticalMarginHeight
+
+	if !m.state.shipping.viewportReady {
+		// Initialize viewport for the first time
+		m.state.shipping.viewport = viewport.New(m.widthContent, availableHeight)
+		m.state.shipping.viewport.KeyMap = viewport.KeyMap{}
+		m.state.shipping.viewportReady = true
+	} else {
+		// Update existing viewport
+		m.state.shipping.viewport.Width = m.widthContent
+		m.state.shipping.viewport.Height = availableHeight
+	}
+
+	return m
+}
+
 func (m model) ShippingSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(shippingPage)
 	m.state.footer.commands = []footerCommand{
@@ -55,6 +80,7 @@ func (m model) ShippingSwitch() (model, tea.Cmd) {
 		{key: "enter", value: "select"},
 	}
 	m.state.shipping.submitting = false
+	m = m.updateShippingViewport()
 	m.state.shipping.form = huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -136,11 +162,7 @@ func (m model) nextAddress() (model, tea.Cmd) {
 }
 
 func (m model) previousAddress() (model, tea.Cmd) {
-	next := m.state.shipping.selected - 1
-	if next < 0 {
-		next = 0
-	}
-
+	next := max(m.state.shipping.selected-1, 0)
 	m.state.shipping.selected = next
 	return m, nil
 }
@@ -336,6 +358,11 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
+	// Update viewport dimensions if window size changed
+	if _, ok := msg.(tea.WindowSizeMsg); ok {
+		m = m.updateShippingViewport()
+	}
+
 	switch msg := msg.(type) {
 	case error:
 		current := m.state.shipping.view
@@ -356,23 +383,69 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m.PaymentSwitch()
 	}
 
+	// Get content before updating
+	var content string
 	if m.state.shipping.view == shippingListView {
-		return m.shippingListUpdate(msg)
+		m, cmd := m.shippingListUpdate(msg)
+
+		// Keep selected item in view if selection changed
+		if m.state.shipping.viewportReady {
+			content = m.shippingListView()
+			m.state.shipping.viewport.SetContent(content)
+
+			// Scroll to keep selected item in view
+			itemHeight := 5 // Approximate height of an address box
+			targetY := m.state.shipping.selected * itemHeight
+
+			// If item is above viewport, scroll up
+			if targetY < m.state.shipping.viewport.YOffset {
+				m.state.shipping.viewport.SetYOffset(targetY)
+			}
+
+			// If item is below viewport, scroll down
+			if targetY+itemHeight > m.state.shipping.viewport.YOffset+m.state.shipping.viewport.Height {
+				m.state.shipping.viewport.SetYOffset(targetY - m.state.shipping.viewport.Height + itemHeight)
+			}
+		}
+
+		return m, cmd
 	} else {
-		return m.shippingFormUpdate(msg)
+		m, cmd := m.shippingFormUpdate(msg)
+
+		if m.state.shipping.viewportReady {
+			content = m.shippingFormView()
+			m.state.shipping.viewport.SetContent(content)
+		}
+
+		return m, cmd
 	}
 }
 
-func (m model) ShippingView(totalWidth int, focused bool) string {
+func (m model) ShippingView() string {
 	if m.state.shipping.submitting {
-		return m.theme.Base().Width(totalWidth).Render(" calculating shipping costs...")
+		return m.theme.Base().Width(m.widthContent).Render("  calculating shipping costs...")
 	}
 
-	if m.state.shipping.view == shippingListView {
-		return m.shippingListView(totalWidth, focused)
-	} else {
-		return m.shippingFormView()
+	if !m.state.shipping.viewportReady {
+		m = m.updateShippingViewport()
 	}
+
+	// Update viewport content
+	var content string
+	if m.state.shipping.view == shippingListView {
+		content = m.shippingListView()
+	} else {
+		content = m.shippingFormView()
+	}
+	m.state.shipping.viewport.SetContent(content)
+
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(m.state.shipping.viewport.View()),
+		lipgloss.Center,
+		lipgloss.Center,
+		m.state.shipping.viewport.View(),
+	)
 }
 
 func (m model) formatListItem(text string, focused bool) string {
@@ -420,32 +493,24 @@ func (m model) formatAddress(address terminal.Address, focused bool) string {
 	return m.formatListItem(lipgloss.JoinHorizontal(lipgloss.Left, parts...), focused)
 }
 
-func (m model) shippingListView(totalWidth int, focused bool) string {
+func (m model) shippingListView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
 
 	addresses := []string{}
 	for i, address := range m.addresses {
-		content := m.formatAddress(
-			address,
-			i == m.state.shipping.selected && (focused || m.page != accountPage),
-		)
+		content := m.formatAddress(address, i == m.state.shipping.selected)
 		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
 			content = m.formatListItem(accent("are you sure?")+base(" (y/n)"), true)
 		}
-		box := m.CreateBoxCustom(
-			content,
-			i == m.state.shipping.selected && (focused || m.page != accountPage),
-			totalWidth,
-		)
+		box := m.CreateBox(content, i == m.state.shipping.selected)
 		addresses = append(addresses, box)
 	}
 
 	newAddressIndex := len(m.addresses)
-	newAddress := m.CreateBoxCustom(
+	newAddress := m.CreateBox(
 		m.formatListItem("add new address", m.state.shipping.selected == newAddressIndex),
 		m.state.shipping.selected == newAddressIndex,
-		totalWidth,
 	)
 	addresses = append(addresses, newAddress)
 	addressList := lipgloss.JoinVertical(lipgloss.Left, addresses...)

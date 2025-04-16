@@ -6,14 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
 )
 
 type cartState struct {
-	selected     int
-	lastUpdateID int64
+	selected      int
+	lastUpdateID  int64
+	viewport      viewport.Model
+	viewportReady bool
 }
 
 type CartUpdatedMsg struct {
@@ -156,6 +159,28 @@ func (m model) UpdateSelectedCartItem(previous bool) (model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) updateCartViewport() model {
+	headerHeight := lipgloss.Height(m.HeaderView())
+	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
+	footerHeight := lipgloss.Height(m.FooterView())
+	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
+
+	availableHeight := m.heightContainer - verticalMarginHeight
+
+	if !m.state.cart.viewportReady {
+		// Initialize viewport for the first time
+		m.state.cart.viewport = viewport.New(m.widthContent, availableHeight)
+		m.state.cart.viewport.KeyMap = viewport.KeyMap{}
+		m.state.cart.viewportReady = true
+	} else {
+		// Update existing viewport
+		m.state.cart.viewport.Width = m.widthContent
+		m.state.cart.viewport.Height = availableHeight
+	}
+
+	return m
+}
+
 func (m model) CartSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(cartPage)
 	m.state.subscribe.product = nil
@@ -165,11 +190,22 @@ func (m model) CartSwitch() (model, tea.Cmd) {
 		{key: "+/-", value: "qty"},
 		{key: "c", value: "checkout"},
 	}
+	m = m.updateCartViewport()
 
 	return m, nil
 }
 
 func (m model) CartUpdate(msg tea.Msg) (model, tea.Cmd) {
+	// Update viewport dimensions if window size changed
+	if _, ok := msg.(tea.WindowSizeMsg); ok {
+		m = m.updateCartViewport()
+	}
+
+	// Handle viewport scrolling
+	var cmd tea.Cmd
+	if m.state.cart.viewportReady {
+		m.state.cart.viewport, cmd = m.state.cart.viewport.Update(msg)
+	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -199,10 +235,10 @@ func (m model) CartUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	return m, cmd
 }
 
-func (m model) CartView() string {
+func (m model) generateCartContent() string {
 	base := m.theme.Base().Align(lipgloss.Left).Render
 	accent := m.theme.TextAccent().Render
 
@@ -235,7 +271,7 @@ func (m model) CartView() string {
 			quantity,
 		) - lipgloss.Width(
 			subtotal,
-		) - 2
+		) - 4
 
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
@@ -253,8 +289,43 @@ func (m model) CartView() string {
 		lines = append(lines, line)
 	}
 
-	return m.theme.Base().Render(lipgloss.JoinVertical(
+	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lines...,
-	))
+	)
+
+}
+
+func (m model) CartView() string {
+	if !m.state.cart.viewportReady {
+		m = m.updateCartViewport()
+	}
+
+	// Generate and update viewport content
+	content := m.generateCartContent()
+	m.state.cart.viewport.SetContent(content)
+
+	// Scroll to keep selected item in view when selection changes
+	if m.CartItemCount() > 0 {
+		itemHeight := 5 // Approximate height of a cart item box with padding
+		targetY := m.state.cart.selected * itemHeight
+
+		// If item is above viewport, scroll up
+		if targetY < m.state.cart.viewport.YOffset {
+			m.state.cart.viewport.SetYOffset(targetY)
+		}
+
+		// If item is below viewport, scroll down
+		if targetY+itemHeight > m.state.cart.viewport.YOffset+m.state.cart.viewport.Height {
+			m.state.cart.viewport.SetYOffset(targetY - m.state.cart.viewport.Height + itemHeight)
+		}
+	}
+
+	return lipgloss.Place(
+		m.widthContainer,
+		lipgloss.Height(m.state.cart.viewport.View()),
+		lipgloss.Center,
+		lipgloss.Center,
+		m.state.cart.viewport.View(),
+	)
 }

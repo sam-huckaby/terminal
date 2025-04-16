@@ -54,7 +54,7 @@ func cartBreadcrumbsView(m model) string {
 	return m.theme.Base().
 		MarginTop(1).
 		MarginBottom(1).
-		PaddingLeft(1).
+		PaddingLeft(2).
 		Render(items...)
 }
 
@@ -104,6 +104,6 @@ func subscribeBreadcrumbsView(m model) string {
 	return m.theme.Base().
 		MarginTop(1).
 		MarginBottom(1).
-		PaddingLeft(1).
+		PaddingLeft(2).
 		Render(items...)
 }
