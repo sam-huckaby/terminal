@@ -9,23 +9,35 @@ import (
 )
 
 func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
+	var appsPageIndex int
+	for i, page := range m.accountPages {
+		if page == appsPage {
+			appsPageIndex = i
+			break
+		}
+	}
+
+	if (m.page == shippingPage && m.state.shipping.view == shippingFormView) ||
+		(m.page == paymentPage && m.state.payment.view == paymentFormView) ||
+		(m.page == accountPage && m.state.account.selected == appsPageIndex && m.state.apps.editing) {
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.hasMenu {
-			switch msg.String() {
-			case "c":
-				return m.CartSwitch()
-			case "s":
-				return m.ShopSwitch()
-			case "a":
-				return m.AccountSwitch()
-			// case "f":
-			// 	return m.FaqSwitch()
-			case "m":
-				return m.MenuSwitch()
-			case "q":
-				return m, tea.Quit
-			}
+		switch msg.String() {
+		case "c":
+			return m.CartSwitch()
+		case "s":
+			return m.ShopSwitch()
+		case "a":
+			return m.AccountSwitch()
+		// case "f":
+		// 	return m.FaqSwitch()
+		case "m":
+			return m.MenuSwitch()
+		case "q":
+			return m, tea.Quit
 		}
 	}
 
@@ -44,10 +56,9 @@ func (m model) HeaderView() string {
 	bold := m.theme.TextAccent().Bold(true).Render
 	accent := m.theme.TextAccent().Render
 	base := m.theme.Base().Render
-	cursor := m.theme.Base().Background(m.theme.Highlight()).Render(" ")
+	cursor := m.theme.Base().Background(m.theme.Brand()).Render(" ")
 
 	menu := bold("m") + base(" ☰")
-	back := base("← ") + bold("esc") + base(" back")
 	mark := bold("t") + cursor
 	logo := bold("terminal")
 	shop := accent("s") + base(" shop")
@@ -80,40 +91,19 @@ func (m model) HeaderView() string {
 			cart,
 		}
 	case medium:
-		if m.hasMenu {
-			tabs = []string{
-				menu,
-				logo,
-				cart,
-			}
-		} else if m.checkout {
-			tabs = []string{
-				back,
-				logo,
-				cart,
-			}
-		} else {
-			tabs = []string{
-				logo,
-				cart,
-			}
+		tabs = []string{
+			menu,
+			logo,
+			cart,
 		}
 	default:
-		if m.checkout {
-			tabs = []string{
-				back,
-				logo,
-				cart,
-			}
-		} else {
-			tabs = []string{
-				logo,
-				shop,
-				account,
-				// about,
-				// faq,
-				cart,
-			}
+		tabs = []string{
+			logo,
+			shop,
+			account,
+			// about,
+			// faq,
+			cart,
 		}
 	}
 

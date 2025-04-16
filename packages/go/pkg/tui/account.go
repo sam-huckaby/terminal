@@ -73,6 +73,13 @@ func (m model) AccountSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(accountPage)
 	m.state.account.selected = 0
 	m.state.account.focused = false
+	m.state.orders = ordersState{
+		selected: 0,
+		viewing:  false,
+	}
+	m.state.subscriptions = subscriptionsState{
+		selected: 0,
+	}
 	m.state.tokens = tokensState{
 		selected: 0,
 	}

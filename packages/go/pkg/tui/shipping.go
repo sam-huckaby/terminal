@@ -393,7 +393,7 @@ func (m model) formatListItemCustom(text string, focused bool, totalWidth int, s
 		content = text
 	}
 
-	padding := 6
+	padding := 4
 	if !showRadio {
 		padding = 2
 	}

@@ -36,6 +36,8 @@ func (m model) SubscriptionManageSwitch(id string) (model, tea.Cmd) {
 	}
 
 	m.state.subscriptions.deleting = nil
+	m = m.scrollToAccountDetailItem(m, subscriptionsPage)
+	m = m.updateAccountViewports()
 	return m, nil
 }
 
@@ -51,11 +53,7 @@ func (m model) nextSubscription() (model, tea.Cmd) {
 }
 
 func (m model) previousSubscription() (model, tea.Cmd) {
-	next := m.state.subscriptions.selected - 1
-	if next < 0 {
-		next = 0
-	}
-
+	next := max(m.state.subscriptions.selected-1, 0)
 	m.state.subscriptions.selected = next
 	return m, nil
 }

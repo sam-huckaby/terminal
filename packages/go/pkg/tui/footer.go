@@ -88,7 +88,7 @@ func (m model) FooterView() string {
 		PaddingBottom(1).
 		Align(lipgloss.Center)
 
-	if m.size == small && m.hasMenu {
+	if m.size == small {
 		return table.Render(bold("m") + base(" menu"))
 	}
 

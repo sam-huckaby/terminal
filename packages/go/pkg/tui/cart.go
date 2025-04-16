@@ -235,7 +235,7 @@ func (m model) CartView() string {
 			quantity,
 		) - lipgloss.Width(
 			subtotal,
-		) - 4
+		) - 2
 
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,

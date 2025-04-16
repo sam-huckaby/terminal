@@ -49,8 +49,6 @@ type model struct {
 	command       []string
 	switched      bool
 	page          page
-	hasMenu       bool
-	checkout      bool
 	state         state
 	region        *terminal.Region
 	context       context.Context
@@ -300,8 +298,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.heightContainer = int(math.Min(float64(msg.Height), 30))
 		}
 
-		m.widthContent = m.widthContainer - 4
-		m.heightContent = m.heightContainer - lipgloss.Height(m.HeaderView()) - lipgloss.Height(m.FooterView()) - lipgloss.Height(m.BreadcrumbsView())
+		m.widthContent = m.widthContainer - 2
+		m.heightContent = m.heightContainer - lipgloss.Height(m.HeaderView()) - lipgloss.Height(m.FooterView()) - lipgloss.Height(m.BreadcrumbsView()) - 2
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
@@ -391,17 +389,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	m.hasMenu = m.page == shopPage ||
-		(m.page == accountPage && m.state.apps.editing == false)
-		// m.page == aboutPage ||
-		// m.page == faqPage
-
-	m.checkout = m.page == cartPage ||
-		m.page == subscribePage ||
-		m.page == paymentPage ||
-		m.page == shippingPage ||
-		m.page == confirmPage
-
 	if m.switched {
 		m.switched = false
 	}
@@ -478,7 +465,7 @@ func (m model) getContent() string {
 	case paymentPage:
 		page = m.PaymentView()
 	case shippingPage:
-		page = m.ShippingView(m.widthContent-2, false)
+		page = m.ShippingView(m.widthContent, false)
 	case confirmPage:
 		page = m.ConfirmView()
 	case finalSubPage:

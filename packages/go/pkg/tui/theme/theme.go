@@ -57,7 +57,7 @@ func HuhTheme(theme Theme) *huh.Theme {
 		BorderForeground(theme.accent)
 	f.Title = theme.renderer.NewStyle().Foreground(theme.body)
 	f.Description = theme.renderer.NewStyle().Foreground(theme.body)
-	f.TextInput.Cursor = theme.renderer.NewStyle().Foreground(theme.highlight)
+	f.TextInput.Cursor = theme.renderer.NewStyle().Foreground(theme.brand)
 	f.TextInput.Placeholder = theme.renderer.NewStyle().Foreground(theme.body)
 	f.TextInput.Prompt = theme.renderer.NewStyle().Foreground(theme.accent)
 	f.TextInput.Text = theme.renderer.NewStyle().Foreground(theme.accent)
