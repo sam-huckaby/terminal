@@ -289,13 +289,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.size = small
 			m.widthContainer = m.viewportWidth
 			m.heightContainer = m.viewportHeight
-		case m.viewportWidth < 75:
+		case m.viewportWidth < 80:
 			m.size = medium
 			m.widthContainer = 50
 			m.heightContainer = int(math.Min(float64(msg.Height), 30))
 		default:
 			m.size = large
-			m.widthContainer = 75
+			m.widthContainer = 80
 			m.heightContainer = int(math.Min(float64(msg.Height), 30))
 		}
 

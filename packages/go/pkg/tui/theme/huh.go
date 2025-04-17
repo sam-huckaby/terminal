@@ -1,7 +1,6 @@
 package theme
 
 import (
-	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/huh"
 )
 
@@ -40,24 +39,5 @@ func copyFieldStyles(f huh.FieldStyles) huh.FieldStyles {
 		Card:                f.Card.Copy(),
 		NoteTitle:           f.NoteTitle.Copy(),
 		Next:                f.Next.Copy(),
-	}
-}
-
-func copy(t huh.Theme) huh.Theme {
-	return huh.Theme{
-		Form:           t.Form.Copy(),
-		Group:          t.Group.Copy(),
-		FieldSeparator: t.FieldSeparator.Copy(),
-		Blurred:        copyFieldStyles(t.Blurred),
-		Focused:        copyFieldStyles(t.Focused),
-		Help: help.Styles{
-			Ellipsis:       t.Help.Ellipsis.Copy(),
-			ShortKey:       t.Help.ShortKey.Copy(),
-			ShortDesc:      t.Help.ShortDesc.Copy(),
-			ShortSeparator: t.Help.ShortSeparator.Copy(),
-			FullKey:        t.Help.FullKey.Copy(),
-			FullDesc:       t.Help.FullDesc.Copy(),
-			FullSeparator:  t.Help.FullSeparator.Copy(),
-		},
 	}
 }

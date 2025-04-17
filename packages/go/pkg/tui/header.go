@@ -76,10 +76,12 @@ func (m model) HeaderView() string {
 		shop = accent("s shop")
 	case accountPage:
 		account = accent("a account")
-		// case aboutPage:
-		// 	about = accent("a about")
-		// case faqPage:
-		// 	faq = accent("f faq")
+	case cartPage:
+		cart =
+			accent("c") +
+				accent(" cart") +
+				accent(fmt.Sprintf(" $%2v", total/100)) +
+				base(fmt.Sprintf(" [%d]", count))
 	}
 
 	var tabs []string

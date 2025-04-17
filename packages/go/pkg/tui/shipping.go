@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"strings"
-
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -71,6 +69,68 @@ func (m model) updateShippingViewport() model {
 	return m
 }
 
+// ensureShippingFocusedInputIsVisible ensures the currently focused form input is visible in the viewport
+func (m model) ensureShippingFocusedInputIsVisible() model {
+	var focusedIndex int
+	focusedField := m.state.shipping.form.GetFocusedField().GetKey()
+	if focusedField == "name" {
+		focusedIndex = 0
+	} else if focusedField == "street1" {
+		focusedIndex = 1
+	} else if focusedField == "street2" {
+		focusedIndex = 2
+	} else if focusedField == "city" {
+		focusedIndex = 3
+	} else if focusedField == "province" {
+		focusedIndex = 4
+	} else if focusedField == "country" {
+		focusedIndex = 5
+	} else if focusedField == "zip" {
+		focusedIndex = 6
+	} else if focusedField == "phone" {
+		focusedIndex = 7
+	} else {
+		focusedIndex = 0
+	}
+
+	if m.state.shipping.viewportReady && m.state.shipping.view == shippingFormView {
+		// Make sure the current focused input is visible
+		inputHeight := 4 // Average height of an input field with padding
+
+		// For columns layout (non-small screens), inputs are split into two columns
+		// The left column has inputs 0-3, the right column has inputs 4-7
+		// We need to calculate the vertical position based on which column the input is in
+		fieldsPerCol := 4 // 4 fields in each column
+
+		var targetY int
+
+		if m.size == small {
+			// On small screens, layout is stacked
+			targetY = focusedIndex * inputHeight
+		} else {
+			// On larger screens, layout is in columns
+			// Calculate which column and row the focused input is in
+			rowIndex := focusedIndex % fieldsPerCol // 0-3 for position within column
+
+			// Calculate vertical position based only on row index
+			targetY = rowIndex * inputHeight
+		}
+
+		// If field is above viewport, scroll up
+		if targetY < m.state.shipping.viewport.YOffset {
+			m.state.shipping.viewport.SetYOffset(targetY)
+		}
+
+		// If field is below viewport, scroll down
+		viewportBottom := m.state.shipping.viewport.YOffset + m.state.shipping.viewport.Height
+		if targetY+inputHeight > viewportBottom {
+			m.state.shipping.viewport.SetYOffset(targetY + inputHeight - m.state.shipping.viewport.Height)
+		}
+	}
+
+	return m
+}
+
 func (m model) ShippingSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(shippingPage)
 	m.state.footer.commands = []footerCommand{
@@ -81,52 +141,7 @@ func (m model) ShippingSwitch() (model, tea.Cmd) {
 	}
 	m.state.shipping.submitting = false
 	m = m.updateShippingViewport()
-	m.state.shipping.form = huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title("name").
-				Key("name").
-				Value(&m.user.User.Name).
-				Validate(validate.NotEmpty("name")),
-			huh.NewInput().
-				Title("street 1").
-				Key("street1").
-				Value(&m.state.shipping.input.street1).
-				Validate(validate.NotEmpty("street 1")),
-			huh.NewInput().
-				Title("street 2").
-				Key("street2").
-				Value(&m.state.shipping.input.street2),
-			huh.NewInput().
-				Title("city").
-				Key("city").
-				Value(&m.state.shipping.input.city).
-				Validate(validate.NotEmpty("city")),
-		),
-		huh.NewGroup(
-			huh.NewInput().
-				Title("state").
-				Key("province").
-				Value(&m.state.shipping.input.province),
-			huh.NewInput().
-				Title("country").
-				Key("country").
-				Value(&m.state.shipping.input.country).
-				Validate(validate.NotEmpty("country")),
-			huh.NewInput().
-				Title("phone").
-				Key("phone").
-				Value(&m.state.shipping.input.phone),
-			huh.NewInput().
-				Title("postal code").
-				Key("zip").
-				Value(&m.state.shipping.input.zip).
-				Validate(validate.NotEmpty("postal code")),
-		),
-	).
-		WithTheme(m.theme.Form()).
-		WithShowHelp(false)
-
+	m.state.shipping.form = m.createShippingForm()
 	m.state.shipping.view = shippingListView
 	if len(m.addresses) == 0 {
 		m.state.shipping.view = shippingFormView
@@ -213,9 +228,10 @@ func (m model) chooseAddress() (model, tea.Cmd) {
 	} else { // new
 		m.state.shipping.input = shippingInput{country: "US"}
 		m.state.shipping.view = shippingFormView
+		m.state.shipping.form = m.createShippingForm()
+		m = m.updateShippingForm()
+		return m, m.state.shipping.form.Init()
 	}
-
-	return m, nil
 }
 
 func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
@@ -305,10 +321,24 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 	}
 
 	m = m.updateShippingForm()
+
+	// Update the form
 	next, cmd := m.state.shipping.form.Update(msg)
+	cmds = append(cmds, cmd)
 	m.state.shipping.form = next.(*huh.Form)
 
-	cmds = append(cmds, cmd)
+	errors := m.state.shipping.form.Errors()
+	if len(errors) > 0 {
+		cmds = append(cmds, func() tea.Msg { return errors[0] })
+		return m, tea.Batch(cmds...)
+	}
+
+	// If the viewport is ready, adjust the viewport
+	if m.state.shipping.viewportReady {
+		// Call our helper function to ensure the focused input is visible
+		m = m.ensureShippingFocusedInputIsVisible()
+	}
+
 	if !m.state.shipping.submitting && m.state.shipping.form.State == huh.StateCompleted {
 		m.state.shipping.submitting = true
 
@@ -365,10 +395,12 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case error:
-		current := m.state.shipping.view
-		m, cmd := m.ShippingSwitch()
-		m.state.shipping.view = current
-		return m, cmd
+		if m.state.shipping.view != shippingFormView || m.state.shipping.form.State == huh.StateCompleted {
+			current := m.state.shipping.view
+			m, cmd := m.ShippingSwitch()
+			m.state.shipping.view = current
+			return m, cmd
+		}
 	case SelectedShippingUpdatedMsg:
 		if m.IsSubscribing() {
 			m.subscription.AddressID = terminal.String(msg.shippingID)
@@ -415,6 +447,7 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 		if m.state.shipping.viewportReady {
 			content = m.shippingFormView()
 			m.state.shipping.viewport.SetContent(content)
+			m = m.ensureShippingFocusedInputIsVisible()
 		}
 
 		return m, cmd
@@ -439,45 +472,17 @@ func (m model) ShippingView() string {
 	}
 	m.state.shipping.viewport.SetContent(content)
 
+	// Ensure focused input is visible in the view
+	if m.state.shipping.view == shippingFormView {
+		m = m.ensureShippingFocusedInputIsVisible()
+	}
+
 	return lipgloss.Place(
 		m.widthContainer,
 		lipgloss.Height(m.state.shipping.viewport.View()),
 		lipgloss.Center,
 		lipgloss.Center,
 		m.state.shipping.viewport.View(),
-	)
-}
-
-func (m model) formatListItem(text string, focused bool) string {
-	return m.formatListItemCustom(text, focused, m.widthContent, true)
-}
-
-func (m model) formatListItemCustom(text string, focused bool, totalWidth int, showRadio bool) string {
-	accent := m.theme.TextAccent().Render
-
-	content := "     " + text
-	hint := ""
-	if focused {
-		content = accent(" ☉   " + text)
-		hint = accent("enter")
-	}
-
-	if !showRadio {
-		content = text
-	}
-
-	padding := 4
-	if !showRadio {
-		padding = 2
-	}
-
-	var lines = strings.Split(content, "\n")
-	var firstLine = lines[0]
-	hintSpace := totalWidth - lipgloss.Width(hint) - lipgloss.Width(firstLine) - padding
-	lines[0] = firstLine + m.theme.Base().Width(hintSpace).Render() + hint
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		lines...,
 	)
 }
 
@@ -528,3 +533,53 @@ func (m model) shippingFormView() string {
 		m.state.shipping.form.View(),
 	)
 }
+
+func (m model) createShippingForm() *huh.Form {
+	return huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("name").
+				Key("name").
+				Value(&m.user.User.Name).
+				Validate(validate.NotEmpty("name")),
+			huh.NewInput().
+				Title("street 1").
+				Key("street1").
+				Value(&m.state.shipping.input.street1).
+				Validate(validate.NotEmpty("street 1")),
+			huh.NewInput().
+				Title("street 2").
+				Key("street2").
+				Value(&m.state.shipping.input.street2),
+			huh.NewInput().
+				Title("city").
+				Key("city").
+				Value(&m.state.shipping.input.city).
+				Validate(validate.NotEmpty("city")),
+		),
+		huh.NewGroup(
+			huh.NewInput().
+				Title("state").
+				Key("province").
+				Value(&m.state.shipping.input.province),
+			huh.NewInput().
+				Title("country").
+				Key("country").
+				Value(&m.state.shipping.input.country).
+				Validate(validate.NotEmpty("country")),
+			huh.NewInput().
+				Title("phone").
+				Key("phone").
+				Value(&m.state.shipping.input.phone),
+			huh.NewInput().
+				Title("postal code").
+				Key("zip").
+				Value(&m.state.shipping.input.zip).
+				Validate(validate.NotEmpty("postal code")),
+		),
+	).
+		WithTheme(m.theme.Form()).
+		WithShowErrors(false).
+		WithShowHelp(false)
+}
+

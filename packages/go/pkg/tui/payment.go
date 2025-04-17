@@ -100,20 +100,72 @@ func (m model) updatePaymentViewport() model {
 	return m
 }
 
-func (m model) PaymentSwitch() (model, tea.Cmd) {
-	if m.IsCartEmpty() && !m.IsSubscribing() {
-		return m, nil
+// ensurePaymentFocusedInputIsVisible ensures the currently focused form input is visible in the viewport
+func (m model) ensurePaymentFocusedInputIsVisible() model {
+	var focusedIndex int
+	focusedField := m.state.payment.form.GetFocusedField().GetKey()
+	if focusedField == "name" {
+		focusedIndex = 0
+	} else if focusedField == "email" {
+		focusedIndex = 1
+	} else if focusedField == "number" {
+		focusedIndex = 2
+	} else if focusedField == "month" {
+		focusedIndex = 3
+	} else if focusedField == "year" {
+		focusedIndex = 4
+	} else if focusedField == "cvc" {
+		focusedIndex = 5
+	} else if focusedField == "zip" {
+		focusedIndex = 6
+	} else {
+		focusedIndex = 0
 	}
-	m = m.SwitchPage(paymentPage)
-	m.state.footer.commands = []footerCommand{
-		{key: "esc", value: "back"},
-		{key: "↑/↓", value: "cards"},
-		{key: "x/del", value: "remove"},
-		{key: "enter", value: "select"},
+
+	if m.state.payment.viewportReady && m.state.payment.view == paymentFormView {
+		// Make sure the current focused input is visible
+		inputHeight := 4 // Average height of an input field with padding
+
+		// For columns layout (non-small screens), inputs are split into two columns
+		// The left column has inputs 0-3, the right column has inputs 4-7
+		// We need to calculate the vertical position based on which column the input is in
+		fieldsPerCol := 3 // ~3-4 fields in each column
+
+		var targetY int
+
+		if m.size == small {
+			// On small screens, layout is stacked
+			targetY = focusedIndex * inputHeight
+		} else {
+			// On larger screens, layout is in columns
+			// Calculate which column and row the focused input is in
+			rowIndex := focusedIndex % fieldsPerCol // 0-3 for position within column
+			// there's an uneven number of fields, so we need to handle the 6th field specially
+			if focusedIndex == 6 {
+				rowIndex = 3
+			}
+
+			// Calculate vertical position based only on row index
+			targetY = rowIndex * inputHeight
+		}
+
+		// If field is above viewport, scroll up
+		if targetY < m.state.payment.viewport.YOffset {
+			m.state.payment.viewport.SetYOffset(targetY)
+		}
+
+		// If field is below viewport, scroll down
+		viewportBottom := m.state.payment.viewport.YOffset + m.state.payment.viewport.Height
+		if targetY+inputHeight > viewportBottom {
+			m.state.payment.viewport.SetYOffset(targetY + inputHeight - m.state.payment.viewport.Height)
+		}
 	}
-	m.state.payment.submitting = false
-	m = m.updatePaymentViewport()
-	m.state.payment.form = huh.NewForm(
+
+	return m
+}
+
+func (m model) createPaymentForm() *huh.Form {
+	return huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("name").
@@ -181,8 +233,24 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 		),
 	).
 		WithTheme(m.theme.Form()).
+		WithShowErrors(false).
 		WithShowHelp(false)
+}
 
+func (m model) PaymentSwitch() (model, tea.Cmd) {
+	if m.IsCartEmpty() && !m.IsSubscribing() {
+		return m, nil
+	}
+	m = m.SwitchPage(paymentPage)
+	m.state.footer.commands = []footerCommand{
+		{key: "esc", value: "back"},
+		{key: "↑/↓", value: "cards"},
+		{key: "x/del", value: "remove"},
+		{key: "enter", value: "select"},
+	}
+	m.state.payment.submitting = false
+	m = m.updatePaymentViewport()
+	m.state.payment.form = m.createPaymentForm()
 	m.state.payment.view = paymentListView
 	// if len(m.cards) == 0 {
 	// 	m.state.payment.view = paymentFormView
@@ -221,7 +289,6 @@ func (m model) updatePaymentForm() model {
 			WithLayout(huh.LayoutColumns(2)).
 			WithWidth(m.widthContent)
 	}
-
 	return m
 }
 
@@ -231,7 +298,6 @@ func (m model) nextPaymentMethod() (model, tea.Cmd) {
 	if next > max {
 		next = max
 	}
-
 	m.state.payment.selected = next
 	return m, nil
 }
@@ -246,7 +312,6 @@ func (m model) SetCard(cardID string) error {
 	if m.IsSubscribing() {
 		return nil
 	}
-
 	params := terminal.CartSetCardParams{CardID: terminal.F(cardID)}
 	_, err := m.client.Cart.SetCard(m.context, params)
 	return err
@@ -256,6 +321,7 @@ func (m model) choosePaymentMethod() (model, tea.Cmd) {
 	if m.state.payment.selected < len(m.cards) { // existing method
 		cardID := m.cards[m.state.payment.selected].ID
 		m.state.payment.submitting = true
+		m.state.payment.viewport.KeyMap = viewport.KeyMap{}
 		return m, func() tea.Msg {
 			err := m.SetCard(cardID)
 			if err != nil {
@@ -266,9 +332,14 @@ func (m model) choosePaymentMethod() (model, tea.Cmd) {
 	} else if m.state.payment.selected == len(m.cards) { // new ssh
 		m.state.payment.input = paymentInput{}
 		m.state.payment.view = paymentFormView
+		m.state.payment.viewport.KeyMap = viewport.KeyMap{}
+		m.state.payment.form = m.createPaymentForm()
+		m = m.updatePaymentForm()
+		return m, m.state.payment.form.Init()
 	} else if m.state.payment.selected == len(m.cards)+1 { // new https
 		m.state.payment.generating = true
 		m.state.payment.view = paymentHttpsView
+		m.state.payment.viewport.KeyMap = viewport.DefaultKeyMap()
 		return m, func() tea.Msg {
 			resp, err := m.client.Card.Collect(m.context)
 			if err != nil {
@@ -387,9 +458,23 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	m = m.updatePaymentForm()
 
+	// Update the form
 	next, cmd := m.state.payment.form.Update(msg)
 	m.state.payment.form = next.(*huh.Form)
 	cmds = append(cmds, cmd)
+
+	errors := m.state.payment.form.Errors()
+	if len(errors) > 0 {
+		cmds = append(cmds, func() tea.Msg { return errors[0] })
+		return m, tea.Batch(cmds...)
+	}
+
+	// If the viewport is ready, adjust the viewport
+	if m.state.payment.viewportReady {
+		// Call our helper function to ensure the focused input is visible
+		m = m.ensurePaymentFocusedInputIsVisible()
+	}
+
 	if !m.state.payment.submitting && m.state.payment.form.State == huh.StateCompleted {
 		m.state.payment.submitting = true
 
@@ -481,19 +566,30 @@ func (m model) paymentHttpsUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
+	var cmd tea.Cmd
+	cmds := []tea.Cmd{}
+
 	// Update viewport dimensions if window size changed
 	if _, ok := msg.(tea.WindowSizeMsg); ok {
 		m = m.updatePaymentViewport()
 	}
 
+	// Handle viewport scrolling
+	if m.state.payment.viewportReady {
+		m.state.payment.viewport, cmd = m.state.payment.viewport.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
 	switch msg := msg.(type) {
 	case error:
-		current := m.state.payment.view
-		m, cmd := m.PaymentSwitch()
-		m.state.payment.view = current
-		m.state.payment.submitting = false
-		m.state.payment.generating = false
-		return m, cmd
+		if m.state.payment.view != paymentFormView || m.state.payment.form.State == huh.StateCompleted {
+			current := m.state.payment.view
+			m, cmd := m.PaymentSwitch()
+			m.state.payment.view = current
+			m.state.payment.submitting = false
+			m.state.payment.generating = false
+			return m, cmd
+		}
 	case SelectedCardUpdatedMsg:
 		m.state.payment.submitting = false
 		if m.IsSubscribing() {
@@ -507,22 +603,25 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// Process message and update viewport content
 	var content string
 	var m2 model
-	var cmd tea.Cmd
 
 	if m.state.payment.view == paymentFormView {
 		m2, cmd = m.paymentFormUpdate(msg)
+		cmds = append(cmds, cmd)
 		if m2.state.payment.viewportReady {
 			content = m2.paymentFormView()
 			m2.state.payment.viewport.SetContent(content)
+			m2 = m2.ensurePaymentFocusedInputIsVisible()
 		}
 	} else if m.state.payment.view == paymentHttpsView {
 		m2, cmd = m.paymentHttpsUpdate(msg)
+		cmds = append(cmds, cmd)
 		if m2.state.payment.viewportReady {
 			content = m2.paymentHttpsView()
 			m2.state.payment.viewport.SetContent(content)
 		}
 	} else {
 		m2, cmd = m.paymentListUpdate(msg)
+		cmds = append(cmds, cmd)
 		if m2.state.payment.viewportReady {
 			content = m2.paymentListView()
 			m2.state.payment.viewport.SetContent(content)
@@ -543,7 +642,7 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	}
 
-	return m2, cmd
+	return m2, tea.Batch(cmds...)
 }
 
 func (m model) PaymentView() string {
@@ -569,6 +668,11 @@ func (m model) PaymentView() string {
 	}
 
 	m.state.payment.viewport.SetContent(content)
+
+	// Ensure focused input is visible in view
+	if m.state.payment.view == paymentFormView {
+		m = m.ensurePaymentFocusedInputIsVisible()
+	}
 
 	return lipgloss.Place(
 		m.widthContainer,
@@ -619,18 +723,16 @@ func (m model) paymentListView() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		m.paymentCostsView(),
+		m.paymentCostsView(true),
 		" select payment method",
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
 	)
-
 }
 
 func (m model) paymentFormView() string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		m.paymentCostsView(),
-		// "\ncreate new payment method:\n",
+		m.paymentCostsView(false),
 		m.state.payment.form.View(),
 	)
 }
@@ -657,7 +759,7 @@ func (m model) paymentHttpsView() string {
 	)
 }
 
-func (m model) paymentCostsView() string {
+func (m model) paymentCostsView(withSpace bool) string {
 	view := strings.Builder{}
 	price := m.cart.Amount.Subtotal
 	shipping := m.cart.Amount.Shipping
@@ -673,7 +775,9 @@ func (m model) paymentCostsView() string {
 		m.theme.TextAccent().
 			Render(fmt.Sprintf("total: %s", formatUSD(int(price+shipping)))),
 	)
-	view.WriteString("\n")
+	if withSpace {
+		view.WriteString("\n")
+	}
 
 	return view.String()
 }
