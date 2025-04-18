@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 
-export module ProductApi {
+export namespace ProductApi {
   export const route = new Hono()
     .get(
       "/",

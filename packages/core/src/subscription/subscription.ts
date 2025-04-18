@@ -70,6 +70,12 @@ export namespace Subscription {
         subscriptionID: Info.shape.id,
       }),
     ),
+    Updated: defineEvent(
+      "subscription.updated",
+      z.object({
+        subscriptionID: Info.shape.id,
+      }),
+    ),
   };
 
   export const list = () =>
@@ -197,6 +203,92 @@ export namespace Subscription {
         )
         .limit(1);
       return rows.map(serialize).at(0);
+    }),
+  );
+
+  export const UpdateInput = z
+    .object({
+      id: Info.shape.id,
+      cardID: Info.shape.cardID.optional(),
+      addressID: Info.shape.addressID.optional(),
+      schedule: SubscriptionSchedule.optional(),
+    })
+    .openapi({
+      ref: "SubscriptionUpdate",
+      description: "Input for updating a subscription",
+    });
+
+  export type UpdateInput = z.infer<typeof UpdateInput>;
+
+  export const update = fn(UpdateInput, async (input) =>
+    useTransaction(async (tx) => {
+      // Check that subscription exists and belongs to the user
+      const subscription = await tx
+        .select({
+          id: subscriptionTable.id,
+          productVariantID: subscriptionTable.productVariantID,
+          timeNext: subscriptionTable.timeNext,
+          schedule: subscriptionTable.schedule,
+        })
+        .from(subscriptionTable)
+        .where(
+          and(
+            eq(subscriptionTable.id, input.id),
+            eq(subscriptionTable.userID, Actor.userID()),
+          ),
+        )
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      if (!subscription) {
+        throw new VisibleError(
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+          "Subscription not found",
+        );
+      }
+
+      // Build update object with only provided fields
+      const updateData: Record<string, any> = {};
+
+      if (input.cardID !== undefined) {
+        updateData.cardID = input.cardID;
+      }
+
+      if (input.addressID !== undefined) {
+        updateData.addressID = input.addressID;
+      }
+
+      if (input.schedule !== undefined) {
+        updateData.schedule = input.schedule;
+
+        // If schedule changes, recalculate next shipment date
+        updateData.timeNext = next({
+          schedule: input.schedule,
+          last: subscription.timeNext || new Date(),
+        });
+      }
+
+      // Only run update if there are fields to update
+      if (Object.keys(updateData).length > 0) {
+        await tx
+          .update(subscriptionTable)
+          .set(updateData)
+          .where(
+            and(
+              eq(subscriptionTable.id, input.id),
+              eq(subscriptionTable.userID, Actor.userID()),
+            ),
+          );
+
+        await afterTx(() =>
+          bus.publish(Resource.Bus, Event.Updated, {
+            subscriptionID: subscription.id,
+          }),
+        );
+      }
+
+      return true;
     }),
   );
 

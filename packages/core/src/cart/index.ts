@@ -7,15 +7,13 @@ import { productTable, productVariantTable } from "../product/product.sql";
 import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
 import { Actor } from "../actor";
 import { cardTable } from "../card/card.sql";
-import { Shippo } from "../shippo/";
 import { ErrorCodes, VisibleError } from "../error";
 import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
-import { Address } from "../address";
 import { Shipping } from "../shipping";
 
-export module Cart {
+export namespace Cart {
   export const Item = z
     .object({
       id: z.string().openapi({

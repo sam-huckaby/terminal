@@ -11,7 +11,7 @@ import { User } from "@terminal/core/user/index";
 import { Actor } from "@terminal/core/actor";
 import { ErrorCodes, VisibleError } from "@terminal/core/error";
 
-export module CardApi {
+export namespace CardApi {
   export const route = new Hono()
     .get(
       "/",

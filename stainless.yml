@@ -61,6 +61,7 @@ resources:
       list: get /subscription
       get: get /subscription/{id}
       create: post /subscription
+      update: put /subscription/{id}
       delete: delete /subscription/{id}
   token:
     models:

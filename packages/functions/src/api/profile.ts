@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 
-export module ProfileApi {
+export namespace ProfileApi {
   export const Profile = z
     .object({
       user: User.Info,

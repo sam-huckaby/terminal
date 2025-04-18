@@ -6,7 +6,7 @@ import { Actor } from "../actor";
 import { linkTable } from "./link.sql";
 import { nanoid } from "nanoid/non-secure";
 
-export module Link {
+export namespace Link {
   export const Info = z.object({
     id: z.string(),
     url: z.string().url(),

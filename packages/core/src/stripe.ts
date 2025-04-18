@@ -10,7 +10,7 @@ export const stripe = new StripeClient(Resource.StripeSecret.value, {
   httpClient: StripeClient.createFetchHttpClient(),
 });
 
-export module Stripe {
+export namespace Stripe {
   export const client = stripe;
 
   export const syncUser = fn(z.string(), (id) =>

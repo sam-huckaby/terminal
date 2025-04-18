@@ -11,6 +11,7 @@ import { Address } from "@terminal/core/address/index";
 import { Examples } from "@terminal/core/examples";
 import { Order } from "@terminal/core/order/order";
 import { ProductFilter } from "@terminal/core/product/filter";
+import { Subscription } from "@terminal/core/subscription/subscription";
 
 export const getTestCardID = async () => {
   const [card] = await Card.list();
@@ -57,6 +58,21 @@ export const getTestOrderID = async () => {
   });
 
   return orderID;
+};
+
+export const getTestSubscriptionID = async () => {
+  const [subscription] = await Subscription.list();
+  if (subscription) return subscription.id;
+  const productVariantID = await getTestProductVariantID();
+  const addressID = await getTestAddressID();
+  const cardID = await getTestCardID();
+  return await Subscription.create({
+    addressID,
+    cardID,
+    productVariantID,
+    quantity: Examples.Subscription.quantity,
+    schedule: Examples.Subscription.schedule,
+  });
 };
 
 /**
@@ -259,7 +275,7 @@ export function setupApiTest() {
     // Test 404 handling if the route defines it
     if (statusCodes.includes(404)) {
       const notFoundPath = originalPath.replace(/:[^/]+/g, "fake-param");
-      const notFoundRes = await request(method, notFoundPath);
+      const notFoundRes = await request(method, notFoundPath, body);
       expect(notFoundRes.status).toBe(404);
       await SchemaValidator.validateResponse(notFoundRes, notFoundPath, method);
     }

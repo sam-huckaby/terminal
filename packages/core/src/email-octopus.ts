@@ -10,7 +10,7 @@ import { Log } from "./util/log";
 const CUSTOMERS_LIST = "3a96a118-0250-11ef-a951-f72c9a1b1995";
 const SUBSCRIBERS_LIST = "e4d1931a-019a-11ef-8784-674ae09367af";
 
-export module EmailOctopus {
+export namespace EmailOctopus {
   const log = Log.create({ namespace: "emailOctopus" });
   export async function find(props: {
     email: string;
@@ -59,8 +59,8 @@ export module EmailOctopus {
     log.info("response", { response });
 
     if (response.error?.code === "MEMBER_EXISTS_WITH_EMAIL_ADDRESS") {
-      log.info("contact not found, looking up by email", { 
-        email: props.email 
+      log.info("contact not found, looking up by email", {
+        email: props.email,
       });
       const contact = await find({ email: props.email, list: props.list });
       log.info("contact found?", { contact });

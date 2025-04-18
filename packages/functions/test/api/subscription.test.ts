@@ -3,6 +3,7 @@ import {
   getTestAddressID,
   getTestCardID,
   getTestProductVariantID,
+  getTestSubscriptionID,
   setupApiTest,
 } from "./util";
 import { Examples } from "@terminal/core/examples";
@@ -67,6 +68,44 @@ describe("subscription", () => {
     ).toBe(true);
   });
 
+  test("PUT /subscription/:id", async () => {
+    const subscriptionData = {
+      schedule: { type: "weekly" as const, interval: 5 },
+    };
+
+    const subscriptionID = await getTestSubscriptionID();
+
+    const response = await validateOpenAPIRoute(
+      "put",
+      "/subscription/:id",
+      { id: subscriptionID },
+      subscriptionData,
+    );
+
+    expect(response.data).toBeDefined();
+    expect(response.data.schedule).toBeDefined();
+    expect(response.data.schedule.interval).toBe(
+      subscriptionData.schedule.interval,
+    );
+
+    // Verify the subscription was actually updated in the database
+    const subscriptionId = response.data.id;
+    const subscription = await Subscription.fromID(subscriptionId);
+    expect(subscription).toBeDefined();
+    expect(subscription!.schedule).toBeDefined();
+    expect(subscription!.schedule!.type).toBe("weekly");
+    // @ts-expect-error
+    expect(subscription!.schedule!.interval).toBe(
+      subscriptionData.schedule.interval,
+    );
+
+    // Reset to original values to clean up
+    await Subscription.update({
+      id: subscriptionId,
+      schedule: Examples.Subscription.schedule,
+    });
+  });
+
   test("DELETE /subscription/:id", async () => {
     const productVariantID = await getTestProductVariantID();
     const addressID = await getTestAddressID();
@@ -87,4 +126,3 @@ describe("subscription", () => {
     expect(deleted).toBeUndefined();
   });
 });
-

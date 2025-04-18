@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 
-export module EmailApi {
+export namespace EmailApi {
   export const route = new Hono().post(
     "/",
     describeRoute({

@@ -20,7 +20,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
 
-export module User {
+export namespace User {
   export const Info = z
     .object({
       id: z.string().openapi({

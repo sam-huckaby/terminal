@@ -4,7 +4,7 @@ import { inventoryTable, inventoryRecordTable } from "./inventory.sql";
 import { useTransaction } from "../drizzle/transaction";
 import { createID } from "../util/id";
 
-export module Inventory {
+export namespace Inventory {
   export const create = fn(
     z.object({
       name: z.string(),

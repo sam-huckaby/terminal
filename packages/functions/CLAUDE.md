@@ -10,7 +10,7 @@
 
 ## Code Style Guidelines
 
-- **API Structure**: Use Hono.js for routing and module pattern `export module NameApi { export const route = new Hono()... }`
+- **API Structure**: Use Hono.js for routing and module pattern `export namespace NameApi { export const route = new Hono()... }`
 - **Validation**: Use `validator()` utility from common.ts with Zod schemas
 - **Error Handling**: Use standardized error responses from ErrorResponses
 - **Documentation**: Use `describeRoute()` with OpenAPI annotations and Zod schemas
@@ -26,4 +26,3 @@
 - `/cron/`: Scheduled Lambda functions
 - `/event/`: Event handlers
 - `/shortener/`: URL shortening service
-
