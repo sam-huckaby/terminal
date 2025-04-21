@@ -16,3 +16,6 @@ go/id_ed25519.pub
 
 # www
 .astro
+
+# opencode
+.opencode/
