@@ -100,7 +100,7 @@ func (m model) updatePaymentViewport() model {
 	return m
 }
 
-// ensurePaymentFocusedInputIsVisible ensures the currently focused form input is visible in the viewport
+// ensures the currently focused form input is visible in the viewport
 func (m model) ensurePaymentFocusedInputIsVisible() model {
 	var focusedIndex int
 	focusedField := m.state.payment.form.GetFocusedField().GetKey()
@@ -627,7 +627,7 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m2.state.payment.viewport.SetContent(content)
 
 			// Scroll to keep selected item in view
-			itemHeight := 5 // Approximate height of a payment method box
+			itemHeight := 3 // Approximate height of a payment method box
 			targetY := m2.state.payment.selected * itemHeight
 
 			// If item is above viewport, scroll up
@@ -637,7 +637,12 @@ func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// If item is below viewport, scroll down
 			if targetY+itemHeight > m2.state.payment.viewport.YOffset+m2.state.payment.viewport.Height {
-				m2.state.payment.viewport.SetYOffset(targetY - m2.state.payment.viewport.Height + itemHeight)
+				m2.state.payment.viewport.SetYOffset(targetY - m2.state.payment.viewport.Height + itemHeight + 1)
+			}
+
+			// If last item, scroll to bottom
+			if m2.state.payment.selected == len(m2.cards)+1 {
+				m2.state.payment.viewport.GotoBottom()
 			}
 		}
 	}
@@ -655,23 +660,6 @@ func (m model) PaymentView() string {
 
 	if !m.state.payment.viewportReady {
 		m = m.updatePaymentViewport()
-	}
-
-	// Update viewport content
-	var content string
-	if m.state.payment.view == paymentFormView {
-		content = m.paymentFormView()
-	} else if m.state.payment.view == paymentHttpsView {
-		content = m.paymentHttpsView()
-	} else {
-		content = m.paymentListView()
-	}
-
-	m.state.payment.viewport.SetContent(content)
-
-	// Ensure focused input is visible in view
-	if m.state.payment.view == paymentFormView {
-		m = m.ensurePaymentFocusedInputIsVisible()
 	}
 
 	return lipgloss.Place(

@@ -69,7 +69,7 @@ func (m model) updateShippingViewport() model {
 	return m
 }
 
-// ensureShippingFocusedInputIsVisible ensures the currently focused form input is visible in the viewport
+// ensures the currently focused form input is visible in the viewport
 func (m model) ensureShippingFocusedInputIsVisible() model {
 	var focusedIndex int
 	focusedField := m.state.shipping.form.GetFocusedField().GetKey()
@@ -426,7 +426,7 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.shipping.viewport.SetContent(content)
 
 			// Scroll to keep selected item in view
-			itemHeight := 5 // Approximate height of an address box
+			itemHeight := 3 // Approximate height of an address box
 			targetY := m.state.shipping.selected * itemHeight
 
 			// If item is above viewport, scroll up
@@ -436,7 +436,12 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 			// If item is below viewport, scroll down
 			if targetY+itemHeight > m.state.shipping.viewport.YOffset+m.state.shipping.viewport.Height {
-				m.state.shipping.viewport.SetYOffset(targetY - m.state.shipping.viewport.Height + itemHeight)
+				m.state.shipping.viewport.SetYOffset(targetY - m.state.shipping.viewport.Height + itemHeight + 1)
+			}
+
+			// If last item, scroll to bottom
+			if m.state.shipping.selected == len(m.addresses) {
+				m.state.shipping.viewport.GotoBottom()
 			}
 		}
 
@@ -461,20 +466,6 @@ func (m model) ShippingView() string {
 
 	if !m.state.shipping.viewportReady {
 		m = m.updateShippingViewport()
-	}
-
-	// Update viewport content
-	var content string
-	if m.state.shipping.view == shippingListView {
-		content = m.shippingListView()
-	} else {
-		content = m.shippingFormView()
-	}
-	m.state.shipping.viewport.SetContent(content)
-
-	// Ensure focused input is visible in the view
-	if m.state.shipping.view == shippingFormView {
-		m = m.ensureShippingFocusedInputIsVisible()
 	}
 
 	return lipgloss.Place(
@@ -582,4 +573,3 @@ func (m model) createShippingForm() *huh.Form {
 		WithShowErrors(false).
 		WithShowHelp(false)
 }
-
