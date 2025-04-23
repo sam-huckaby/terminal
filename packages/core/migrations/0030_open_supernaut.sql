@@ -1,1 +1,0 @@
-ALTER TABLE `product_variant` ADD `weight` int DEFAULT 12 NOT NULL;

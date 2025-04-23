@@ -1,1 +1,0 @@
-ALTER TABLE `order_item` ADD `time_inventory_tracked` timestamp(3);
