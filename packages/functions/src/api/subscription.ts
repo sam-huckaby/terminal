@@ -120,15 +120,19 @@ export namespace SubscriptionApi {
       authRequired,
       validator(
         "json",
-        Subscription.Info.omit({ id: true, created: true }).openapi({
+        Subscription.Info.omit({
+          id: true,
+          price: true,
+          created: true,
+        }).openapi({
           description: "Subscription information.",
           example: {
             ...Examples.Subscription,
-            // @ts-ignore
+            // @ts-expect-error
             id: undefined,
             next: undefined,
-            // @ts-ignore
             created: undefined,
+            price: undefined,
           },
         }),
       ),

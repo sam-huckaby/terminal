@@ -1,7 +1,7 @@
 import "zod-openapi/extend";
 import { mysqlTable, unique, int, json } from "drizzle-orm/mysql-core";
 import { cardTable } from "../card/card.sql";
-import { id, timestamp, timestamps, ulid } from "../drizzle/types";
+import { dollar, id, timestamp, timestamps, ulid } from "../drizzle/types";
 import { productVariantTable } from "../product/product.sql";
 import { userTable } from "../user/user.sql";
 import { z } from "zod";
@@ -24,6 +24,7 @@ export const subscriptionTable = mysqlTable(
         onDelete: "cascade",
       })
       .notNull(),
+    price: dollar("price").notNull(),
     quantity: int("quantity").notNull(),
     addressID: ulid("shipping_id")
       .references(() => addressTable.id)

@@ -108,6 +108,7 @@ export namespace Examples {
   export const Subscription = {
     id: Id("subscription"),
     productVariantID: ProductVariant.id,
+    price: ProductVariant.price,
     quantity: 1,
     addressID: Shipping.id,
     cardID: Card.id,

@@ -158,12 +158,10 @@ func (m model) formatSubscription(subscription terminal.Subscription, totalWidth
 	accent := m.theme.TextAccent().Render
 
 	var product *terminal.Product
-	var variant *terminal.ProductVariant
 	for _, p := range m.products {
 		for _, v := range p.Variants {
 			if v.ID == subscription.ProductVariantID {
 				product = &p
-				variant = &v
 			}
 		}
 	}
@@ -183,7 +181,7 @@ func (m model) formatSubscription(subscription terminal.Subscription, totalWidth
 		title = accent(title) + base(fmt.Sprintf(" (every %d %s)", subscription.Schedule.Interval, scheduleType))
 	}
 
-	price := fmt.Sprintf(" $%2v", subscription.Quantity*variant.Price/100)
+	price := fmt.Sprintf(" $%2v", subscription.Quantity*subscription.Price/100)
 	space := totalWidth - lipgloss.Width(
 		title,
 	) - lipgloss.Width(price) - 2
@@ -216,48 +214,48 @@ func (m model) formatSubscriptionDetail(subscription terminal.Subscription) stri
 	lines = append(lines, base("created: ")+base(subscription.Created))
 	lines = append(lines, "")
 
-   // Address details
-   var addr *terminal.Address
-   for _, a := range m.addresses {
-       if a.ID == subscription.AddressID {
-           addr = &a
-           break
-       }
-   }
-   if addr != nil {
-       lines = append(lines, accent("address"))
-       lines = append(lines, base(addr.Name))
-       lines = append(lines, base(addr.Street1))
-       if addr.Street2 != "" {
-           lines = append(lines, base(addr.Street2))
-       }
-       cityLine := fmt.Sprintf("%s, %s %s", addr.City, addr.Province, addr.Zip)
-       lines = append(lines, base(cityLine))
-       lines = append(lines, base(addr.Country))
-       if addr.Phone != "" {
-           lines = append(lines, base(fmt.Sprintf("tel: %s", addr.Phone)))
-       }
-       lines = append(lines, "")
-   } else {
-       lines = append(lines, accent("address"), base(subscription.AddressID), "")
-   }
+	// Address details
+	var addr *terminal.Address
+	for _, a := range m.addresses {
+		if a.ID == subscription.AddressID {
+			addr = &a
+			break
+		}
+	}
+	if addr != nil {
+		lines = append(lines, accent("address"))
+		lines = append(lines, base(addr.Name))
+		lines = append(lines, base(addr.Street1))
+		if addr.Street2 != "" {
+			lines = append(lines, base(addr.Street2))
+		}
+		cityLine := fmt.Sprintf("%s, %s %s", addr.City, addr.Province, addr.Zip)
+		lines = append(lines, base(cityLine))
+		lines = append(lines, base(addr.Country))
+		if addr.Phone != "" {
+			lines = append(lines, base(fmt.Sprintf("tel: %s", addr.Phone)))
+		}
+		lines = append(lines, "")
+	} else {
+		lines = append(lines, accent("address"), base(subscription.AddressID), "")
+	}
 
-   // Card details
-   var card *terminal.Card
-   for _, c := range m.cards {
-       if c.ID == subscription.CardID {
-           card = &c
-           break
-       }
-   }
-   if card != nil {
-       lines = append(lines, accent("card"))
-       lines = append(lines, base(fmt.Sprintf("%s • ****%s", card.Brand, card.Last4)))
-       lines = append(lines, base(fmt.Sprintf("expires %02d/%04d", card.Expiration.Month, card.Expiration.Year)))
-       lines = append(lines, "")
-   } else {
-       lines = append(lines, accent("card"), base(subscription.CardID), "")
-   }
+	// Card details
+	var card *terminal.Card
+	for _, c := range m.cards {
+		if c.ID == subscription.CardID {
+			card = &c
+			break
+		}
+	}
+	if card != nil {
+		lines = append(lines, accent("card"))
+		lines = append(lines, base(fmt.Sprintf("%s • ****%s", card.Brand, card.Last4)))
+		lines = append(lines, base(fmt.Sprintf("expires %02d/%04d", card.Expiration.Month, card.Expiration.Year)))
+		lines = append(lines, "")
+	} else {
+		lines = append(lines, accent("card"), base(subscription.CardID), "")
+	}
 
 	// Product details
 	var product *terminal.Product
@@ -275,8 +273,8 @@ func (m model) formatSubscriptionDetail(subscription terminal.Subscription) stri
 		lines = append(lines, base(fmt.Sprintf("name: %s", product.Name)))
 		lines = append(lines, base(fmt.Sprintf("variant: %s", variant.Name)))
 		lines = append(lines, base(fmt.Sprintf("quantity: %d", subscription.Quantity)))
-		lines = append(lines, base(fmt.Sprintf("price: $%d", variant.Price/100)))
-		lines = append(lines, base(fmt.Sprintf("subtotal: $%d", (subscription.Quantity*variant.Price)/100)))
+		lines = append(lines, base(fmt.Sprintf("price: $%d", subscription.Price/100)))
+		lines = append(lines, base(fmt.Sprintf("subtotal: $%d", (subscription.Quantity*subscription.Price)/100)))
 		lines = append(lines, "")
 	}
 

@@ -30,6 +30,10 @@ export namespace Subscription {
         description: "ID of the product variant being subscribed to.",
         example: Examples.Subscription.productVariantID,
       }),
+      price: z.number().int().openapi({
+        description: "Price of the subscription in cents (USD).",
+        example: Examples.Subscription.price,
+      }),
       quantity: z.number().int().openapi({
         description: "Quantity of the subscription.",
         example: Examples.Subscription.quantity,
@@ -88,13 +92,14 @@ export namespace Subscription {
     );
 
   export const create = fn(
-    Info.omit({ id: true, created: true }),
+    Info.omit({ id: true, created: true, price: true }),
     async (input) =>
       useTransaction(async (tx) => {
         const id = createID("subscription");
-        const product = await tx
+        const productVariant = await tx
           .select({
             subscription: productTable.subscription,
+            price: productVariantTable.price,
           })
           .from(productVariantTable)
           .innerJoin(
@@ -103,7 +108,7 @@ export namespace Subscription {
           )
           .where(eq(productVariantTable.id, input.productVariantID))
           .then((rows) => rows[0]);
-        if (!product)
+        if (!productVariant)
           throw new VisibleError(
             "validation",
             ErrorCodes.Validation.INVALID_PARAMETER,
@@ -111,7 +116,7 @@ export namespace Subscription {
           );
 
         input.schedule =
-          product.subscription === "required"
+          productVariant.subscription === "required"
             ? { type: "fixed" }
             : input.schedule;
         if (!input.schedule)
@@ -132,6 +137,7 @@ export namespace Subscription {
               : undefined,
             userID: Actor.userID(),
             productVariantID: input.productVariantID,
+            price: productVariant.price,
             quantity: input.quantity,
             addressID: input.addressID,
             cardID: input.cardID,
@@ -298,9 +304,10 @@ export namespace Subscription {
     return {
       id: input.id,
       cardID: input.cardID,
-      quantity: input.quantity,
-      addressID: input.addressID,
       productVariantID: input.productVariantID,
+      quantity: input.quantity,
+      price: input.price,
+      addressID: input.addressID,
       next: input.timeNext || undefined,
       schedule: input.schedule || undefined,
       created: input.timeCreated,
@@ -357,6 +364,9 @@ export namespace Subscription {
               group.map(
                 (item) => [item.productVariantID, item.quantity] as const,
               ),
+            ),
+            prices: Object.fromEntries(
+              group.map((item) => [item.productVariantID, item.price] as const),
             ),
           }).catch((ex) => {
             log.error(ex);

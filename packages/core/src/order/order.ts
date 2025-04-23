@@ -298,9 +298,10 @@ export namespace Order {
 
   export const create = fn(
     z.object({
-      variants: z.record(z.number().int()),
       cardID: z.string(),
       addressID: z.string(),
+      variants: z.record(z.number().int()),
+      prices: z.record(z.number().int()).optional(), // price overrides, used for subscriptions
     }),
     async (input) => {
       log.info("creating order");
@@ -352,7 +353,9 @@ export namespace Order {
               id: row.id,
               productID: row.productID,
               tags: row.tags || {},
-              price: row.price * (input.variants[row.id] ?? 0),
+              price:
+                (input.prices?.[row.id] ?? row.price) *
+                (input.variants[row.id] ?? 0),
               quantity: input.variants[row.id] ?? 0,
               weight: row.weight * (input.variants[row.id] ?? 0),
             })),
@@ -386,10 +389,10 @@ export namespace Order {
       const shippingAmount = shipping.shippingAmount || 0;
       const totalChargeAmount = subtotal + shippingAmount;
       const needsPayment = ![
-        "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3",
-        "usr_01J1KHKPA8QK82MBHQDBQP78XK",
-        "usr_01J1KHPJ88QEFEQ6K27QA9C4WN",
-        "usr_01JG4BDDCKTY6CYWF6JXKVPNNT",
+        "usr_01J1JGH7NH2HZ6DGAGT8SK2KE3", // dax
+        "usr_01J1KHKPA8QK82MBHQDBQP78XK", // teej
+        "usr_01JG4BDDCKTY6CYWF6JXKVPNNT", // prime
+        "usr_01J1JTQHAJZKVSEKZS6P3RYW0K", // adam
       ].includes(userID);
 
       try {
