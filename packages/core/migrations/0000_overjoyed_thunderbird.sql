@@ -194,7 +194,7 @@ CREATE TABLE `subscription` (
 	`quantity` int NOT NULL,
 	`shipping_id` char(30) NOT NULL,
 	`card_id` char(30) NOT NULL,
-	CONSTRAINT `subscription_id` PRIMARY KEY(`id`),
+  PRIMARY KEY(`id`),
 	CONSTRAINT `unique` UNIQUE(`user_id`,`product_variant_id`)
 );
 --> statement-breakpoint
@@ -236,7 +236,6 @@ ALTER TABLE `inventory_record` ADD CONSTRAINT `inventory_record_inventory_id_inv
 ALTER TABLE `link` ADD CONSTRAINT `link_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `order_item` ADD CONSTRAINT `order_item_order_id_order_id_fk` FOREIGN KEY (`order_id`) REFERENCES `order`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `order_item` ADD CONSTRAINT `order_item_product_variant_id_product_variant_id_fk` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variant`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `order_item` ADD CONSTRAINT `order_item_subscription_id_subscription_id_fk` FOREIGN KEY (`subscription_id`) REFERENCES `subscription`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `order` ADD CONSTRAINT `order_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_variant_inventory` ADD CONSTRAINT `product_variant_inventory_product_variant_id_product_variant_id_fk` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variant`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_variant_inventory` ADD CONSTRAINT `product_variant_inventory_inventory_id_inventory_id_fk` FOREIGN KEY (`inventory_id`) REFERENCES `inventory`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

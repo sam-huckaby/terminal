@@ -59,9 +59,7 @@ export const orderItemTable = mysqlTable(
         onDelete: "cascade",
       },
     ),
-    subscriptionID: ulid("subscription_id").references(
-      () => subscriptionTable.id,
-    ),
+    subscriptionID: ulid("subscription_id"),
     description: text("description"),
     quantity: int("quantity").notNull(),
     amount: dollar("amount").notNull(),
