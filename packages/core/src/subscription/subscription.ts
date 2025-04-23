@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { isNotNull, isNull, lt } from "drizzle-orm";
+import { isNotNull, isNull, lt, and, eq } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
 import { useTransaction, afterTx } from "../drizzle/transaction";
-import { and, eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { Actor } from "../actor";
 import { createID } from "../util/id";
 import { fn } from "../util/fn";
@@ -11,6 +11,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { DateTime } from "luxon";
 import { Order } from "../order/order";
+import { orderItemTable } from "../order/order.sql";
 import { groupBy, pipe, values } from "remeda";
 import { ErrorCodes, VisibleError } from "../error";
 import { Log } from "../util/log";
@@ -372,6 +373,24 @@ export namespace Subscription {
             log.error(ex);
           });
           if (!order) return;
+          
+          // Update order items with subscription IDs
+          await useTransaction(async (tx) => {
+            for (const sub of group) {
+              await tx
+                .update(orderItemTable)
+                .set({
+                  subscriptionID: sub.id,
+                })
+                .where(
+                  and(
+                    eq(orderItemTable.orderID, order),
+                    eq(orderItemTable.productVariantID, sub.productVariantID)
+                  )
+                );
+            }
+          });
+          
           for (const sub of group) {
             const n = next({
               schedule: sub.schedule!,

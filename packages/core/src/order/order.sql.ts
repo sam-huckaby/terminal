@@ -17,6 +17,7 @@ import {
 import { userTable } from "../user/user.sql";
 import { productVariantTable } from "../product/product.sql";
 import { Card } from "../card";
+import { subscriptionTable } from "../subscription/subscription.sql";
 
 export const orderTable = mysqlTable("order", {
   ...id,
@@ -58,6 +59,7 @@ export const orderItemTable = mysqlTable(
         onDelete: "cascade",
       },
     ),
+    subscriptionID: ulid("subscription_id").references(() => subscriptionTable.id),
     description: text("description"),
     quantity: int("quantity").notNull(),
     amount: dollar("amount").notNull(),
