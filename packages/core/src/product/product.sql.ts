@@ -21,6 +21,7 @@ export const ProductTags = z.object({
   featured: z.boolean().optional(),
   market_na: z.boolean().optional(),
   market_eu: z.boolean().optional(),
+  market_global: z.boolean().optional(),
 });
 export type ProductTags = z.infer<typeof ProductTags>;
 
@@ -36,6 +37,14 @@ export const productTable = mysqlTable("product", {
   tags: json("tags").$type<ProductTags>(),
 });
 
+export const ProductVariantTags = z.object({
+  app: z.string().optional(),
+  market_na: z.boolean().optional(),
+  market_eu: z.boolean().optional(),
+  market_global: z.boolean().optional(),
+});
+export type ProductVariantTags = z.infer<typeof ProductVariantTags>;
+
 export const productVariantTable = mysqlTable("product_variant", {
   ...id,
   ...timestamps,
@@ -47,6 +56,7 @@ export const productVariantTable = mysqlTable("product_variant", {
   name: varchar("name", { length: 255 }).notNull(),
   price: dollar("price").notNull(),
   weight: int("weight").notNull().default(12),
+  tags: json("tags").$type<ProductVariantTags>(),
 });
 
 export const productVariantInventoryTable = mysqlTable(

@@ -3,10 +3,10 @@ import { createContext } from "../context";
 import { ProductTags } from "./product.sql";
 
 export namespace ProductFilter {
-  export const Region = z.enum(["eu", "na"]).openapi({
+  export const Region = z.enum(["eu", "na", "global"]).openapi({
     ref: "Region",
     description: "A Terminal shop user's region.",
-    examples: ["na", "eu"],
+    examples: ["na", "eu", "global"],
   });
 
   export type Region = z.infer<typeof Region>;
@@ -24,6 +24,7 @@ export namespace ProductFilter {
       const regions = [
         tags.market_eu ? "eu" : undefined,
         tags.market_na ? "na" : undefined,
+        tags.market_global ? "global" : undefined,
       ].flatMap((x) => (x ? [x] : []));
       if (!regions.length) return true;
       if (context.region) return regions.includes(context.region);
@@ -62,8 +63,7 @@ function countryToRegion(country: string | undefined) {
   if (!country) return undefined;
 
   const countryCode = country.toLowerCase();
-  if (countryCode === "us" || countryCode === "ca" || countryCode === "mx")
-    return "na";
+  if (countryCode === "us") return "na";
 
   const euCountries = [
     "at", // Austria
@@ -101,5 +101,5 @@ function countryToRegion(country: string | undefined) {
   ];
   if (euCountries.includes(countryCode)) return "eu";
 
-  return undefined;
+  return "global";
 }

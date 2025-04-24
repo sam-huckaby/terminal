@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   ProductTags,
   productVariantInventoryTable,
+  ProductVariantTags,
 } from "@terminal/core/product/product.sql";
 
 async function selectProduct() {
@@ -262,7 +263,7 @@ export default new Page({
                   eq(productVariantInventoryTable.productVariantID, variant.id),
                 ),
             );
-            const [name, price, productIDs] = await io.group([
+            const [name, price, productIDs, ...tags] = await io.group([
               io.input.text("name", {
                 defaultValue: variant.name,
               }),
@@ -280,13 +281,44 @@ export default new Page({
                   value: item.inventoryID,
                 })),
               }),
+              ...Object.entries(ProductVariantTags.shape).map(([key, value]) =>
+                value._def.innerType instanceof z.ZodBoolean
+                  ? io.input
+                      .boolean(key, {
+                        defaultValue:
+                          (variant.tags?.[
+                            key as keyof ProductVariantTags
+                          ] as any) === true,
+                      })
+                      .optional()
+                  : io.input
+                      .text(key, {
+                        defaultValue: variant.tags?.[
+                          key as keyof ProductVariantTags
+                        ] as any,
+                      })
+                      .optional(),
+              ),
             ]);
-            ctx.log("edit variant", { name, price });
+
+            // Extract tag values from the io.group result
+            const tagValues: Record<string, any> = {};
+            Object.keys(ProductVariantTags.shape).forEach((key, index) => {
+              if (tags[index] !== undefined) {
+                tagValues[key] = tags[index];
+              }
+            });
+
+            ctx.log("edit variant", { name, price, tags: tagValues });
             await Product.editVariant({
               id: variant.id,
               name,
               price: price * 100,
               inventoryIDs: productIDs.map((item) => item.value),
+              tags: {
+                ...variant.tags,
+                ...tagValues,
+              },
             });
             ctx.redirect({
               route: "product/detail",
@@ -300,18 +332,33 @@ export default new Page({
           name: "Create Variant",
           handler: async () => {
             const product = await selectProduct();
-            const [name, price] = await io.group([
+            const [name, price, ...tags] = await io.group([
               io.input.text("name", {
                 minLength: 1,
               }),
               io.input.number("price", {
                 currency: "USD",
               }),
+              ...Object.entries(ProductVariantTags.shape).map(([key, value]) =>
+                value._def.innerType instanceof z.ZodBoolean
+                  ? io.input.boolean(key).optional()
+                  : io.input.text(key).optional(),
+              ),
             ]);
+
+            // Extract tag values from the io.group result
+            const tagValues: Record<string, any> = {};
+            Object.keys(ProductVariantTags.shape).forEach((key, index) => {
+              if (tags[index] !== undefined) {
+                tagValues[key] = tags[index];
+              }
+            });
+
             await Product.addVariant({
               productID: product.id,
               name,
               price: price * 100,
+              tags: tagValues,
             });
             ctx.redirect({
               route: "product/detail",

@@ -134,7 +134,7 @@ func (m model) formatOrderDetail(order terminal.Order, index int) string {
 	// Shipping details
 	if order.Tracking.Service != "" || order.Tracking.Number != "" {
 		lines = append(lines, accent("shipping"))
-		lines = append(lines, base("status: ")+base(order.Tracking.Status))
+		lines = append(lines, base("status: ")+base(string(order.Tracking.Status)))
 		if order.Tracking.Service != "" {
 			lines = append(lines, base("service: ")+base(order.Tracking.Service))
 		}

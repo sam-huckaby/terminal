@@ -18,16 +18,18 @@ type shopState struct {
 	viewportsReady bool
 }
 
-func (m model) updateShopViewports() model {
-	headerHeight := lipgloss.Height(m.HeaderView())
-	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
-	footerHeight := lipgloss.Height(m.FooterView())
-	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
-
-	availableHeight := m.heightContainer - verticalMarginHeight
-
+func (m model) calculateShopWidths() (int, int) {
 	// Calculate menu width based on products
-	menuWidth := 0
+	menuWidth := 14 // minimum width
+
+	// Handle empty products case
+	if len(m.products) == 0 {
+		if m.size < large {
+			return m.widthContent, m.widthContent
+		}
+		return menuWidth, m.widthContent - menuWidth
+	}
+
 	for _, p := range m.products {
 		w := lipgloss.Width(p.Name)
 		if w > menuWidth {
@@ -50,6 +52,24 @@ func (m model) updateShopViewports() model {
 		detailWidth = m.widthContent
 	}
 
+	return menuWidth, detailWidth
+}
+
+func (m model) updateShopViewports() model {
+	headerHeight := lipgloss.Height(m.HeaderView())
+	breadcrumbsHeight := lipgloss.Height(m.BreadcrumbsView())
+	footerHeight := lipgloss.Height(m.FooterView())
+	verticalMarginHeight := headerHeight + footerHeight + breadcrumbsHeight
+
+	availableHeight := m.heightContainer - verticalMarginHeight
+
+	// If no products, don't need to set up viewports
+	if len(m.products) == 0 {
+		return m
+	}
+
+	menuWidth, detailWidth := m.calculateShopWidths()
+
 	if !m.state.shop.viewportsReady {
 		// Initialize viewports for the first time
 		m.state.shop.menuViewport = viewport.New(menuWidth, availableHeight)
@@ -71,23 +91,36 @@ func (m model) updateShopViewports() model {
 	return m
 }
 
+func (m model) setShopFooterCommands() model {
+	// Set footer commands
+	m.state.footer.commands = []footerCommand{
+		{key: "q", value: "quit"},
+	}
+
+	// Add product-specific commands only if we have products
+	if len(m.products) > 0 {
+		m.state.footer.commands = []footerCommand{
+			{key: "+/-", value: "qty"},
+			{key: "c", value: "cart"},
+			{key: "q", value: "quit"},
+		}
+
+		if len(m.products) > 1 {
+			m.state.footer.commands = append(
+				[]footerCommand{{key: "↑/↓", value: "products"}},
+				m.state.footer.commands...,
+			)
+		}
+	}
+
+	return m
+}
+
 func (m model) ShopSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(shopPage)
 	m.state.subscribe.product = nil
 
-	m.state.footer.commands = []footerCommand{
-		{key: "+/-", value: "qty"},
-		{key: "c", value: "cart"},
-		{key: "q", value: "quit"},
-	}
-
-	if len(m.products) > 1 {
-		m.state.footer.commands = append(
-			[]footerCommand{{key: "↑/↓", value: "products"}},
-			m.state.footer.commands...,
-		)
-	}
-
+	m = m.setShopFooterCommands()
 	m = m.UpdateSelectedTheme()
 	m = m.updateShopViewports()
 	return m, nil
@@ -100,6 +133,17 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 	// Update viewport dimensions if window size changed
 	if _, ok := msg.(tea.WindowSizeMsg); ok {
 		m = m.updateShopViewports()
+	}
+
+	m = m.setShopFooterCommands()
+
+	// Handle empty products case
+	if len(m.products) == 0 {
+		// Only handle region toggle key when no products
+		if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "r" {
+			return m.ToggleRegion()
+		}
+		return m, nil
 	}
 
 	// Handle different message types
@@ -250,30 +294,13 @@ func (m model) reorderProducts() model {
 
 // Helper function to generate content for the menu viewport
 func (m model) getShopMenuContent() string {
-	menuWidth := 0
+	menuWidth, _ := m.calculateShopWidths()
 	var featuredCount int
 
 	// Calculate max width and count featured products
 	for _, p := range m.products {
-		w := lipgloss.Width(p.Name)
-		if w > menuWidth {
-			menuWidth = w
-		}
 		if p.Tags.Featured {
 			featuredCount++
-		}
-	}
-
-	// Only consider section header widths if we have featured products
-	if featuredCount > 0 {
-		featuredHeader := "~ featured ~"
-		originalsHeader := "~ originals ~"
-		headerWidth := lipgloss.Width(featuredHeader)
-		if w := lipgloss.Width(originalsHeader); w > headerWidth {
-			headerWidth = w
-		}
-		if headerWidth > menuWidth {
-			menuWidth = headerWidth
 		}
 	}
 
@@ -408,21 +435,11 @@ func (m model) getShopDetailContent() string {
 		}
 	}
 
-	menuWidth := 0
-	if m.size >= large {
-		// Calculate menu width for large screens
-		for _, p := range m.products {
-			w := lipgloss.Width(p.Name)
-			if w > menuWidth {
-				menuWidth = w
-			}
-		}
-		menuWidth += 4 // padding
-	}
+	_, detailWidth := m.calculateShopWidths()
 
-	detailWidth := m.widthContent - menuWidth - 2
-	if m.size < large {
-		detailWidth = m.widthContent
+	// Adjust detailWidth for padding in this view
+	if m.size >= large {
+		detailWidth -= 2
 	}
 
 	detailStyle := m.theme.Base().Width(detailWidth)
@@ -457,6 +474,26 @@ func (m model) ShopView() string {
 		m = m.updateShopViewports()
 	}
 
+	// Check if there are no products
+	if len(m.products) == 0 {
+		// Create a message for no products
+		noProductsMsg := "no products available for this region."
+		pressRMsg := "press 'r' to change region."
+
+		return lipgloss.Place(
+			m.widthContent,
+			m.heightContent,
+			lipgloss.Center,
+			lipgloss.Center,
+			lipgloss.JoinVertical(
+				lipgloss.Center,
+				m.theme.TextAccent().Render(noProductsMsg),
+				"",
+				m.theme.Base().Render(pressRMsg),
+			),
+		)
+	}
+
 	// Update viewport contents
 	menuContent := m.getShopMenuContent()
 	m.state.shop.menuViewport.SetContent(menuContent)
@@ -484,6 +521,13 @@ func (m model) ShopView() string {
 }
 
 func (m model) UpdateSelectedTheme() model {
+	// Handle empty products case
+	if len(m.products) == 0 {
+		// Use default theme when no products
+		m.theme = theme.BasicTheme(m.renderer, nil)
+		return m
+	}
+
 	var highlight string
 	product := m.products[m.state.shop.selected]
 	highlight = product.Tags.Color

@@ -47,9 +47,14 @@ func wordWrap(text string, maxWidth int) string {
 
 // ToggleRegion switches between regions and creates a new client with the updated region header
 func (m model) ToggleRegion() (model, tea.Cmd) {
-	// Toggle between "na" and "eu"
-	newRegion := terminal.RegionEu
-	if m.region != nil && *m.region == terminal.RegionEu {
+	// Toggle between "na", "eu", and "global"
+	var newRegion terminal.Region
+
+	if m.region == nil || *m.region == terminal.RegionNa {
+		newRegion = terminal.RegionEu
+	} else if *m.region == terminal.RegionEu {
+		newRegion = terminal.RegionGlobal
+	} else {
 		newRegion = terminal.RegionNa
 	}
 
@@ -94,14 +99,17 @@ func (m model) FooterView() string {
 
 	// Note: Region selection is now handled server-side based on client IP
 	// but we keep the UI indicator to show which region's products are displayed
-	naFlag := "🇺🇸" // US flag for North America
-	euFlag := "🇪🇺" // EU flag
+	naFlag := "🇺🇸"    // US flag for North America
+	euFlag := "🇪🇺"    // EU flag
+	globalFlag := "🌎" // Globe for global
 
 	var regionSelector string
 	if m.region == nil || *m.region == terminal.RegionNa {
 		regionSelector = base(" " + naFlag + " (US)")
-	} else {
+	} else if *m.region == terminal.RegionEu {
 		regionSelector = base(" " + euFlag + " (EU)")
+	} else {
+		regionSelector = base(" " + globalFlag + " (Global)")
 	}
 
 	// Add other commands

@@ -15,6 +15,13 @@
       "when": 1745431054227,
       "tag": "0001_abnormal_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1745513451588,
+      "tag": "0002_hot_sabretooth",
+      "breakpoints": true
     }
   ]
 }

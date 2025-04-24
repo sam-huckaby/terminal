@@ -6,6 +6,7 @@ import {
   ProductTags,
   productVariantInventoryTable,
   productVariantTable,
+  ProductVariantTags,
 } from "./product.sql";
 import { eq, isNull } from "drizzle-orm";
 import { first, groupBy, map, pipe, values } from "remeda";
@@ -29,6 +30,10 @@ export namespace Product {
       price: z.number().int().min(0).openapi({
         description: "Price of the product variant in cents (USD).",
         example: Examples.ProductVariant.price,
+      }),
+      tags: ProductVariantTags.optional().openapi({
+        description: "Tags for the product variant.",
+        example: undefined,
       }),
     })
     .openapi({
@@ -88,30 +93,47 @@ export namespace Product {
         )
         .where(isNull(productTable.timeDeleted))
         .orderBy(productTable.order);
+
+      const filterContext = ProductFilter.use();
+
       const result = pipe(
         rows,
         groupBy((x) => x.product.id),
         values(),
-        map(
-          (group): Info => ({
+        map((group): Info => {
+          // Get all variants
+          const allVariants = !group[0].product_variant
+            ? []
+            : group.map((item) => ({
+                id: item.product_variant!.id,
+                name: item.product_variant!.name,
+                price: item.product_variant!.price,
+                tags: item.product_variant!.tags || undefined,
+              }));
+
+          // Filter variants based on region if they have tags
+          const filteredVariants = allVariants.filter(
+            (variant) =>
+              !variant.tags || ProductFilter.run(filterContext, variant.tags),
+          );
+
+          return {
             id: group[0].product.id,
             name: group[0].product.name,
             description: group[0].product.description,
             order: group[0].product.order || undefined,
             subscription: group[0].product.subscription || undefined,
-            variants: !group[0].product_variant
-              ? []
-              : group.map((item) => ({
-                  id: item.product_variant!.id,
-                  name: item.product_variant!.name,
-                  price: item.product_variant!.price,
-                })),
+            variants: filteredVariants,
             tags: group[0].product.tags || undefined,
-          }),
-        ),
-      ).filter((item) =>
-        ProductFilter.run(ProductFilter.use(), item.tags || {}),
+          };
+        }),
+      ).filter(
+        (item) =>
+          // Only include products that pass the filter and have at least one variant
+          ProductFilter.run(filterContext, item.tags || {}) &&
+          item.variants.length > 0,
       );
+
       return result as Info[];
     });
 
@@ -125,25 +147,40 @@ export namespace Product {
           eq(productTable.id, productVariantTable.productID),
         )
         .where(eq(productTable.id, input));
+
+      const filterContext = ProductFilter.use();
+
       const result = pipe(
         rows,
         groupBy((x) => x.product.id),
         values(),
-        map(
-          (group): Info => ({
+        map((group): Info => {
+          // Get all variants
+          const allVariants = !group[0].product_variant
+            ? []
+            : group.map((item) => ({
+                id: item.product_variant!.id,
+                name: item.product_variant!.name,
+                price: item.product_variant!.price,
+                tags: item.product_variant!.tags || undefined,
+              }));
+
+          // Filter variants based on region if they have tags
+          const filteredVariants = allVariants.filter(
+            (variant) =>
+              !variant.tags || ProductFilter.run(filterContext, variant.tags),
+          );
+
+          return {
             id: group[0].product.id,
             name: group[0].product.name,
             description: group[0].product.description,
-            variants: !group[0].product_variant
-              ? []
-              : group.map((item) => ({
-                  id: item.product_variant!.id,
-                  name: item.product_variant!.name,
-                  price: item.product_variant!.price,
-                })),
+            variants: filteredVariants,
             tags: group[0].product.tags || undefined,
-          }),
-        ),
+            order: group[0].product.order || undefined,
+            subscription: group[0].product.subscription || undefined,
+          };
+        }),
         first(),
       );
       return result;
@@ -201,6 +238,7 @@ export namespace Product {
       name: Variant.shape.name,
       price: Variant.shape.price,
       id: Variant.shape.id.optional(),
+      tags: ProductTags.optional(),
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -218,6 +256,7 @@ export namespace Product {
           id,
           name: input.name,
           price: input.price,
+          tags: input.tags || null,
         });
         return id;
       }),
@@ -229,6 +268,7 @@ export namespace Product {
       name: Variant.shape.name.optional(),
       price: Variant.shape.price.optional(),
       inventoryIDs: z.string().array().optional(),
+      tags: ProductVariantTags.optional(),
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -237,6 +277,7 @@ export namespace Product {
           .set({
             name: input.name,
             price: input.price,
+            tags: input.tags,
           })
           .where(eq(productVariantTable.id, input.id));
 

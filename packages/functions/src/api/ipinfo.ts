@@ -28,7 +28,7 @@ export async function getRegionFromIP(ip: string): Promise<string | undefined> {
     // Logic from core/product/filter.ts countryToRegion function
     let region: string | undefined;
 
-    if (countryCode === "us" || countryCode === "ca" || countryCode === "mx") {
+    if (countryCode === "us") {
       region = "na";
     } else if (
       [
@@ -67,6 +67,8 @@ export async function getRegionFromIP(ip: string): Promise<string | undefined> {
       ].includes(countryCode)
     ) {
       region = "eu";
+    } else {
+      region = "global";
     }
 
     // Cache the result
