@@ -103,13 +103,13 @@ export namespace Template {
         .select({
           email: orderTable.email,
           name: userTable.name,
-          trackingUrl: orderTable.trackingURL,
           shippingCost: orderTable.shippingAmount,
           shippingAddress: orderTable.shippingAddress,
           productName: productTable.name,
           variantName: productVariantTable.name,
           quantity: orderItemTable.quantity,
           amount: orderItemTable.amount,
+          subscriptionID: orderItemTable.subscriptionID,
           index: sql<string>`${tx
             .select({ index: count() })
             .from(orderTable)
@@ -141,16 +141,15 @@ export namespace Template {
     const shipping = order.shippingCost / 100;
     const total = subtotal + shipping;
     const formatItem = (i: typeof order) =>
-      `• ${i.quantity}x ${i.productName} (${i.variantName}) $${(i.amount / 100).toFixed(2)}`;
+      `• ${i.quantity}x ${i.productName} (${i.variantName}) $${(i.amount / 100).toFixed(2)} ${i.subscriptionID ? "(Subscription)" : ""}`;
     const index = order.index.toString().padStart(3, "0");
+    const subscription = items.some((i) => i.subscriptionID);
     const body = [
       `Dear {valued_customer_name},`,
       ``,
-      `Thank you for ordering from Terminal!`,
-      `We're working on packing and shipping your coffee as you read this.`,
+      `Thank you for ${subscription ? "subscribing to" : "ordering"} Terminal coffee!`,
       ``,
-      `Here's a tracking URL that definitely won't work, yet:`,
-      `${order.trackingUrl}`,
+      `Your coffee will be shipped within 24 hours of roasting. We'll send you another email with tracking information once your order has shipped.`,
       ``,
       `Order #${index} (zero-indexed btw)`,
       ``,
@@ -170,5 +169,62 @@ export namespace Template {
     ].join("\n");
 
     await Email.send("order", order.email!, `Terminal Order #${index}`, body);
+  }
+
+  export async function sendOrderShipped(orderID: string) {
+    const data = await useTransaction((tx) =>
+      tx
+        .select({
+          email: orderTable.email,
+          name: userTable.name,
+          trackingUrl: orderTable.trackingURL,
+          trackingNumber: orderTable.trackingNumber,
+          trackingStatus: orderTable.trackingStatus,
+          trackingStatusDetails: orderTable.trackingStatusDetails,
+          shippingAddress: orderTable.shippingAddress,
+          index: sql<string>`${tx
+            .select({ index: count() })
+            .from(orderTable)
+            .where(
+              and(
+                eq(orderTable.userID, userTable.id),
+                lt(orderTable.id, orderID),
+              ),
+            )}`,
+        })
+        .from(orderTable)
+        .leftJoin(userTable, eq(userTable.id, orderTable.userID))
+        .where(eq(orderTable.id, orderID))
+        .limit(1)
+        .then((rows) => rows[0]),
+    );
+
+    if (!data || !data.email) return;
+
+    const index = data.index.toString().padStart(3, "0");
+    const body = [
+      `Dear {valued_customer_name},`,
+      ``,
+      `Great news! Your Terminal coffee order (#${index}) has shipped and is on its way to you.`,
+      ``,
+      `Tracking Number: ${data.trackingNumber || "Not available"}`,
+      `Tracking URL: ${data.trackingUrl || "Not available"}`,
+      `Status: ${data.trackingStatus || "In Transit"}`,
+      `${data.trackingStatusDetails ? `Details: ${data.trackingStatusDetails}` : ""}`,
+      ``,
+      `Shipping Address:`,
+      `${data.shippingAddress.name}`,
+      `${data.shippingAddress.street1 + (data.shippingAddress.street2 ? "\n" + data.shippingAddress.street2 : "")}`,
+      `${data.shippingAddress.city}, ${data.shippingAddress.province} ${data.shippingAddress.zip} ${data.shippingAddress.country}`,
+      ``,
+      ps,
+    ].join("\n");
+
+    await Email.send(
+      "order",
+      data.email,
+      `Your Terminal Order #${index} Has Shipped`,
+      body,
+    );
   }
 }

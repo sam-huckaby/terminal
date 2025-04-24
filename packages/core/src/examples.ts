@@ -86,7 +86,7 @@ export namespace Examples {
       service: Cart.shipping.service,
       number: "92346903470167000000000019",
       url: "https://tools.usps.com/go/TrackConfirmAction_input?origTrackNum=92346903470167000000000019",
-      status: "DELIVERED",
+      status: "DELIVERED" as const,
       statusDetails: "Your shipment has been delivered.",
       statusUpdatedAt: new Date("2025-04-08T12:00:00Z"),
     },

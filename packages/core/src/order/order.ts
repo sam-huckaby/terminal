@@ -70,6 +70,28 @@ export namespace Order {
     })
     .openapi({ ref: "OrderItem", example: Examples.OrderItem });
 
+  export const TrackingStatus = z.enum([
+    "PRE_TRANSIT",
+    "TRANSIT",
+    "DELIVERED",
+    "RETURNED",
+    "FAILURE",
+    "UNKNOWN",
+  ]);
+
+  export type TrackingStatus = z.infer<typeof TrackingStatus>;
+
+  export const TrackingInfo = z.object({
+    trackingNumber: z.string(),
+    carrier: z.string(),
+    status: TrackingStatus,
+    statusDetails: z.string().optional(),
+    statusDate: z.string(),
+    metadata: z.string().optional(),
+  });
+
+  export type TrackingInfo = z.infer<typeof TrackingInfo>;
+
   export const Info = z
     .object({
       id: z.string().openapi({
@@ -117,7 +139,7 @@ export namespace Order {
             description: "Tracking URL of the order.",
             example: Examples.Order.tracking.url,
           }),
-          status: z.string().optional().openapi({
+          status: TrackingStatus.optional().openapi({
             description: "Current tracking status of the shipment.",
             example: Examples.Order.tracking.status,
           }),
@@ -152,6 +174,14 @@ export namespace Order {
       "order.created",
       z.object({
         orderID: Info.shape.id,
+      }),
+    ),
+    TrackingStatusChanged: defineEvent(
+      "order.tracking_status_changed",
+      z.object({
+        orderID: Info.shape.id,
+        previousStatus: TrackingStatus.optional(),
+        newStatus: TrackingStatus,
       }),
     ),
   };
@@ -235,7 +265,9 @@ export namespace Order {
                 tracking: {
                   number: rows[0]!.order.trackingNumber || undefined,
                   url: rows[0]!.order.trackingURL || undefined,
-                  status: rows[0]!.order.trackingStatus || undefined,
+                  status: rows[0]!.order.trackingStatus as
+                    | Order.TrackingStatus
+                    | undefined,
                   statusDetails:
                     rows[0]!.order.trackingStatusDetails || undefined,
                   statusUpdatedAt:
@@ -571,6 +603,180 @@ export namespace Order {
       );
     },
   );
+
+  export const UpdateInput = z
+    .object({
+      id: Info.shape.id,
+      fulfiller: z.enum(["qc", "lp"]).optional(),
+      trackingNumber: z.string().optional(),
+      trackingURL: z.string().optional(),
+      labelURL: z.string().optional(),
+      trackingStatus: TrackingStatus.optional(),
+      trackingStatusDetails: z.string().optional(),
+      shippoOrderID: z.string().optional(),
+      shippoLabelID: z.string().optional(),
+      shippoRateID: z.string().optional(),
+    })
+    .openapi({
+      ref: "OrderUpdate",
+      description: "Input for updating an order",
+    });
+
+  export type UpdateInput = z.infer<typeof UpdateInput>;
+
+  export const update = fn(UpdateInput, async (input) =>
+    useTransaction(async (tx) => {
+      // Check that order exists and belongs to the user
+      const order = await tx
+        .select({
+          id: orderTable.id,
+          trackingStatus: orderTable.trackingStatus,
+        })
+        .from(orderTable)
+        .where(
+          and(
+            eq(orderTable.id, input.id),
+            eq(orderTable.userID, Actor.userID()),
+          ),
+        )
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      if (!order) {
+        throw new VisibleError(
+          "not_found",
+          ErrorCodes.NotFound.RESOURCE_NOT_FOUND,
+          "Order not found",
+        );
+      }
+
+      // Build update object with only provided fields
+      const updateData: Record<string, any> = {};
+
+      if (input.fulfiller !== undefined) {
+        updateData.fulfiller = input.fulfiller;
+      }
+
+      if (input.labelURL !== undefined) {
+        updateData.labelURL = input.labelURL;
+      }
+
+      if (input.trackingNumber !== undefined) {
+        updateData.trackingNumber = input.trackingNumber;
+      }
+
+      if (input.trackingURL !== undefined) {
+        updateData.trackingURL = input.trackingURL;
+      }
+
+      if (input.trackingStatus !== undefined) {
+        updateData.trackingStatus = input.trackingStatus;
+      }
+
+      if (input.trackingStatusDetails !== undefined) {
+        updateData.trackingStatusDetails = input.trackingStatusDetails;
+      }
+
+      if (input.shippoOrderID !== undefined) {
+        updateData.shippoOrderID = input.shippoOrderID;
+      }
+
+      if (input.shippoLabelID !== undefined) {
+        updateData.shippoLabelID = input.shippoLabelID;
+      }
+
+      if (input.shippoRateID !== undefined) {
+        updateData.shippoRateID = input.shippoRateID;
+      }
+
+      // Only run update if there are fields to update
+      if (Object.keys(updateData).length > 0) {
+        await tx
+          .update(orderTable)
+          .set(updateData)
+          .where(
+            and(
+              eq(orderTable.id, input.id),
+              eq(orderTable.userID, Actor.userID()),
+            ),
+          );
+
+        // If tracking status changed, emit event
+        if (
+          input.trackingStatus !== undefined &&
+          order.trackingStatus !== input.trackingStatus
+        ) {
+          await afterTx(() =>
+            bus.publish(Resource.Bus, Event.TrackingStatusChanged, {
+              orderID: order.id,
+              previousStatus: order.trackingStatus || undefined,
+              newStatus: input.trackingStatus!,
+            }),
+          );
+        }
+      }
+
+      return true;
+    }),
+  );
+
+  export const updateTrackingStatus = fn(TrackingInfo, async (data) => {
+    const order = await useTransaction((tx) =>
+      tx
+        .select({
+          id: orderTable.id,
+          trackingStatus: orderTable.trackingStatus,
+        })
+        .from(orderTable)
+        .where(eq(orderTable.trackingNumber, data.trackingNumber))
+        .execute()
+        .then((results) => results[0]),
+    );
+
+    if (!order) {
+      log.warn("tracking update for unknown order", {
+        trackingNumber: data.trackingNumber,
+      });
+      return;
+    }
+
+    const previousStatus = order.trackingStatus as
+      | Order.TrackingStatus
+      | undefined;
+    const newStatus = data.status;
+
+    // Update the order's tracking status
+    await useTransaction((tx) =>
+      tx
+        .update(orderTable)
+        .set({
+          trackingStatus: data.status,
+          trackingStatusDetails: data.statusDetails || null,
+          trackingStatusUpdatedAt: new Date(data.statusDate),
+        })
+        .where(eq(orderTable.id, order.id))
+        .execute(),
+    );
+
+    log.info("updated order tracking status", {
+      orderID: order.id,
+      previousStatus,
+      newStatus: data.status,
+    });
+
+    // Emit event for tracking status change
+    if (previousStatus !== newStatus) {
+      await afterTx(() =>
+        bus.publish(Resource.Bus, Event.TrackingStatusChanged, {
+          orderID: order.id,
+          previousStatus,
+          newStatus,
+        }),
+      );
+    }
+
+    return order.id;
+  });
 
   export async function trackInventory() {
     await createTransaction(async (tx) => {

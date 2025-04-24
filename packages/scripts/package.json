@@ -4,12 +4,15 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "email": "sst shell -- bun src/send-test-email.ts"
   },
   "devDependencies": {},
   "dependencies": {
     "@terminal/core": "workspace:*",
+    "@terminal/functions": "workspace:*",
     "remeda": "*",
-    "sst": "3.13.3"
+    "sst": "3.13.3",
+    "zod": "^3.22.4"
   }
 }

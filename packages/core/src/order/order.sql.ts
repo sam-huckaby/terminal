@@ -17,7 +17,7 @@ import {
 import { userTable } from "../user/user.sql";
 import { productVariantTable } from "../product/product.sql";
 import { Card } from "../card";
-import { subscriptionTable } from "../subscription/subscription.sql";
+import { Order } from "./order";
 
 export const orderTable = mysqlTable("order", {
   ...id,
@@ -32,7 +32,7 @@ export const orderTable = mysqlTable("order", {
   card: json("card").$type<Omit<Card.Info, "id" | "created">>(),
   trackingNumber: text("tracking_number"),
   trackingURL: text("tracking_url"),
-  trackingStatus: text("tracking_status"),
+  trackingStatus: text("tracking_status").$type<Order.TrackingStatus>(),
   trackingStatusDetails: text("tracking_status_details"),
   trackingStatusUpdatedAt: timestamp("tracking_status_updated_at"),
   labelURL: text("label_url"),

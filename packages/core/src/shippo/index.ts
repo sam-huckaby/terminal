@@ -8,6 +8,7 @@ import { ErrorCodes, VisibleError } from "../error";
 import { z } from "zod";
 import { userTable } from "../user/user.sql";
 import { Log } from "../util/log";
+import { Order } from "../order/order";
 
 const TERMINAL_ADDRESS = {
   name: "Terminal Products Inc",
@@ -44,17 +45,6 @@ const CUSTOMS_DECLARATION_ITEM = {
 
 export namespace Shippo {
   const log = Log.create({ namespace: "shippo" });
-
-  export const TrackingStatus = z.object({
-    trackingNumber: z.string(),
-    carrier: z.string(),
-    status: z.string(),
-    statusDetails: z.string().optional(),
-    statusDate: z.string(),
-    metadata: z.string().optional(),
-  });
-
-  export type TrackingStatus = z.infer<typeof TrackingStatus>;
 
   const Address = z.object({
     name: z.string(),
@@ -227,17 +217,12 @@ export namespace Shippo {
     if (shipment.object_state !== "VALID") {
       throw new Error("Shipment invalid");
     }
-    await useTransaction((tx) =>
-      tx
-        .update(orderTable)
-        .set({
-          shippoOrderID: order.object_id,
-          shippoLabelID: shipment.object_id,
-          shippoRateID: rate.shippoRateID,
-        })
-        .where(eq(orderTable.id, orderID))
-        .execute(),
-    );
+    await Order.update({
+      id: orderID,
+      shippoOrderID: order.object_id,
+      shippoLabelID: shipment.object_id,
+      shippoRateID: rate.shippoRateID,
+    });
 
     while (true) {
       const result = await api("GET", "/transactions/" + shipment.object_id);
@@ -247,17 +232,12 @@ export namespace Shippo {
         await new Promise((r) => setTimeout(r, 1000));
         continue;
       }
-      await useTransaction((tx) =>
-        tx
-          .update(orderTable)
-          .set({
-            trackingURL: result.tracking_url_provider,
-            labelURL: result.label_url,
-            trackingNumber: result.tracking_number,
-          })
-          .where(eq(orderTable.id, orderID))
-          .execute(),
-      );
+      await Order.update({
+        id: orderID,
+        labelURL: result.label_url,
+        trackingURL: result.tracking_url_provider,
+        trackingNumber: result.tracking_number,
+      });
       break;
     }
   });
@@ -305,46 +285,6 @@ export namespace Shippo {
       );
     }
   }
-
-  export const updateTrackingStatus = fn(TrackingStatus, async (data) => {
-    const order = await useTransaction((tx) =>
-      tx
-        .select({
-          id: orderTable.id,
-        })
-        .from(orderTable)
-        .where(eq(orderTable.trackingNumber, data.trackingNumber))
-        .execute()
-        .then((results) => results[0]),
-    );
-
-    if (!order) {
-      log.warn("tracking update for unknown order", {
-        trackingNumber: data.trackingNumber,
-      });
-      return;
-    }
-
-    // Update the order's tracking status
-    await useTransaction((tx) =>
-      tx
-        .update(orderTable)
-        .set({
-          trackingStatus: data.status,
-          trackingStatusDetails: data.statusDetails || null,
-          trackingStatusUpdatedAt: new Date(data.statusDate),
-        })
-        .where(eq(orderTable.id, order.id))
-        .execute(),
-    );
-
-    log.info("updated order tracking status", {
-      orderID: order.id,
-      status: data.status,
-    });
-
-    return order.id;
-  });
 
   const ROOT = "https://api.goshippo.com";
   async function api(method: string, path: string, body?: any) {

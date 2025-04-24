@@ -1,5 +1,5 @@
 import { Card } from "@terminal/core/card/index";
-import { Shippo } from "@terminal/core/shippo/index";
+import { Order } from "@terminal/core/order/order";
 import { stripe } from "@terminal/core/stripe";
 import { Hono } from "hono";
 import { Resource } from "sst";
@@ -66,7 +66,7 @@ export namespace Hook {
           metadata: body.data.metadata || undefined,
         };
 
-        await Shippo.updateTrackingStatus(trackingData);
+        await Order.updateTrackingStatus(trackingData);
 
         return ctx.json({ status: "success" });
       } catch (error) {

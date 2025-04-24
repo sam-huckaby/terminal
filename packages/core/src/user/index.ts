@@ -51,7 +51,7 @@ export namespace User {
       example: Examples.User,
     });
 
-  export const Events = {
+  export const Event = {
     Created: defineEvent(
       "user.created",
       z.object({
@@ -92,7 +92,7 @@ export namespace User {
             fingerprint: input.fingerprint,
           });
         await afterTx(() =>
-          bus.publish(Resource.Bus, Events.Created, { userID: id }),
+          bus.publish(Resource.Bus, Event.Created, { userID: id }),
         );
         await Card.sync(customer!.id);
       });
@@ -159,7 +159,7 @@ export namespace User {
     (input) =>
       useTransaction(async (tx) => {
         await afterTx(() =>
-          bus.publish(Resource.Bus, Events.Updated, {
+          bus.publish(Resource.Bus, Event.Updated, {
             userID: input.id,
           }),
         );
