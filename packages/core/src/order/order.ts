@@ -265,9 +265,7 @@ export namespace Order {
                 tracking: {
                   number: rows[0]!.order.trackingNumber || undefined,
                   url: rows[0]!.order.trackingURL || undefined,
-                  status: rows[0]!.order.trackingStatus as
-                    | Order.TrackingStatus
-                    | undefined,
+                  status: rows[0]!.order.trackingStatus || undefined,
                   statusDetails:
                     rows[0]!.order.trackingStatusDetails || undefined,
                   statusUpdatedAt:
