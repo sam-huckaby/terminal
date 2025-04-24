@@ -738,9 +738,7 @@ export namespace Order {
       return;
     }
 
-    const previousStatus = order.trackingStatus as
-      | Order.TrackingStatus
-      | undefined;
+    const previousStatus = order.trackingStatus || undefined;
     const newStatus = data.status;
 
     // Update the order's tracking status
