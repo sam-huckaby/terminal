@@ -60,7 +60,7 @@ export namespace Hook {
         const trackingData = {
           trackingNumber: body.data.tracking_number,
           carrier: body.data.carrier,
-          status: body.data.tracking_status.status,
+          status: body.data.tracking_status.status || undefined,
           statusDetails: body.data.tracking_status.status_details,
           statusDate: body.data.tracking_status.status_date,
           metadata: body.data.metadata || undefined,
