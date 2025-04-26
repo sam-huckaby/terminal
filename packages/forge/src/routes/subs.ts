@@ -39,6 +39,7 @@ export const Subs = new Page({
                   email: userTable.email,
                   address: addressTable.address,
                   product: productTable.name,
+                  price: subscriptionTable.price,
                   created: subscriptionTable.timeCreated,
                   schedule: subscriptionTable.schedule,
                   next: subscriptionTable.timeNext,
@@ -84,6 +85,12 @@ export const Subs = new Page({
             "name",
             "email",
             "product",
+            {
+              label: "price",
+              renderCell: (row) => ({
+                label: `$${(row.price / 100).toFixed(2)}`,
+              }),
+            },
             {
               label: "address",
               renderCell: (row) => ({
