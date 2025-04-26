@@ -43,7 +43,7 @@ export namespace Shipping {
 
   export type Fulfiller = "qc" | "lp";
 
-  const FREE_SHIPPING_THRESHOLD = 40 * 100;
+  const FREE_SHIPPING_THRESHOLD = 30 * 100;
   const FLAT_SHIPPING_COST = 800;
   export async function calculate(subtotal: number, address: Address.Inner) {
     log.info("calculating shipping", {
