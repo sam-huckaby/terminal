@@ -69,53 +69,11 @@ const stripe = tool({
   },
 });
 
-export const terminal = [
-  tool({
-    name: "terminal_openapi",
-    description:
-      "OpenAPI documentation for the terminal API, which is used to order coffee",
-    async run() {
-      return fetch(Resource.Api.url + "/doc").then((res) => res.json());
-    },
-  }),
-  tool({
-    name: "terminal_call",
-    description: "Call the terminal API",
-    args: z.object({
-      method: z.string().describe("HTTP method to use"),
-      path: z.string().describe("Path to call"),
-      query: z.record(z.string()).optional().describe("Query params"),
-      body: z.any().optional().describe("HTTP body to use if it is not GET"),
-      token: z
-        .string()
-        .describe("Personal access token that you should ask the user for"),
-    }),
-    async run(input) {
-      console.log(input.method, Resource.Api.url + input.path);
-      return fetch(Resource.Api.url + input.path, {
-        method: input.method,
-        headers: {
-          Authorization: `Bearer ${input.token}`,
-          "Content-Type": "application/json",
-        },
-        body: input.body ? JSON.stringify(input.body) : undefined,
-      }).then((res) => res.text());
-    },
-  }),
-];
-
 const app = create({
   model: createAnthropic({
     apiKey: Resource.AnthropicApiKey.value,
   })("claude-3-7-sonnet-20250219"),
-  tools: [
-    databaseRead,
-    databaseWrite,
-    inventory,
-    stripe,
-    ...terminal,
-    ...tools,
-  ],
+  tools: [databaseRead, databaseWrite, inventory, stripe, ...tools],
 });
 
 export const handler = handle(app);
