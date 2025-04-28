@@ -1,4 +1,4 @@
-import { secret } from "./secret";
+import { allSecrets, secret } from "./secret";
 import { domain, shortDomain } from "./dns";
 import { database } from "./database";
 import { webhook as stripeWebhook } from "./stripe";
@@ -180,7 +180,7 @@ new sst.aws.Cron("SubscriptionProcessor", {
 new sst.aws.Cron("EUFulfillment", {
   schedule: "rate(1 day)",
   job: {
-    link: [database, shortDomainEmail, email, secret.ShippoSecret],
+    link: [database, shortDomainEmail, email, ...allSecrets],
     handler: "./packages/functions/src/cron/shipping.handler",
   },
 });
