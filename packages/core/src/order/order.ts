@@ -423,6 +423,8 @@ export namespace Order {
         "usr_01J1KHKPA8QK82MBHQDBQP78XK", // teej
         "usr_01JG4BDDCKTY6CYWF6JXKVPNNT", // prime
         "usr_01J1JTQHAJZKVSEKZS6P3RYW0K", // adam
+        "usr_01JPKFME5A1YMX66Y55YW3WGZ2", // david
+        "usr_01JSPVYJ9VAEHX1GB4P4TP04W9", // josh
       ].includes(userID);
 
       try {
