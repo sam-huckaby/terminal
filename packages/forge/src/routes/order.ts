@@ -135,18 +135,6 @@ export const Order = new Page({
                 label: "Tracking",
                 url: row.tracking!,
               },
-              {
-                label: "Process",
-                action: async () => {
-                  await ctx.loading.start({
-                    label: "Processing order",
-                    description: "Emitting order created event",
-                  });
-                  await bus.publish(Resource.Bus, OrderM.Event.Created, {
-                    orderID: row.id,
-                  });
-                },
-              },
             ].filter(Boolean) as any,
           columns: [
             "id",
