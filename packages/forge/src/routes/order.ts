@@ -18,6 +18,7 @@ import { orderItemTable, orderTable } from "@terminal/core/order/order.sql";
 import { Order as OrderM } from "@terminal/core/order/order";
 import { PDFDocument } from "pdf-lib";
 import { Resource } from "sst";
+import { bus } from "sst/aws/bus";
 import {
   S3Client,
   PutObjectCommand,
@@ -133,6 +134,18 @@ export const Order = new Page({
               row.tracking && {
                 label: "Tracking",
                 url: row.tracking!,
+              },
+              {
+                label: "Process",
+                action: async () => {
+                  await ctx.loading.start({
+                    label: "Processing order",
+                    description: "Emitting order created event",
+                  });
+                  await bus.publish(Resource.Bus, OrderM.Event.Created, {
+                    orderID: row.id,
+                  });
+                },
               },
             ].filter(Boolean) as any,
           columns: [
@@ -294,6 +307,7 @@ export const Order = new Page({
         });
       },
     }),
+
     create: new Action({
       name: "Create",
       handler: async () => {
