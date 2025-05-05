@@ -64,6 +64,7 @@ export const Subs = new Page({
                   productTable,
                   eq(productVariantTable.productID, productTable.id),
                 )
+                .where(isNull(subscriptionTable.timeDeleted))
                 .orderBy(desc(subscriptionTable.id))
                 .offset(input.offset)
                 .limit(input.pageSize),
