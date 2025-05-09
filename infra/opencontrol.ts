@@ -6,6 +6,12 @@ import { allSecrets } from "./secret";
 const opencontrol = new sst.aws.OpenControl("OpenControl", {
   server: {
     handler: "packages/functions/src/opencontrol.handler",
+    permissions: [
+      {
+        actions: ["bedrock:*"],
+        resources: ["*"],
+      },
+    ],
     policies: $dev
       ? ["arn:aws:iam::aws:policy/AdministratorAccess"]
       : ["arn:aws:iam::aws:policy/ReadOnlyAccess"],

@@ -8,6 +8,7 @@ import { db } from "@terminal/core/drizzle/index";
 import { Inventory } from "@terminal/core/inventory/index";
 import { Resource } from "sst";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { bedrock } from "@ai-sdk/amazon-bedrock";
 
 const databaseRead = tool({
   name: "database_query_readonly",
@@ -70,9 +71,7 @@ const stripe = tool({
 });
 
 const app = create({
-  model: createAnthropic({
-    apiKey: Resource.AnthropicApiKey.value,
-  })("claude-3-7-sonnet-20250219"),
+  model: bedrock("us.anthropic.claude-3-7-sonnet-20250219-v1:0"),
   tools: [databaseRead, databaseWrite, inventory, stripe, ...tools],
 });
 
