@@ -207,6 +207,8 @@ export namespace Template {
       ``,
       `Great news! Your Terminal coffee order (#${index}) has shipped and is on its way to you.`,
       ``,
+      `Your roast date is ${new Date().toDateString()}`,
+      ``,
       `Tracking Number: ${data.trackingNumber || "Not available"}`,
       `Tracking URL: ${data.trackingUrl || "Not available"}`,
       `Status: ${data.trackingStatus || "In Transit"}`,
