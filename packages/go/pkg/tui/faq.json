@@ -1,5 +1,13 @@
 [
   {
+    "question": "help, i have a question about my order!",
+    "answer": "send us an email at support@terminal.shop."
+  },
+  {
+    "question": "when was my coffee roasted? the roast date is blank on my bag.",
+    "answer": "we roast your coffee within 24 hours of shipping, and you'll receive an email once your order ships. we're working on a solution to stamping the roast date on the bags, but so far all attempts have failed (the ink wipes off)."
+  },
+  {
     "question": "where do you ship?",
     "answer": "we ship all of our blends in the US, and our Flow blend in the US and the EU (not available in the UK)."
   },
