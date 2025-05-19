@@ -172,6 +172,7 @@ new sst.aws.Cron("SubscriptionProcessor", {
   schedule: "rate(1 day)",
   job: {
     link: [database, bus, ...Object.values(secret)],
+    memory: "2048 MB",
     handler: "./packages/functions/src/cron/subscription.handler",
     timeout: "15 minutes",
   },
