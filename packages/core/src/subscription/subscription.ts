@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { isNotNull, isNull, lt, and, eq } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
-import { useTransaction, afterTx } from "../drizzle/transaction";
+import {
+  useTransaction,
+  afterTx,
+  createTransaction,
+} from "../drizzle/transaction";
 import { sql } from "drizzle-orm";
 import { Actor } from "../actor";
 import { createID } from "../util/id";
@@ -18,6 +22,7 @@ import { Log } from "../util/log";
 import { defineEvent } from "../event";
 import { bus } from "sst/aws/bus";
 import { Resource } from "sst";
+import Database from "bun:sqlite";
 
 export namespace Subscription {
   const log = Log.create({ namespace: "subscription" });
@@ -358,24 +363,26 @@ export namespace Subscription {
         },
         async () => {
           log.info("creating order");
-          const order = await Order.create({
-            addressID: group[0].addressID,
-            cardID: group[0].cardID,
-            variants: Object.fromEntries(
-              group.map(
-                (item) => [item.productVariantID, item.quantity] as const,
+          await createTransaction(async (tx) => {
+            const order = await Order.create({
+              addressID: group[0].addressID,
+              cardID: group[0].cardID,
+              variants: Object.fromEntries(
+                group.map(
+                  (item) => [item.productVariantID, item.quantity] as const,
+                ),
               ),
-            ),
-            prices: Object.fromEntries(
-              group.map((item) => [item.productVariantID, item.price] as const),
-            ),
-          }).catch((ex) => {
-            log.error(ex);
-          });
-          if (!order) return;
-          
-          // Update order items with subscription IDs
-          await useTransaction(async (tx) => {
+              prices: Object.fromEntries(
+                group.map(
+                  (item) => [item.productVariantID, item.price] as const,
+                ),
+              ),
+            }).catch((ex) => {
+              log.error(ex);
+            });
+            if (!order) return;
+
+            // Update order items with subscription IDs
             for (const sub of group) {
               await tx
                 .update(orderItemTable)
@@ -385,27 +392,25 @@ export namespace Subscription {
                 .where(
                   and(
                     eq(orderItemTable.orderID, order),
-                    eq(orderItemTable.productVariantID, sub.productVariantID)
-                  )
+                    eq(orderItemTable.productVariantID, sub.productVariantID),
+                  ),
                 );
             }
-          });
-          
-          for (const sub of group) {
-            const n = next({
-              schedule: sub.schedule!,
-              last: sub.timeNext || new Date(),
-            });
 
-            await useTransaction(async (tx) => {
+            for (const sub of group) {
+              const n = next({
+                schedule: sub.schedule!,
+                last: sub.timeNext || new Date(),
+              });
+
               await tx
                 .update(subscriptionTable)
                 .set({
                   timeNext: n,
                 })
                 .where(eq(subscriptionTable.id, sub.id));
-            });
-          }
+            }
+          });
         },
       );
     }
