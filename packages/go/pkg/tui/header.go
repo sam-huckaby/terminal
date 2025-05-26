@@ -27,7 +27,9 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "c":
-			return m.CartSwitch()
+			if m.page != cartPage {
+				return m.CartSwitch()
+			}
 		case "s":
 			return m.ShopSwitch()
 		case "a":

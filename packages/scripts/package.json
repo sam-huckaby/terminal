@@ -12,7 +12,7 @@
     "@terminal/core": "workspace:*",
     "@terminal/functions": "workspace:*",
     "remeda": "*",
-    "sst": "3.13.3",
+    "sst": "3.16.0",
     "zod": "^3.22.4"
   }
 }
