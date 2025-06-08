@@ -26,7 +26,7 @@ export default defineConfig({
   redirects: {
     '/report': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     '/trust': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    '/flow': 'https://ray.so/coffee',
+    '/ray': 'https://ray.so/coffee',
   },
   vite: {
     server: { allowedHosts: true },
