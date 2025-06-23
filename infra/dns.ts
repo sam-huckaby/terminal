@@ -5,11 +5,15 @@ export const domain =
   }[$app.stage] || $app.stage + ".dev.terminal.shop";
 
 export const zone = cloudflare.getZoneOutput({
-  name: "terminal.shop",
+  filter: {
+    name: domain,
+  },
 });
 
 export const shortDomain = domain.replace(/terminal\.shop$/, "trm.sh");
 
 export const shortZone = cloudflare.getZoneOutput({
-  name: "trm.sh",
+  filter: {
+    name: "trm.sh",
+  },
 });
