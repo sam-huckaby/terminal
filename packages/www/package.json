@@ -48,7 +48,7 @@
     "remark-directive": "3.0.0",
     "shiki": "3.2.1",
     "solid-js": "^1.8.16",
-    "sst": "3.16.0",
+    "sst": "3.17.6",
     "stripe": "*",
     "zod": "*"
   }

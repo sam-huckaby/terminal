@@ -6,7 +6,7 @@ import { vhs } from "./vhs";
 export const www = new sst.aws.Astro("Site", {
   domain: {
     name: "www." + domain,
-    dns: sst.cloudflare.dns({}),
+    dns: sst.cloudflare.dns(),
   },
   path: "./packages/www",
   buildCommand: "bun run build",

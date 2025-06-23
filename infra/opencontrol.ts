@@ -27,6 +27,6 @@ new sst.aws.Router("OpencontrolRouter", {
   },
   domain: {
     name: "opencontrol." + domain,
-    dns: sst.cloudflare.dns({}),
+    dns: sst.cloudflare.dns(),
   },
 });

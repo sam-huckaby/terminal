@@ -52,7 +52,7 @@ export const auth = new sst.aws.Auth("Auth", {
   },
   domain: {
     name: "auth." + domain,
-    dns: sst.cloudflare.dns({}),
+    dns: sst.cloudflare.dns(),
   },
   forceUpgrade: "v2",
 });
@@ -144,7 +144,7 @@ export const api = new sst.aws.Router("Api", {
   },
   domain: {
     name: "api." + domain,
-    dns: sst.cloudflare.dns({}),
+    dns: sst.cloudflare.dns(),
   },
   transform: {
     cdn(args) {

@@ -1,6 +1,6 @@
 import { urls } from "./api";
 import { database } from "./database";
-import { shortDomain, shortZone } from "./dns";
+import { shortDomain } from "./dns";
 
 const linkShortenerFn = new sst.aws.Function("LinkShortenerFn", {
   handler: "./packages/functions/src/shortener/index.handler",
@@ -15,9 +15,7 @@ export const linkShortener = new sst.aws.Router("LinkShortener", {
   },
   domain: {
     name: shortDomain,
-    dns: sst.cloudflare.dns({
-      zone: shortZone.id,
-    }),
+    dns: sst.cloudflare.dns(),
   },
 });
 
