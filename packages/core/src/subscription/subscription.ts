@@ -22,7 +22,7 @@ import { Log } from "../util/log";
 import { defineEvent } from "../event";
 import { bus } from "sst/aws/bus";
 import { Resource } from "sst";
-import Database from "bun:sqlite";
+import { Template } from "../email/template";
 
 export namespace Subscription {
   const log = Log.create({ namespace: "subscription" });
@@ -377,8 +377,12 @@ export namespace Subscription {
                   (item) => [item.productVariantID, item.price] as const,
                 ),
               ),
-            }).catch((ex) => {
+            }).catch(async (ex) => {
               log.error(ex);
+              for (const sub of group) {
+                await afterTx(() => Template.sendSubscriptionFailed(sub.id));
+              }
+              return;
             });
             if (!order) return;
 

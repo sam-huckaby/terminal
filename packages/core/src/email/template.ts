@@ -229,4 +229,65 @@ export namespace Template {
       body,
     );
   }
+
+  export async function sendSubscriptionFailed(subscriptionID: string) {
+    const data = await useTransaction((tx) =>
+      tx
+        .select({
+          email: userTable.email,
+          name: userTable.name,
+          productName: productTable.name,
+          variantName: productVariantTable.name,
+          quantity: subscriptionTable.quantity,
+          schedule: subscriptionTable.schedule,
+          addressID: subscriptionTable.addressID,
+        })
+        .from(subscriptionTable)
+        .innerJoin(userTable, eq(userTable.id, subscriptionTable.userID))
+        .innerJoin(
+          productVariantTable,
+          eq(productVariantTable.id, subscriptionTable.productVariantID),
+        )
+        .innerJoin(
+          productTable,
+          eq(productTable.id, productVariantTable.productID),
+        )
+        .where(eq(subscriptionTable.id, subscriptionID))
+        .limit(1)
+        .then((rows) => rows[0]),
+    );
+
+    if (!data || !data.email) return;
+
+    const body = [
+      `Dear ${data.name || "{valued_customer_name}"},`,
+      ``,
+      `We encountered an issue processing your Terminal Coffee subscription and were unable to complete your order.`,
+      ``,
+      `Subscription Details:`,
+      `• ${data.quantity}x ${data.productName} (${data.variantName})`,
+      `• Delivery: ${data.schedule?.type === "weekly" ? `Every ${data.schedule.interval} week(s)` : "One-time"}`,
+      ``,
+      `This could be due to:`,
+      `• Payment method issues (expired card, insufficient funds, etc.)`,
+      `• Shipping address problems`,
+      `• Product availability`,
+      ``,
+      `To resolve this issue, please reply to this email or contact us with any updates needed for your subscription, including:`,
+      `• Updated payment information`,
+      `• Corrected shipping address`,
+      `• Any other changes to your subscription`,
+      ``,
+      `We'll retry processing your subscription once we hear from you.`,
+      ``,
+      ps,
+    ].join("\n");
+
+    await Email.send(
+      "order",
+      data.email,
+      `Issue Processing Your Terminal Coffee Subscription`,
+      body,
+    );
+  }
 }
