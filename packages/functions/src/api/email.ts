@@ -38,6 +38,7 @@ export namespace EmailApi {
       }),
     ),
     async (c) => {
+      return c.json({ data: "ok" as const }, 200);
       const body = c.req.valid("json");
       await EmailOctopus.subscribe({ email: body.email });
       return c.json({ data: "ok" as const }, 200);
