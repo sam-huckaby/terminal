@@ -329,7 +329,6 @@ export namespace Subscription {
       if (input.schedule.type === "fixed") return null;
       return DateTime.fromJSDate(input.last)
         .toUTC()
-        .startOf("week")
         .plus({ weeks: input.schedule.interval })
         .toJSDate();
     },
