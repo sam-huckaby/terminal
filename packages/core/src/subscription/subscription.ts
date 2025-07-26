@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isNotNull, isNull, lt, and, eq } from "drizzle-orm";
+import { isNotNull, isNull, lt, and, eq, desc } from "drizzle-orm";
 import { SubscriptionSchedule, subscriptionTable } from "./subscription.sql";
 import {
   useTransaction,
@@ -15,7 +15,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { DateTime } from "luxon";
 import { Order } from "../order/order";
-import { orderItemTable } from "../order/order.sql";
+import { orderItemTable, orderTable } from "../order/order.sql";
 import { groupBy, pipe, values } from "remeda";
 import { ErrorCodes, VisibleError } from "../error";
 import { Log } from "../util/log";
@@ -329,7 +329,6 @@ export namespace Subscription {
       if (input.schedule.type === "fixed") return null;
       return DateTime.fromJSDate(input.last)
         .toUTC()
-        .startOf("week")
         .plus({ weeks: input.schedule.interval })
         .toJSDate();
     },
@@ -402,9 +401,25 @@ export namespace Subscription {
             }
 
             for (const sub of group) {
+              // Get the last order date for this subscription
+              const lastOrder = await tx
+                .select({
+                  timeCreated: orderTable.timeCreated,
+                })
+                .from(orderItemTable)
+                .innerJoin(orderTable, eq(orderItemTable.orderID, orderTable.id))
+                .where(eq(orderItemTable.subscriptionID, sub.id))
+                .orderBy(desc(orderTable.timeCreated))
+                .limit(1)
+                .then((rows) => rows[0]);
+
+              // Use the last order date as the base for calculating next date
+              // If no previous orders, use the current processing date
+              const lastOrderDate = lastOrder?.timeCreated || sub.timeNext || new Date();
+              
               const n = next({
                 schedule: sub.schedule!,
-                last: sub.timeNext || new Date(),
+                last: lastOrderDate,
               });
 
               await tx
